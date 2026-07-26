@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "BIV + Rijtaks Estimator (Belgium)",
+  "version": "0.1.0",
+  "description": "Estimates Belgian BIV (registration tax) and Rijtaks (annual road tax) on car ads. Estimate only, not an official assessment.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "*://*.autoscout24.be/*",
+    "*://*.autoscout24.de/*",
+    "*://*.autoscout24.nl/*",
+    "*://*.autoscout24.fr/*",
+    "*://*.autoscout24.lu/*"
+  ],
+  "background": { "service_worker": "sw.js" },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.autoscout24.be/*",
+        "*://*.autoscout24.de/*",
+        "*://*.autoscout24.nl/*",
+        "*://*.autoscout24.fr/*",
+        "*://*.autoscout24.lu/*"
+      ],
+      "js": [
+        "core/tax.js",
+        "core/normalise.js",
+        "ui/badge.js",
+        "content/autoscout24.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["core/tariffs.json"],
+      "matches": [
+        "*://*.autoscout24.be/*",
+        "*://*.autoscout24.de/*",
+        "*://*.autoscout24.nl/*",
+        "*://*.autoscout24.fr/*",
+        "*://*.autoscout24.lu/*"
+      ]
+    }
+  ],
+  "options_page": "options.html"
+}

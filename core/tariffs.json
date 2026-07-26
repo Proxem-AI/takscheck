@@ -1,0 +1,158 @@
+{
+  "version": "2026.07",
+  "updated": "2026-07-27",
+  "source": "Vlaamse Belastingdienst simulator (belastingen.fenb.be) calibration, WIGB art. 97ter-sexies, Bruxelles Fiscalite tariff PDF, SPW Finances bareme 1 Jul 2025. See README.",
+  "currency": "EUR",
+  "simulatorUrls": {
+    "flanders": "https://belastingen.fenb.be/ui/public/vkb/simulatie",
+    "brussels": "https://fisc.brussels/mytax/nl/tc",
+    "wallonia": "https://finances.wallonie.be/home/fiscalite/fiscalite-des-vehicules/tableaux-des-baremes/taxe-de-mise-en-circulation-1.html"
+  },
+  "flanders": {
+    "biv": {
+      "q": 1.245,
+      "divisor": 246,
+      "exponent": 6,
+      "factor": 4500,
+      "fuelFactor": {
+        "petrol": 1.0,
+        "diesel": 1.0,
+        "lpg": 0.88,
+        "cng": 0.93,
+        "cng_petrol": 0.744,
+        "other": 1.0
+      },
+      "airComponent": {
+        "diesel": { "0": 3809.99, "1": 1117.79, "2": 828.45, "3": 656.51, "4": 621.52, "5": 611.26, "6": 604.23 },
+        "petrol": { "0": 1515.37, "1": 677.70, "2": 202.65, "3": 127.12, "4": 30.51, "5": 27.43, "6": 27.43 }
+      },
+      "ageCorrection": { "startPct": 1.0, "stepPerYear": 0.10, "floorPct": 0.10, "floorFromYear": 9 },
+      "min": 61.50,
+      "max": 10000.0,
+      "evFlat": 61.50,
+      "evExemptBeforeYear": 2026
+    },
+    "roadTax": {
+      "scale": "annualScale",
+      "min": 58.55,
+      "evFlat": 102.96,
+      "evExemptBeforeYear": 2026,
+      "oldtimerFlat": 95.84,
+      "oldtimerAgeYears": 30,
+      "confidence": "low",
+      "note": "Combustion annual road tax uses the shared representative fiscal-HP scale. Flemish per-CV cents and the diesel/CO2 eco-modulation are not yet pinned against the Flemish road-tax simulator. EV flat 102.96 and minimum 58.55 are simulator-confirmed."
+    }
+  },
+  "brussels": {
+    "tmc": {
+      "usesCo2": false,
+      "brackets": [
+        { "kwMax": 70,  "cvMax": 8,   "petrolDiesel": 78.88,   "lpg": 0.0 },
+        { "kwMax": 85,  "cvMax": 10,  "petrolDiesel": 157.76,  "lpg": 0.0 },
+        { "kwMax": 100, "cvMax": 11,  "petrolDiesel": 634.89,  "lpg": 252.67 },
+        { "kwMax": 110, "cvMax": 14,  "petrolDiesel": 1112.01, "lpg": 729.80 },
+        { "kwMax": 120, "cvMax": 15,  "petrolDiesel": 1589.14, "lpg": 1206.93 },
+        { "kwMax": 155, "cvMax": 17,  "petrolDiesel": 3178.28, "lpg": 2796.07 },
+        { "kwMax": null, "cvMax": null, "petrolDiesel": 6357.85, "lpg": 5975.63 }
+      ],
+      "ageSchedule": [1.0, 0.9, 0.8, 0.7, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1],
+      "ageFloorFromYear": 15,
+      "evFlat": 78.88,
+      "min": 78.88
+    },
+    "roadTax": {
+      "scale": "annualScale",
+      "evExempt": true,
+      "lpgSupplement": [
+        { "cvMax": 7, "amount": 89.0 },
+        { "cvMax": 13, "amount": 149.0 },
+        { "cvMax": null, "amount": 208.0 }
+      ],
+      "confidence": "low",
+      "note": "Fiscal-HP scale with 10 percent decime already included. EV/hydrogen exempt. Per-CV cents drift by indexation window."
+    }
+  },
+  "wallonia": {
+    "tmc": {
+      "reformDate": "2025-07-01",
+      "baseByKw": [
+        { "kwMax": 70,  "mb": 61.50 },
+        { "kwMax": 85,  "mb": 123.00 },
+        { "kwMax": 100, "mb": 495.00 },
+        { "kwMax": 110, "mb": 867.00 },
+        { "kwMax": 120, "mb": 1239.00 },
+        { "kwMax": 155, "mb": 2478.00 },
+        { "kwMax": null, "mb": 4957.00 }
+      ],
+      "ageSchedule": [1.0, 0.9, 0.8, 0.7, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25, 0.2, 0.15, 0.1],
+      "ageFloorFromYear": 15,
+      "mbFloor": 61.50,
+      "co2Divisor": { "wltp": 136, "nedc": 115 },
+      "massReference": 1838,
+      "energyCoefficient": {
+        "combustion": 1.0,
+        "hybrid": 0.80,
+        "electricByKw": [
+          { "kwMax": 120, "c": 0.01 },
+          { "kwMax": 155, "c": 0.10 },
+          { "kwMax": 249, "c": 0.18 },
+          { "kwMax": null, "c": 0.26 }
+        ]
+      },
+      "min": 50.0,
+      "max": 9000.0
+    },
+    "roadTax": {
+      "scale": "annualScale",
+      "dieselSurchargePct": 0.35,
+      "evFlat": 102.96,
+      "oldtimerFlat": 46.70,
+      "confidence": "low",
+      "note": "Fiscal-HP scale with decimes. Diesel carries roughly +35 percent over the petrol base. EV pays a reduced forfait rather than full exemption."
+    }
+  },
+  "annualScale": {
+    "note": "Representative 2025-2026 all-in fiscal-HP road-tax scale (10 percent decime included). Cents drift by region and indexation window. Flagged low confidence pending per-region bareme scrape.",
+    "byFiscalHp": {
+      "4": 103, "5": 129, "6": 186, "7": 243, "8": 301, "9": 359, "10": 415,
+      "11": 539, "12": 663, "13": 786, "14": 910, "15": 1033,
+      "16": 1354, "17": 1674, "18": 1994, "19": 2314, "20": 2634
+    },
+    "minFiscalHp": 4,
+    "perExtraHpAbove20": 143.62
+  },
+  "inference": {
+    "euroNormByFirstReg": [
+      { "fromYearMonth": "2015-09", "euroNorm": 6 },
+      { "fromYearMonth": "2011-01", "euroNorm": 5 },
+      { "fromYearMonth": "2006-01", "euroNorm": 4 },
+      { "fromYearMonth": "2001-01", "euroNorm": 3 },
+      { "fromYearMonth": "1997-01", "euroNorm": 2 },
+      { "fromYearMonth": "1993-01", "euroNorm": 1 },
+      { "fromYearMonth": "0000-01", "euroNorm": 0 }
+    ],
+    "co2CycleByFirstReg": [
+      { "fromYearMonth": "2019-01", "cycle": "wltp", "confidence": "high" },
+      { "fromYearMonth": "2018-09", "cycle": "wltp", "confidence": "low" },
+      { "fromYearMonth": "0000-01", "cycle": "nedc", "confidence": "high" }
+    ],
+    "fiscalHpFromCcDivisor": 200,
+    "fiscalHpMin": 4,
+    "evFiscalHpByKw": [
+      { "kwMax": 30, "cv": 4 },
+      { "kwMax": 50, "cv": 6 },
+      { "kwMax": 75, "cv": 8 },
+      { "kwMax": 100, "cv": 10 },
+      { "kwMax": 130, "cv": 12 },
+      { "kwMax": 170, "cv": 14 },
+      { "kwMax": null, "cv": 16 }
+    ],
+    "defaultMmaByBody": {
+      "hatchback": 1600, "small": 1600, "compact": 1800, "sedan": 2100,
+      "saloon": 2100, "estate": 2100, "wagon": 2100, "suv": 2600,
+      "offroad": 2700, "van": 3000, "transporter": 3000, "motorhome": 3200,
+      "default": 2000
+    },
+    "kerbToMmaPayload": 450
+  }
+}

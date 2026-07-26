@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BIV + Rijtaks Estimator - Settings</title>
+<style>
+  :root{color-scheme:light dark}
+  body{margin:0;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:#f7f8fa;color:#1a1d24;padding:28px 20px}
+  @media (prefers-color-scheme:dark){body{background:#0f1216;color:#e7ebf0}
+    .card{background:#171b21;border-color:#2a3038}.opt{border-color:#2a3038}.opt:hover{background:#1e242c}}
+  .wrap{max-width:520px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#5b6472;font-size:13px;margin:0 0 20px}
+  .card{background:#fff;border:1px solid #e2e6ec;border-radius:14px;padding:18px 20px;margin-bottom:16px}
+  h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:#5b6472;margin:0 0 12px}
+  .opt{display:flex;gap:12px;align-items:flex-start;border:1px solid #e2e6ec;border-radius:10px;
+    padding:12px 14px;margin-bottom:8px;cursor:pointer}
+  .opt:hover{background:#fafbfc}
+  .opt input{margin-top:3px}
+  .opt b{display:block;font-size:14px}
+  .opt span{font-size:12.5px;color:#5b6472}
+  .saved{font-size:12.5px;color:#1a7f4b;height:16px;margin-top:4px}
+  .note{font-size:12px;color:#8a94a2;margin-top:8px}
+  .disc{background:#fdf3dd;border:1px solid #e6c766;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#6b4e00}
+  @media (prefers-color-scheme:dark){.disc{background:#2a2312;border-color:#5c4a1a;color:#f0d68a}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>BIV + Rijtaks Estimator</h1>
+  <p class="sub">Belgian vehicle-tax estimates on AutoScout24 car ads.</p>
+
+  <div class="card">
+    <h2>Tax region</h2>
+    <p class="note" style="margin-top:0">Belgian vehicle tax is set by the registered keeper's official address, not where the car is sold. Pick your region.</p>
+    <label class="opt"><input type="radio" name="region" value="flanders">
+      <span><b>Flanders</b><span>CO2 formula BIV (validated). Default.</span></span></label>
+    <label class="opt"><input type="radio" name="region" value="brussels">
+      <span><b>Brussels</b><span>Traditional fiscal-HP / kW table. No CO2.</span></span></label>
+    <label class="opt"><input type="radio" name="region" value="wallonia">
+      <span><b>Wallonia</b><span>Reformed 2025: kW x CO2 x mass x energy.</span></span></label>
+    <div class="saved" id="saved"></div>
+  </div>
+
+  <div class="disc">
+    Figures are informational estimates, not official tax assessments. The binding amount is set by the regional
+    tax administration from the vehicle's certificate of conformity. Flanders BIV is calibrated against the official
+    Vlaamse Belastingdienst simulator; Brussels, Wallonia and all annual road-tax figures are lower-confidence and
+    pending further validation.
+  </div>
+</div>
+<script src="options.js"></script>
+</body>
+</html>

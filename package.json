@@ -1,0 +1,9 @@
+{
+  "name": "belgian-car-tax-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MV3 Chrome extension estimating Belgian BIV and Rijtaks on car ads, plus a regression harness against the official Flemish simulator.",
+  "scripts": {
+    "test": "node test/harness.mjs"
+  }
+}
