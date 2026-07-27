@@ -1,9 +1,24 @@
 {
   "manifest_version": 3,
-  "name": "BIV + Rijtaks Estimator (Belgium)",
+  "name": "TaksCheck",
   "version": "0.1.0",
-  "description": "Estimates Belgian BIV (registration tax) and Rijtaks (annual road tax) on car ads. Estimate only, not an official assessment.",
+  "description": "See the real Belgian car tax on any car ad: BIV / TMC (registration) and Rijtaks / TC (annual road tax), in NL or FR. Estimate only, not an official assessment.",
   "permissions": ["storage"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "TaksCheck",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "host_permissions": [
     "*://*.autoscout24.be/*",
     "*://*.autoscout24.de/*",

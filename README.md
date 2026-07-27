@@ -1,10 +1,13 @@
-# BIV + Rijtaks Estimator (Belgium)
+# TaksCheck
 
 A Manifest V3 Chrome extension prototype that reads an AutoScout24 or mobile.de
-car ad and shows two estimated Belgian vehicle taxes as badges on the page:
+car ad and shows two estimated Belgian vehicle taxes as an on-ad badge:
 
 - **BIV / TMC** the one-off registration tax (belasting op de inverkeerstelling)
 - **Rijtaks / TC** the annual road tax (jaarlijkse verkeersbelasting)
+
+The badge is bilingual (NL / FR): it auto-detects the page language, defaults to
+Dutch, and carries a manual NL / FR toggle whose choice is remembered.
 
 Everything runs client side, in the tab the user already opened. No data leaves
 the browser. Every figure is labelled an estimate; the binding amount is set by
@@ -31,7 +34,9 @@ the regional tax office from the certificate of conformity.
   WLTP/NEDC cycle inferred from the first-registration date, MMA fallback tiering
   (ad value, then kerb weight + payload, then body-type default).
 - **Confidence + assumptions**: every result carries a confidence level and the
-  list of assumptions used, both surfaced on the badge.
+  list of assumptions used. The badge surfaces confidence as an "approx." / "env."
+  tag plus a short localised note; the full assumptions list stays in the
+  `[BIV+Rijtaks]` console debug line to keep the on-ad badge clean.
 - **Two per-site detail-page adapters feeding one shared pipeline**
   (normaliser to tax engine to Shadow-DOM badge). Only extraction differs:
   - **AutoScout24** (`content/autoscout24.js`): parses `__NEXT_DATA__`
@@ -41,16 +46,19 @@ the regional tax office from the certificate of conformity.
     (stable label text, not hashed class names).
   Both normalise into the same `Vehicle` shape, run the same engine, and inject
   the same panel via **Shadow DOM**, re-running on SPA navigation.
-- **Panel design** (`ui/badge.js`): Iris's approved overlay. The tax amount is
-  the hero of each result block (30px, weight 800, near-black on white). Header
-  with mark, title, Estimate pill and region chip; a compact vehicle summary;
-  two result blocks with a per-result confidence chip (sage = high, calm amber =
-  low, never red), a native `<details>` assumptions expander, and a link to the
-  official simulator. Three states: full data, low confidence (an "approx." tag
-  plus a plain sentence naming the guessed input), and a neutral dashed
-  "not enough data" block (the other tax still computes). Light and dark aware.
-  Currency uses the euro glyph with a dot thousands separator (e.g. the glyph
-  then "1.847"), the Belgian convention.
+- **Badge design** (`ui/badge.js`): Iris's approved TaksCheck identity in a
+  style-isolated Shadow DOM overlay. Light header (`#F1F4F8`) with the
+  Belgian-plate mark (soft drop-shadow), the ink + ruby `TaksCheck` wordmark and
+  the NL / FR toggle; a compact vehicle line; the BIV and Rijtaks figures in two
+  reflow-proof columns (euro in tabular mono, key label in a fixed two-line slot
+  so the longer French wording never shifts the numbers); a footer with the
+  region plate tag and a single-hue verdict (low = neutral, medium = pale ruby
+  tint, high = full ruby fill, no green or amber); and an estimate disclaimer.
+  Palette is one blue `#1B54C7`, one ruby `#841922`, plus neutrals. States: full
+  data, low confidence (an "approx." / "env." tag plus a localised sentence), and
+  a "not enough data" cell naming the missing input while the other tax still
+  computes. Currency uses the euro glyph with a dot thousands separator (e.g. the
+  glyph then "1.847"), the Belgian convention.
 - **Options page** (`options.html`): region selection (Flanders default), stored
   in `chrome.storage.sync`.
 - **Regression harness** (`test/harness.mjs`): runs the Flemish engine against
@@ -144,12 +152,13 @@ simulator wizard in a browser (or via browser automation, as Pax did) and read
 
 ```
 manifest.json            MV3 config, narrow AutoScout24 + mobile.de host permissions, storage only
+icons/                   plate mark: icon.svg + icon-16.svg sources, icon16/32/48/128.png (toolbar + store)
 core/tax.js              pure tax engine (BIV + Rijtaks, all three regions)
 core/tariffs.json        updateable tariff tables (baked-in default)
 core/normalise.js        site payload -> common Vehicle (fromAutoScout24, fromMobileDe)
 content/autoscout24.js   AutoScout24 detail-page adapter (parse __NEXT_DATA__)
 content/mobilede.js      mobile.de detail-page adapter (JSON-LD + Technische Daten)
-ui/badge.js              Shadow-DOM badge renderer (shared)
+ui/badge.js              Shadow-DOM TaksCheck badge renderer (shared, bilingual NL / FR)
 options.html / options.js  region selection UI
 sw.js                    ephemeral MV3 service worker
 test/harness.mjs         regression harness vs the official Flemish simulator
