@@ -45,7 +45,18 @@
       disclaimer: "Schatting, geen officiële aanslag.",
       changeRegion: "Wijzig regio",
       co2na: "CO2 onbekend",
-      tokens: { co2: "de CO2-waarde", power: "het vermogen (kW)", cc: "de cilinderinhoud (cc)", data: "meer gegevens" }
+      tokens: { co2: "de CO2-waarde", power: "het vermogen (kW)", cc: "de cilinderinhoud (cc)", data: "meer gegevens" },
+      conf: {
+        caption: "Betrouwbaarheid",
+        tier: { high: "hoog", medium: "gemiddeld", low: "laag" },
+        aria: { high: "Betrouwbaarheid hoog", medium: "Betrouwbaarheid gemiddeld", low: "Betrouwbaarheid laag" }
+      },
+      expander: {
+        label: "Waarom dit bedrag?",
+        intro: "Deze schatting steunt op enkele aannames:",
+        src: { biv: "BIV", rij: "Rijtaks" }
+      },
+      genericReason: "Enkele waarden zijn geschat"
     },
     fr: {
       biv: { t: "TMC", s: "taxe de mise en circulation" },
@@ -60,9 +71,107 @@
       disclaimer: "Estimation, pas un avis d'imposition officiel.",
       changeRegion: "Changer de région",
       co2na: "CO2 inconnu",
-      tokens: { co2: "la valeur CO2", power: "la puissance (kW)", cc: "la cylindrée (cc)", data: "plus de données" }
+      tokens: { co2: "la valeur CO2", power: "la puissance (kW)", cc: "la cylindrée (cc)", data: "plus de données" },
+      conf: {
+        caption: "Fiabilite",
+        tier: { high: "élevée", medium: "moyenne", low: "faible" },
+        aria: { high: "Fiabilite elevee", medium: "Fiabilite moyenne", low: "Fiabilite faible" }
+      },
+      expander: {
+        label: "Pourquoi ce montant?",
+        intro: "Cette estimation repose sur quelques hypothèses:",
+        src: { biv: "TMC", rij: "Circ." }
+      },
+      genericReason: "Certaines valeurs sont estimées"
     }
   };
+
+  // Presentation-layer localisation of the engine's English assumption strings.
+  // The engine (core/tax.js) is never touched; every assumption it can push is
+  // matched here (interpolated values captured by the regex) and rendered as a
+  // short, plain NL / FR reason. Anything unmatched falls back to genericReason.
+  var ASSUMPTION_RULES = [
+    // --- fiscal HP (deriveFiscalHp) ---
+    { re: /^fiscal HP taken from the ad/,
+      nl: "Fiscale pk uit de advertentie", fr: "Puissance fiscale reprise de l'annonce" },
+    { re: /^EV fiscal HP estimated from kW/,
+      nl: "Fiscale pk geschat uit kW (benaderende tabel)", fr: "Puissance fiscale estimée d'après les kW (table approximative)" },
+    { re: /^fiscal HP derived from cc/,
+      nl: "Fiscale pk afgeleid uit de cilinderinhoud", fr: "Puissance fiscale déduite de la cylindrée" },
+    { re: /^fiscal HP roughly estimated from kW/,
+      nl: "Fiscale pk ruw geschat uit kW (cilinderinhoud ontbreekt)", fr: "Puissance fiscale estimée grossièrement d'après les kW (cylindrée absente)" },
+    { re: /^no displacement or fiscal HP/,
+      nl: "Geen cilinderinhoud of fiscale pk beschikbaar", fr: "Ni cylindrée ni puissance fiscale disponibles" },
+    // --- MMA (defaultMma) ---
+    { re: /^MMA taken from the ad/,
+      nl: "Maximale massa uit de advertentie", fr: "Masse maximale reprise de l'annonce" },
+    { re: /^MMA approximated as kerb weight \+ (\d+) kg/,
+      nl: function (m) { return "Maximale massa geschat als leeggewicht + " + m[1] + " kg lading"; },
+      fr: function (m) { return "Masse maximale estimée: poids à vide + " + m[1] + " kg de charge"; } },
+    { re: /^MMA defaulted from body type/,
+      nl: "Maximale massa afgeleid uit het carrosserietype", fr: "Masse maximale déduite du type de carrosserie" },
+    // --- Flanders BIV (bivFlanders) ---
+    { re: /^EV\/hydrogen first registered before (\d+)/,
+      nl: function (m) { return "Elektrisch/waterstof van voor " + m[1] + ": historische BIV-vrijstelling"; },
+      fr: function (m) { return "Électrique/hydrogène immatriculé avant " + m[1] + ": exonération TMC historique"; } },
+    { re: /^new EV\/hydrogen: flat BIV since 1 Jan (\d+)/,
+      nl: function (m) { return "Nieuwe EV/waterstof: forfaitaire BIV sinds 1 jan " + m[1]; },
+      fr: function (m) { return "Nouveau électrique/hydrogène: TMC forfaitaire depuis le 1 jan " + m[1]; } },
+    { re: /^unknown fuel, using fuel factor/,
+      nl: "Onbekende brandstof, standaard brandstoffactor gebruikt", fr: "Carburant inconnu, facteur carburant par défaut" },
+    { re: /^Euro (\d+) inferred from (?:the )?first-registration date/,
+      nl: function (m) { return "Euronorm " + m[1] + " afgeleid uit de eerste inschrijving"; },
+      fr: function (m) { return "Norme Euro " + m[1] + " déduite de la première immatriculation"; } },
+    { re: /^pre-2018 car: CO2 treated as NEDC/,
+      nl: "Auto van voor 2018: CO2 als NEDC gebruikt", fr: "Voiture d'avant 2018: CO2 traité comme NEDC" },
+    { re: /^2018 transition-window registration/,
+      nl: "Inschrijving in de overgangsperiode 2018: WLTP aangenomen voor CO2", fr: "Immatriculation dans la fenêtre de transition 2018: WLTP supposé pour le CO2" },
+    { re: /^air component defaulted to Euro 6/,
+      nl: "Luchtcomponent standaard op Euro 6", fr: "Composante air par défaut sur Euro 6" },
+    { re: /^PHEV taxed by the CO2 formula/,
+      nl: "Plug-inhybride belast op de CO2 zoals een benzinewagen", fr: "Hybride rechargeable taxé sur le CO2 comme une essence" },
+    // --- no first-registration date (BIV / Brussels / Wallonia) ---
+    { re: /^no first-registration date: assuming/,
+      nl: "Geen datum eerste inschrijving: nieuwe auto aangenomen", fr: "Date de première immatriculation absente: voiture neuve supposée" },
+    // --- Brussels TMC (tmcBrussels) ---
+    { re: /^electric\/hydrogen: flat TMC/,
+      nl: "Elektrisch/waterstof: forfaitaire TMC", fr: "Électrique/hydrogène: TMC forfaitaire" },
+    // --- Wallonia TMC (tmcWallonia) ---
+    { re: /^2018 transition window: WLTP divisor/,
+      nl: "Overgangsperiode 2018: WLTP-deler aangenomen", fr: "Fenêtre de transition 2018: diviseur WLTP supposé" },
+    { re: /^(WLTP|NEDC) CO2 assumed, divisor X/,
+      nl: function (m) { return m[1] + "-CO2 aangenomen"; },
+      fr: function (m) { return "CO2 " + m[1] + " supposé"; } },
+    // --- Flanders road tax (roadTaxFlandersModel) ---
+    { re: /^LPG: reduced base road tax \+ AVB supplement/,
+      nl: "LPG: verlaagde basis + AVB-supplement", fr: "LPG: base réduite + supplément AVB" },
+    { re: /^validated Flemish model:/,
+      nl: "Berekend met het gevalideerde Vlaamse model", fr: "Calculé avec le modèle flamand validé" },
+    // --- road tax EV / oldtimer / region modifiers (roadTax) ---
+    { re: /^electric\/hydrogen: exempt from Brussels road tax/,
+      nl: "Elektrisch/waterstof: vrijgesteld van Brusselse rijtaks", fr: "Électrique/hydrogène: exonéré de la taxe de circulation bruxelloise" },
+    { re: /^EV first registered before (\d+)/,
+      nl: function (m) { return "EV van voor " + m[1] + ": rijtaksvrijstelling behouden"; },
+      fr: function (m) { return "Électrique immatriculé avant " + m[1] + ": exonération de circulation maintenue"; } },
+    { re: /^new EV: flat Flemish road tax/,
+      nl: "Nieuwe EV: forfaitaire Vlaamse rijtaks", fr: "Nouveau électrique: taxe de circulation flamande forfaitaire" },
+    { re: /^EV: reduced Walloon forfait/,
+      nl: "EV: verlaagd Waals forfait", fr: "Électrique: forfait wallon réduit" },
+    { re: /^oldtimer \((\d+)y\+\): flat Flemish rate/,
+      nl: function (m) { return "Oldtimer (" + m[1] + " jaar+): vast Vlaams tarief"; },
+      fr: function (m) { return "Ancêtre (" + m[1] + " ans+): tarif flamand forfaitaire"; } },
+    { re: /^oldtimer \((\d+)y\+\): flat Walloon rate/,
+      nl: function (m) { return "Oldtimer (" + m[1] + " jaar+): vast Waals tarief"; },
+      fr: function (m) { return "Ancêtre (" + m[1] + " ans+): tarif wallon forfaitaire"; } },
+    { re: /^Walloon diesel surcharge \+(\d+)%/,
+      nl: function (m) { return "Waalse dieseltoeslag +" + m[1] + "%"; },
+      fr: function (m) { return "Surtaxe diesel wallonne +" + m[1] + "%"; } },
+    { re: /^Brussels LPG supplement \+(\S+)/,
+      nl: function (m) { return "Brusselse LPG-toeslag +" + m[1]; },
+      fr: function (m) { return "Supplément LPG bruxellois +" + m[1]; } },
+    { re: /^representative fiscal-HP scale/,
+      nl: "Indicatieve fiscale-pk-schaal, alles inbegrepen", fr: "Barème indicatif de puissance fiscale, tout compris" }
+  ];
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
@@ -121,6 +230,24 @@
       '<path d="M12.4 12 L16.4 16 L25 6" fill="none" stroke="#841922" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>' +
     "</svg>";
 
+  // Assumptions expander icons (Iris's question mark + chevron).
+  var QIC = '<svg class="tc-qic" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9.4 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1 .8-1 1.6v.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.15" fill="currentColor"/></svg>';
+  var CHEV = '<svg class="tc-chev" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Localise one engine assumption string to the current language, or fall back.
+  function translateAssumption(str) {
+    var s = String(str == null ? "" : str), lg = lang();
+    for (var i = 0; i < ASSUMPTION_RULES.length; i++) {
+      var m = s.match(ASSUMPTION_RULES[i].re);
+      if (m) {
+        var v = ASSUMPTION_RULES[i][lg];
+        if (v == null) v = ASSUMPTION_RULES[i].nl;
+        return typeof v === "function" ? v(m) : v;
+      }
+    }
+    return L().genericReason;
+  }
+
   // Name the missing input from the engine's English reason, localised.
   function missingToken(reason) {
     var r = String(reason || ""), tk = L().tokens;
@@ -158,6 +285,26 @@
     }
     var approx = res.confidence !== "high" ? '<span class="tc-approx">' + esc(L().approx) + "</span> " : "";
     return '<span class="tc-v">' + approx + esc(euro(res.amount)) + "</span>";
+  }
+
+  // Per-result confidence tier for the meter. Only meaningful when a euro
+  // figure is shown (needsMoreData / no amount -> no meter). Maps the engine's
+  // tier to Iris's three-tier meter; anything unexpected reads as "low".
+  function confTier(res) {
+    if (!res || res.needsMoreData || res.amount == null) return null;
+    var c = res.confidence;
+    return c === "high" || c === "medium" || c === "low" ? c : "low";
+  }
+
+  // Iris's ascending blue signal meter + caption + tier word, one per figure.
+  function confCell(res) {
+    var tier = confTier(res);
+    if (!tier) return "";
+    var cf = L().conf;
+    return '<span class="tc-conf" data-tier="' + tier + '" role="img" aria-label="' + esc(cf.aria[tier]) + '">' +
+      '<span class="tc-cmeter"><i></i><i></i><i></i></span>' +
+      '<span class="tc-clab"><small>' + esc(cf.caption) + "</small>" + esc(cf.tier[tier]) + "</span>" +
+    "</span>";
   }
 
   function keyCell(key) {
@@ -236,15 +383,58 @@
       'font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;display:flex;align-items:center;justify-content:center;width:14px}' +
     ".tc-reg{padding:0 8px;color:var(--ink);font-weight:800;font-size:10.5px;letter-spacing:.05em;" +
       'display:flex;align-items:center;font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace}' +
-    ".tc-verdict{font-size:11.5px;font-weight:800;letter-spacing:.02em;padding:4px 11px;border-radius:7px;white-space:nowrap}" +
-    // Traffic-light verdict, independent of the brand marks. All three are
-    // filled pills with white text, each pairing verified WCAG AA:
-    //   low green #0B7350 (5.86:1), medium amber #B45309 (5.02:1),
-    //   high red #C5221F (5.80:1). The status red is a brighter, more saturated
-    //   red than the brand ruby #841922, so the two never read as the same hue.
-    ".tc-verdict.low{background:#0B7350;color:#fff}" +
-    ".tc-verdict.medium{background:#B45309;color:#fff}" +
-    ".tc-verdict.high{background:#C5221F;color:#fff}" +
+    // Traffic-light verdict, Iris's soft treatment (2026-07-28): a pale tinted
+    // pill + a coloured round dot + darker coloured text (not a solid filled
+    // pill). Hexes verbatim from Iris's confidence-assumptions document, each
+    // pairing AA-confirmed: green tx #14572E on bg #E3F1E8 (6.9:1), amber tx
+    // #7A4E00 on bg #FBEBCF (6.1:1), red tx #841922 on bg #F3DADE (7.4:1). Dot
+    // is decorative (word beside it carries the meaning), never colour-alone.
+    ".tc-verdict{font-size:11px;font-weight:800;letter-spacing:.02em;padding:3px 9px 3px 8px;border-radius:6px;" +
+      "white-space:nowrap;display:inline-flex;align-items:center;gap:6px}" +
+    ".tc-verdict .tc-tldot{width:8px;height:8px;border-radius:50%;flex:none}" +
+    ".tc-verdict.low{background:#E3F1E8;color:#14572E}" +
+    ".tc-verdict.low .tc-tldot{background:#1E7A46}" +
+    ".tc-verdict.medium{background:#FBEBCF;color:#7A4E00}" +
+    ".tc-verdict.medium .tc-tldot{background:#C77700}" +
+    ".tc-verdict.high{background:#F3DADE;color:#841922}" +
+    ".tc-verdict.high .tc-tldot{background:#C0202C}" +
+    // Per-figure confidence meter (Iris): ascending blue signal bars + caption +
+    // tier word, blue and neutral only, never the verdict's green/amber/red, so
+    // reliability is never read as tax heaviness. Fill #1B54C7 on #FFFFFF = 6.7:1.
+    ".tc-conf{display:flex;align-items:center;gap:5px;margin-top:6px}" +
+    ".tc-cmeter{display:inline-flex;align-items:flex-end;gap:1.5px;height:11px}" +
+    ".tc-cmeter i{width:3px;border-radius:1px;background:#ccd3db}" +
+    ".tc-cmeter i:nth-child(1){height:5px}" +
+    ".tc-cmeter i:nth-child(2){height:8px}" +
+    ".tc-cmeter i:nth-child(3){height:11px}" +
+    '.tc-conf[data-tier="high"] .tc-cmeter i{background:var(--blue)}' +
+    '.tc-conf[data-tier="medium"] .tc-cmeter i:nth-child(1),' +
+    '.tc-conf[data-tier="medium"] .tc-cmeter i:nth-child(2){background:var(--blue)}' +
+    '.tc-conf[data-tier="low"] .tc-cmeter i:nth-child(1){background:var(--blue)}' +
+    ".tc-clab{font-size:10px;font-weight:700;color:var(--ink);letter-spacing:.005em;white-space:nowrap;line-height:1.1}" +
+    ".tc-clab small{display:block;font-size:8.5px;font-weight:600;color:var(--slate);" +
+      "letter-spacing:.05em;text-transform:uppercase;line-height:1;margin-bottom:1px}" +
+    // Assumptions expander: quiet disclosure row above the footer, closed by
+    // default. Sits below the value rows so opening it never moves the figures.
+    ".tc-expander-wrap{background:var(--white);border-top:1px solid var(--line)}" +
+    ".tc-expander{width:100%;border:0;background:transparent;cursor:pointer;font-family:inherit;" +
+      "display:flex;align-items:center;gap:8px;padding:8px 12px;color:var(--slate);" +
+      "font-size:11.5px;font-weight:700;text-align:left}" +
+    ".tc-expander:hover{color:var(--ink)}" +
+    ".tc-qic{width:14px;height:14px;flex:none;color:var(--blue)}" +
+    ".tc-chev{margin-left:auto;width:12px;height:12px;flex:none;transition:transform .18s ease}" +
+    '.tc-expander[aria-expanded="true"] .tc-chev{transform:rotate(180deg)}' +
+    ".tc-ex-panel{display:none;padding:2px 12px 12px}" +
+    ".tc-expander-wrap.open .tc-ex-panel{display:block}" +
+    ".tc-ex-intro{margin:0 0 8px;font-size:11px;color:var(--slate)}" +
+    ".tc-ex-list{margin:0;padding:0;list-style:none;max-height:104px;overflow-y:auto}" +
+    ".tc-ex-list li{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:11.5px;" +
+      "color:var(--ink);line-height:1.4;border-top:1px solid var(--line)}" +
+    ".tc-ex-list li:first-child{border-top:0}" +
+    ".tc-ex-src{flex:none;font-family:\"IBM Plex Mono\",ui-monospace,\"SF Mono\",Menlo,Consolas,monospace;" +
+      "font-size:9px;font-weight:700;letter-spacing:.03em;color:var(--slate);background:var(--mist);" +
+      "border:1px solid var(--line);border-radius:5px;padding:2px 5px;margin-top:1px;min-width:34px;text-align:center}" +
+    ".tc-ex-list li .tc-rz{flex:1}" +
     // disclaimer: stacked (text line, then the link line) so the taller French
     // wording lays out in the same two-line shape as Dutch. This keeps the panel
     // height language-invariant and stops the ~25px vertical shift on NL/FR
@@ -256,6 +446,7 @@
     // collapsed
     ".tc-panel.tc-collapsed .tc-vehicle,.tc-panel.tc-collapsed .tc-rows," +
     ".tc-panel.tc-collapsed .tc-notes,.tc-panel.tc-collapsed .tc-sim," +
+    ".tc-panel.tc-collapsed .tc-expander-wrap," +
     ".tc-panel.tc-collapsed .tc-foot,.tc-panel.tc-collapsed .tc-disc{display:none}";
 
   function buildNotes(all) {
@@ -274,6 +465,43 @@
     return out.length ? '<div class="tc-notes">' + out.join("") + "</div>" : "";
   }
 
+  // Collapsed assumptions disclosure. Gathers the localised assumption reasons
+  // from each shown figure, tags them with the figure they affect, and orders
+  // the lowest-confidence figure first (so a low BIV surfaces its reasons above
+  // a high Rijtaks). Closed by default; the open list is capped and scrolls.
+  function buildExpander(all) {
+    var exp = L().expander;
+    var order = { none: 0, low: 1, medium: 2, high: 3 };
+    var figures = [
+      { res: all.biv, src: exp.src.biv },
+      { res: all.rijtaks, src: exp.src.rij }
+    ].filter(function (fig) {
+      return fig.res && !fig.res.needsMoreData && fig.res.amount != null;
+    });
+    figures.sort(function (a, b) {
+      var ca = order[a.res.confidence] != null ? order[a.res.confidence] : 1;
+      var cb = order[b.res.confidence] != null ? order[b.res.confidence] : 1;
+      return ca - cb;
+    });
+
+    var lis = [];
+    figures.forEach(function (fig) {
+      (fig.res.assumptions || []).forEach(function (str) {
+        lis.push('<li><span class="tc-ex-src">' + esc(fig.src) + '</span>' +
+          '<span class="tc-rz">' + esc(translateAssumption(str)) + "</span></li>");
+      });
+    });
+    if (!lis.length) return "";
+
+    return '<div class="tc-expander-wrap">' +
+      '<button class="tc-expander" type="button" aria-expanded="false">' + QIC + esc(exp.label) + CHEV + "</button>" +
+      '<div class="tc-ex-panel">' +
+        '<p class="tc-ex-intro">' + esc(exp.intro) + "</p>" +
+        '<ul class="tc-ex-list">' + lis.join("") + "</ul>" +
+      "</div>" +
+    "</div>";
+  }
+
   function render(all, vehicle, region) {
     LAST = { all: all, vehicle: vehicle, region: region };
 
@@ -290,7 +518,7 @@
     var simUrl = (all.biv && all.biv.simulatorUrl) || (all.rijtaks && all.rijtaks.simulatorUrl) || "";
     var tier = verdictTier(all);
     var verdictHtml = tier
-      ? '<span class="tc-verdict ' + tier + '">' + esc(L().verdict[tier]) + "</span>"
+      ? '<span class="tc-verdict ' + tier + '"><span class="tc-tldot"></span>' + esc(L().verdict[tier]) + "</span>"
       : "<span></span>";
 
     shadow.innerHTML =
@@ -307,11 +535,12 @@
           "</div>" +
           '<div class="tc-vehicle">' + vehicleLine(vehicle) + "</div>" +
           '<div class="tc-rows">' +
-            '<div class="tc-row">' + keyCell(L().biv) + valueCell(all.biv) + "</div>" +
-            '<div class="tc-row">' + keyCell(L().rij) + valueCell(all.rijtaks) + "</div>" +
+            '<div class="tc-row">' + keyCell(L().biv) + valueCell(all.biv) + confCell(all.biv) + "</div>" +
+            '<div class="tc-row">' + keyCell(L().rij) + valueCell(all.rijtaks) + confCell(all.rijtaks) + "</div>" +
           "</div>" +
           buildNotes(all) +
           (simUrl ? '<a class="tc-sim" href="' + esc(simUrl) + '" target="_blank" rel="noopener">' + esc(L().sim) + " " + EXT + "</a>" : "") +
+          buildExpander(all) +
           '<div class="tc-foot">' + plateTag(region) + verdictHtml + "</div>" +
           '<div class="tc-disc"><span>' + esc(L().disclaimer) + "</span>" +
             '<a class="tc-opt" href="' + esc(optionsHref()) + '" target="_blank" rel="noopener">' + esc(L().changeRegion) + "</a>" +
@@ -321,7 +550,21 @@
 
     wireToggle(shadow);
     wireCollapse(shadow);
+    wireExpander(shadow);
     loadPrefOnce();
+  }
+
+  // Assumptions disclosure: open/close on click, keep aria-expanded in sync.
+  // Sits below the value rows, so opening it never shifts the euro figures.
+  function wireExpander(shadow) {
+    var btn = shadow.querySelector(".tc-expander");
+    if (!btn) return;
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var wrap = btn.closest(".tc-expander-wrap");
+      var open = wrap.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
   }
 
   // Language toggle: set + persist, then re-render from LAST (never touches the
