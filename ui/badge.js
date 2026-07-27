@@ -6,9 +6,10 @@
  *
  * Identity: white panel, light header (#F1F4F8), ink + ruby "TaksCheck"
  * wordmark, the Belgian-plate mark with a soft drop-shadow, euro figures in
- * tabular mono, region plate tag in the footer, and a single-hue ruby
- * verdict (low = neutral, medium = pale ruby tint, high = full ruby fill).
- * One blue #1B54C7, one ruby #841922, plus neutrals. No green, no amber.
+ * tabular mono, region plate tag in the footer, and a traffic-light verdict
+ * pill (low = green, medium = amber, high = red) that carries its own status
+ * colour. Brand marks stay blue #1B54C7 + ruby #841922, plus neutrals; the
+ * verdict red is a brighter status red, kept distinct from the brand ruby.
  *
  * Bilingual: auto-detects NL / FR (default NL), with a manual toggle in the
  * header persisted to chrome.storage.sync. The key label sits in a fixed
@@ -131,14 +132,14 @@
 
   // Verdict tier from the one-off tax (BIV / TMC), the figure a buyer weighs.
   // Presentation-only thresholds (do NOT touch the tax engine). Bands, in EUR:
-  //   low <= 250, medium <= 2000, high > 2000. Calibrated so a typical modern
+  //   low <= 250, medium <= 1500, high > 1500. Calibrated so a typical modern
   //   petrol/diesel reads "medium" and an EV flat (61.50) reads "low".
   //   Falls back to the annual figure if the one-off is unavailable.
   function verdictTier(all) {
     var b = all.biv;
     if (b && b.amount != null) {
       if (b.amount <= 250) return "low";
-      if (b.amount <= 2000) return "medium";
+      if (b.amount <= 1500) return "medium";
       return "high";
     }
     var r = all.rijtaks;
@@ -214,7 +215,11 @@
     ".tc-v{display:block;font-weight:750;font-size:17px;letter-spacing:-.02em;color:var(--ink);" +
       'font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}' +
     ".tc-approx{font-family:inherit;font-size:11px;font-weight:600;color:var(--slate);letter-spacing:0}" +
-    ".tc-v.tc-nd{font-family:inherit;font-size:12px;font-weight:700;color:var(--slate);letter-spacing:0}" +
+    // The "not enough data" tag wraps to two lines in Dutch but one in French;
+    // reserve the two-line height so the no-data card stays the same height in
+    // both languages (no vertical shift on toggle), matching the euro-figure rows.
+    ".tc-v.tc-nd{font-family:inherit;font-size:12px;font-weight:700;color:var(--slate);letter-spacing:0;" +
+      "display:flex;align-items:center;min-height:36px}" +
     // notes
     ".tc-notes{padding:0 12px 2px}" +
     ".tc-note{font-size:12px;line-height:1.45;color:var(--slate);margin:8px 0 0}" +
@@ -232,11 +237,19 @@
     ".tc-reg{padding:0 8px;color:var(--ink);font-weight:800;font-size:10.5px;letter-spacing:.05em;" +
       'display:flex;align-items:center;font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace}' +
     ".tc-verdict{font-size:11.5px;font-weight:800;letter-spacing:.02em;padding:4px 11px;border-radius:7px;white-space:nowrap}" +
-    ".tc-verdict.low{background:#EDF0F4;color:var(--ink);border:1px solid #ccd3db}" +
-    ".tc-verdict.medium{background:#F3DADE;color:var(--ruby)}" +
-    ".tc-verdict.high{background:var(--ruby);color:#fff}" +
-    // disclaimer
-    ".tc-disc{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;" +
+    // Traffic-light verdict, independent of the brand marks. All three are
+    // filled pills with white text, each pairing verified WCAG AA:
+    //   low green #0B7350 (5.86:1), medium amber #B45309 (5.02:1),
+    //   high red #C5221F (5.80:1). The status red is a brighter, more saturated
+    //   red than the brand ruby #841922, so the two never read as the same hue.
+    ".tc-verdict.low{background:#0B7350;color:#fff}" +
+    ".tc-verdict.medium{background:#B45309;color:#fff}" +
+    ".tc-verdict.high{background:#C5221F;color:#fff}" +
+    // disclaimer: stacked (text line, then the link line) so the taller French
+    // wording lays out in the same two-line shape as Dutch. This keeps the panel
+    // height language-invariant and stops the ~25px vertical shift on NL/FR
+    // toggle (was a space-between row where only French wrapped the link).
+    ".tc-disc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;" +
       "padding:8px 12px 10px;font-size:11px;line-height:1.4;color:var(--slate)}" +
     ".tc-opt{color:var(--blue);font-weight:700;text-decoration:none;white-space:nowrap}" +
     ".tc-opt:hover{text-decoration:underline}" +
