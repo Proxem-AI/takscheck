@@ -19,7 +19,8 @@
     "*://*.autoscout24.pl/*",
     "*://*.autoscout24.ro/*",
     "*://*.autoscout24.se/*",
-    "*://*.autoscout24.tr/*"
+    "*://*.autoscout24.tr/*",
+    "*://*.mobile.de/*"
   ],
   "background": { "service_worker": "sw.js" },
   "content_scripts": [
@@ -48,6 +49,16 @@
         "content/autoscout24.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*.mobile.de/*"],
+      "js": [
+        "core/tax.js",
+        "core/normalise.js",
+        "ui/badge.js",
+        "content/mobilede.js"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
@@ -68,7 +79,8 @@
         "*://*.autoscout24.pl/*",
         "*://*.autoscout24.ro/*",
         "*://*.autoscout24.se/*",
-        "*://*.autoscout24.tr/*"
+        "*://*.autoscout24.tr/*",
+        "*://*.mobile.de/*"
       ]
     }
   ],

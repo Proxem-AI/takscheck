@@ -116,5 +116,100 @@
     };
   }
 
-  root.BivNormalise = { fromAutoScout24: fromAutoScout24, pick: pick, deepFind: deepFind };
+  // ---- mobile.de -----------------------------------------------------------
+  // First integer in a string, tolerant of German thousands dots and units.
+  // "1.995 cm3" -> 1995, "128 g/km" -> 128, "140 kW (190 PS)" -> 140.
+  function intFrom(v) {
+    if (v == null) return null;
+    var s = String(v).replace(/[.\s ]/g, "");
+    var m = s.match(/-?\d+/);
+    return m ? parseInt(m[0], 10) : null;
+  }
+  function kwFrom(v) {
+    if (v == null) return null;
+    var m = String(v).match(/(\d+(?:[.,]\d+)?)\s*kw/i);
+    if (m) return Math.round(parseFloat(m[1].replace(",", ".")));
+    var ps = String(v).match(/(\d+(?:[.,]\d+)?)\s*ps/i);
+    if (ps) return Math.round(parseFloat(ps[1].replace(",", ".")) / 1.36);
+    return intFrom(v);
+  }
+
+  // Build a Vehicle from mobile.de. input = { jsonld: object|null, tech: {labelLower: valueString} }.
+  // JSON-LD (schema.org Car) is preferred; the labelled Technische Daten table is the fallback.
+  function fromMobileDe(input) {
+    input = input || {};
+    var j = input.jsonld || null;
+    var tech = input.tech || {};
+    function t(label) { return tech[label] != null ? tech[label] : null; }
+
+    var eng = j && (j.vehicleEngine || (j.vehicleEngine === 0 ? null : null));
+    if (j && !eng && j["@graph"]) {
+      for (var g = 0; g < j["@graph"].length; g++) {
+        if (/car|vehicle|product/i.test(j["@graph"][g]["@type"] || "")) { j = j["@graph"][g]; eng = j.vehicleEngine; break; }
+      }
+    }
+
+    // First registration.
+    var firstReg = (j && (j.dateVehicleFirstRegistered || j.productionDate || j.vehicleModelDate)) ||
+      t("erstzulassung") || t("ez");
+
+    // Fuel.
+    var fuelRaw = (j && (j.fuelType || (eng && eng.fuelType))) || t("kraftstoff") || t("kraftstoffart");
+
+    // Power (kW).
+    var powerKw = null;
+    if (eng && eng.enginePower) {
+      var ep = eng.enginePower;
+      powerKw = kwFrom((ep.value != null ? ep.value + " " + (ep.unitText || "kW") : ep));
+    }
+    if (powerKw == null) powerKw = kwFrom(t("leistung"));
+
+    // Displacement (cc).
+    var cc = null;
+    if (eng && eng.engineDisplacement) {
+      var ed = eng.engineDisplacement;
+      cc = intFrom(ed.value != null ? ed.value : ed);
+    }
+    if (cc == null) cc = intFrom(t("hubraum"));
+
+    // CO2.
+    var co2 = null;
+    if (j && (j.emissionsCO2 != null)) co2 = intFrom(j.emissionsCO2);
+    if (co2 == null) co2 = intFrom(t("co2-emissionen") || t("co₂-emissionen") || t("co2-emission"));
+
+    // Euro norm.
+    var euro = parseEuroNorm(t("schadstoffklasse") || t("emissionsklasse") || (j && j.emissionStandard));
+
+    // Make / model.
+    var make = j && (j.brand && (j.brand.name || j.brand) || j.manufacturer);
+    var model = j && (j.model && (j.model.name || j.model) || j.name);
+    var title = [make, model].filter(Boolean).join(" ").trim() || (j && j.name) || null;
+
+    // MMA / kerb weight (rarely present for cars).
+    var mma = intFrom(t("zul. gesamtgewicht") || t("zulassiges gesamtgewicht") || t("gesamtgewicht"));
+    var kerb = intFrom(t("leergewicht"));
+    var price = (j && (j.offers && (j.offers.price || (j.offers[0] && j.offers[0].price)))) || intFrom(t("preis"));
+
+    return {
+      firstRegistration: firstReg ? String(firstReg) : null,
+      fuel: Tax.mapFuel(fuelRaw),
+      fuelRaw: fuelRaw ? String(fuelRaw) : null,
+      powerKw: powerKw,
+      displacementCc: cc,
+      co2: co2,
+      euroNorm: euro,
+      bodyType: (j && (j.bodyType || j.vehicleConfiguration)) ? String(j.bodyType || j.vehicleConfiguration) : null,
+      mma: mma,
+      kerbWeight: kerb,
+      price: price != null ? Number(price) : null,
+      title: title
+    };
+  }
+
+  root.BivNormalise = {
+    fromAutoScout24: fromAutoScout24,
+    fromMobileDe: fromMobileDe,
+    pick: pick,
+    deepFind: deepFind
+  };
 })(typeof globalThis !== "undefined" ? globalThis : this);

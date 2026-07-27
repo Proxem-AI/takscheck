@@ -1,7 +1,7 @@
 # BIV + Rijtaks Estimator (Belgium)
 
-A Manifest V3 Chrome extension prototype that reads an AutoScout24 car ad and
-shows two estimated Belgian vehicle taxes as badges on the page:
+A Manifest V3 Chrome extension prototype that reads an AutoScout24 or mobile.de
+car ad and shows two estimated Belgian vehicle taxes as badges on the page:
 
 - **BIV / TMC** the one-off registration tax (belasting op de inverkeerstelling)
 - **Rijtaks / TC** the annual road tax (jaarlijkse verkeersbelasting)
@@ -32,10 +32,15 @@ the regional tax office from the certificate of conformity.
   (ad value, then kerb weight + payload, then body-type default).
 - **Confidence + assumptions**: every result carries a confidence level and the
   list of assumptions used, both surfaced on the badge.
-- **AutoScout24 detail-page content script** (`content/autoscout24.js`): parses
-  `__NEXT_DATA__` (`props.pageProps.listingDetails`), normalises the vehicle,
-  runs the engine for the chosen region, injects two badges via **Shadow DOM**,
-  and re-runs on Next.js SPA navigation.
+- **Two per-site detail-page adapters feeding one shared pipeline**
+  (normaliser to tax engine to Shadow-DOM badge). Only extraction differs:
+  - **AutoScout24** (`content/autoscout24.js`): parses `__NEXT_DATA__`
+    (`props.pageProps.listingDetails`).
+  - **mobile.de** (`content/mobilede.js`): parses the schema.org Car JSON-LD
+    first, with a fallback to the labelled German **Technische Daten** table
+    (stable label text, not hashed class names).
+  Both normalise into the same `Vehicle` shape, run the same engine, and inject
+  the same two badges via **Shadow DOM**, re-running on SPA navigation.
 - **Options page** (`options.html`): region selection (Flanders default), stored
   in `chrome.storage.sync`.
 - **Regression harness** (`test/harness.mjs`): runs the Flemish engine against
@@ -49,11 +54,12 @@ the regional tax office from the certificate of conformity.
    (`~/Projects/belgian-car-tax-extension`).
 4. Open the extension **Options** (or the Details page > Extension options) and
    pick your region. Flanders is the default.
-5. Open any AutoScout24 **detail** page, for example an ad on `autoscout24.be`
-   or `autoscout24.de` (a single car, not the search results list). A panel
-   appears bottom-right with the BIV and Rijtaks estimates. Click its header to
-   collapse it. Open the browser console to see the extracted vehicle and the
-   full computation under the `[BIV+Rijtaks]` debug line.
+5. Open any **detail** page (a single car, not the search results list):
+   - AutoScout24, e.g. an ad on `autoscout24.be` or `autoscout24.de`.
+   - mobile.de, e.g. `suchen.mobile.de/auto-inserat/<slug>/<id>.html`.
+   A panel appears bottom-right with the BIV and Rijtaks estimates. Click its
+   header to collapse it. Open the browser console to see the extracted vehicle
+   and the full computation under the `[BIV+Rijtaks]` debug line.
 
 If a badge shows "not enough data", the ad did not expose a required field
 (typically CO2 for Flanders, or displacement for the fiscal-HP based figures).
@@ -90,14 +96,17 @@ simulator wizard in a browser (or via browser automation, as Pax did) and read
 
 **In scope now**
 
-- AutoScout24 **detail pages** on `.be`, `.de`, `.nl`, `.fr`, `.lu`.
+- **AutoScout24 detail pages** across all country domains (be, de, nl, fr, lu,
+  com, it, es, at, bg, hr, pl, ro, se, tr).
+- **mobile.de detail pages** (`*.mobile.de`, including `suchen.mobile.de` and
+  `www.mobile.de`): JSON-LD first, Technische Daten table fallback.
 - All three regional formulas, with **Flanders BIV validated** against the
   official simulator.
 
 **Deferred to the next phase**
 
-- **mobile.de** adapter (JSON-LD / Technische Daten table) and AutoScout24
-  **list-view** badges with the SPA + infinite-scroll handling.
+- **List-view** badges (AutoScout24 and mobile.de) with the SPA plus
+  infinite-scroll handling. Badges currently appear on detail pages only.
 - **Brussels and Wallonia validation.** Their formulas are encoded from the
   research but not round-tripped against an official simulator (Brussels has no
   public simulator; Wallonia was not driven). Spot-check before relying on them.
@@ -124,12 +133,13 @@ simulator wizard in a browser (or via browser automation, as Pax did) and read
 ## Files
 
 ```
-manifest.json            MV3 config, narrow AutoScout24 host permissions, storage only
+manifest.json            MV3 config, narrow AutoScout24 + mobile.de host permissions, storage only
 core/tax.js              pure tax engine (BIV + Rijtaks, all three regions)
 core/tariffs.json        updateable tariff tables (baked-in default)
-core/normalise.js        AutoScout24 listingDetails -> common Vehicle
-content/autoscout24.js   detail-page content script (extract, compute, inject)
-ui/badge.js              Shadow-DOM badge renderer
+core/normalise.js        site payload -> common Vehicle (fromAutoScout24, fromMobileDe)
+content/autoscout24.js   AutoScout24 detail-page adapter (parse __NEXT_DATA__)
+content/mobilede.js      mobile.de detail-page adapter (JSON-LD + Technische Daten)
+ui/badge.js              Shadow-DOM badge renderer (shared)
 options.html / options.js  region selection UI
 sw.js                    ephemeral MV3 service worker
 test/harness.mjs         regression harness vs the official Flemish simulator
