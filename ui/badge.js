@@ -42,36 +42,47 @@
           '<span class="dot" title="' + esc(CONF_LABEL[conf]) + '" style="background:' + CONF_COLOR[conf] + '"></span></div>' +
         '<div class="amt">' + esc(euro(res.amount)) + '</div>' +
         '<div class="basis">' + esc(res.basis) + '</div>' +
-        '<div class="conf" style="color:' + CONF_COLOR[conf] + '">' + esc(CONF_LABEL[conf]) + '</div>' +
+        '<div class="conf ' + esc(conf) + '">' + esc(CONF_LABEL[conf]) + '</div>' +
         (assum ? '<details class="assum"><summary>assumptions</summary><ul>' + assum + '</ul></details>' : '') +
         '<a class="sim" href="' + esc(res.simulatorUrl) + '" target="_blank" rel="noopener">official simulator &rarr;</a>' +
       '</div>';
   }
 
+  // Light theme is the base. The dark-mode override block is placed LAST so its
+  // rules win in source order (equal specificity, later-wins). Text colours are
+  // explicit (no opacity-based muting) so contrast is predictable and WCAG AA.
   var CSS = '' +
     ':host{all:initial}' +
     '.panel{position:fixed;right:16px;bottom:16px;z-index:2147483000;width:300px;max-width:calc(100vw - 32px);' +
       'font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1a1d24;' +
       'background:#fff;border:1px solid #e2e6ec;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18);overflow:hidden}' +
-    '@media (prefers-color-scheme:dark){.panel{background:#171b21;color:#e7ebf0;border-color:#2a3038}' +
-      '.card{background:#1e242c;border-color:#2a3038}.head{background:#12161b}.basis,.reason{color:#9aa4b2}}' +
-    '.head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f4f6f9;cursor:pointer}' +
-    '.head b{font-size:13px}.head .reg{font-size:11px;opacity:.7}' +
+    '.head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#eef1f5;cursor:pointer}' +
+    '.head b{font-size:13px;color:#12151b}.head .reg{font-size:11px;color:#4b5563;font-weight:600}' +
     '.body{padding:10px 12px;display:grid;gap:10px}' +
     '.card{border:1px solid #e2e6ec;border-radius:10px;padding:10px 12px;background:#fafbfc}' +
     '.row{display:flex;align-items:center;justify-content:space-between}' +
-    '.kind{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;opacity:.75}' +
-    '.dot{width:9px;height:9px;border-radius:50%;display:inline-block}' +
-    '.amt{font-size:24px;font-weight:800;margin:4px 0 2px}.amt.na{font-size:15px;color:#b23b3b}' +
-    '.basis,.reason{font-size:11px;color:#5b6472}.conf{font-size:11px;font-weight:600;margin-top:2px}' +
-    '.assum{margin:6px 0 2px}.assum summary{font-size:11px;cursor:pointer;opacity:.8}' +
-    '.assum ul{margin:6px 0 0;padding-left:16px}.assum li{font-size:11px;margin:2px 0;color:#5b6472}' +
-    '.sim{display:inline-block;margin-top:8px;font-size:11px;color:#2b6cb0;text-decoration:none}' +
+    '.kind{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:#374151}' +
+    '.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto}' +
+    '.amt{font-size:24px;font-weight:800;margin:4px 0 2px;color:#12151b}.amt.na{font-size:15px;color:#b23b3b}' +
+    '.basis,.reason{font-size:11px;color:#4b5563}.conf{font-size:11px;font-weight:700;margin-top:2px}' +
+    '.conf.high{color:#1a7f4b}.conf.medium{color:#8a5a00}.conf.low{color:#b23b3b}.conf.none{color:#5b6472}' +
+    '.assum{margin:6px 0 2px}.assum summary{font-size:11px;cursor:pointer;color:#4b5563}' +
+    '.assum ul{margin:6px 0 0;padding-left:16px}.assum li{font-size:11px;margin:2px 0;color:#4b5563}' +
+    '.sim{display:inline-block;margin-top:8px;font-size:11px;color:#1e5aa8;text-decoration:none;font-weight:600}' +
     '.sim:hover{text-decoration:underline}' +
-    '.foot{padding:8px 12px;font-size:10.5px;color:#8a94a2;border-top:1px solid #e2e6ec}' +
-    '.vehicle{font-size:11px;opacity:.75;margin-bottom:2px}' +
+    '.foot{padding:8px 12px;font-size:10.5px;color:#5b6472;border-top:1px solid #e2e6ec}' +
+    '.vehicle{font-size:11px;color:#4b5563;margin-bottom:2px}' +
     '.min{display:none}.panel.collapsed .body,.panel.collapsed .foot{display:none}' +
-    '.tag{font-size:10px;font-weight:700;color:#9a6a00;background:#fdf3dd;border-radius:20px;padding:1px 7px}';
+    '.tag{font-size:10px;font-weight:700;color:#8a5a00;background:#fdf3dd;border-radius:20px;padding:1px 7px}' +
+    '@media (prefers-color-scheme:dark){' +
+      '.panel{background:#171b21;color:#e7ebf0;border-color:#2a3038}' +
+      '.head{background:#0f1318}.head b{color:#f2f5f8}.head .reg{color:#aab4c2}' +
+      '.card{background:#1e242c;border-color:#333b45}' +
+      '.kind{color:#cbd3de}.amt{color:#f4f7fa}' +
+      '.basis,.reason,.vehicle,.assum summary,.assum li{color:#a9b3c0}' +
+      '.conf.high{color:#4ec98a}.conf.medium{color:#e0b34d}.conf.low{color:#f08a8a}.conf.none{color:#9aa4b2}' +
+      '.sim{color:#7bb4ec}.foot{color:#98a2b0;border-top-color:#2a3038}' +
+      '.tag{color:#f0d68a;background:#3a2f12}}';
 
   function render(all, vehicle, region) {
     var host = document.getElementById(HOST_ID);
