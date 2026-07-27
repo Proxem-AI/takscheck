@@ -73,9 +73,9 @@
       co2na: "CO2 inconnu",
       tokens: { co2: "la valeur CO2", power: "la puissance (kW)", cc: "la cylindrée (cc)", data: "plus de données" },
       conf: {
-        caption: "Fiabilite",
+        caption: "Fiabilité",
         tier: { high: "élevée", medium: "moyenne", low: "faible" },
-        aria: { high: "Fiabilite elevee", medium: "Fiabilite moyenne", low: "Fiabilite faible" }
+        aria: { high: "Fiabilité élevée", medium: "Fiabilité moyenne", low: "Fiabilité faible" }
       },
       expander: {
         label: "Pourquoi ce montant?",
