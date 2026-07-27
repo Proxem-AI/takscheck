@@ -9,7 +9,17 @@
     "*://*.autoscout24.de/*",
     "*://*.autoscout24.nl/*",
     "*://*.autoscout24.fr/*",
-    "*://*.autoscout24.lu/*"
+    "*://*.autoscout24.lu/*",
+    "*://*.autoscout24.com/*",
+    "*://*.autoscout24.it/*",
+    "*://*.autoscout24.es/*",
+    "*://*.autoscout24.at/*",
+    "*://*.autoscout24.bg/*",
+    "*://*.autoscout24.hr/*",
+    "*://*.autoscout24.pl/*",
+    "*://*.autoscout24.ro/*",
+    "*://*.autoscout24.se/*",
+    "*://*.autoscout24.tr/*"
   ],
   "background": { "service_worker": "sw.js" },
   "content_scripts": [
@@ -19,7 +29,17 @@
         "*://*.autoscout24.de/*",
         "*://*.autoscout24.nl/*",
         "*://*.autoscout24.fr/*",
-        "*://*.autoscout24.lu/*"
+        "*://*.autoscout24.lu/*",
+        "*://*.autoscout24.com/*",
+        "*://*.autoscout24.it/*",
+        "*://*.autoscout24.es/*",
+        "*://*.autoscout24.at/*",
+        "*://*.autoscout24.bg/*",
+        "*://*.autoscout24.hr/*",
+        "*://*.autoscout24.pl/*",
+        "*://*.autoscout24.ro/*",
+        "*://*.autoscout24.se/*",
+        "*://*.autoscout24.tr/*"
       ],
       "js": [
         "core/tax.js",
@@ -38,7 +58,17 @@
         "*://*.autoscout24.de/*",
         "*://*.autoscout24.nl/*",
         "*://*.autoscout24.fr/*",
-        "*://*.autoscout24.lu/*"
+        "*://*.autoscout24.lu/*",
+        "*://*.autoscout24.com/*",
+        "*://*.autoscout24.it/*",
+        "*://*.autoscout24.es/*",
+        "*://*.autoscout24.at/*",
+        "*://*.autoscout24.bg/*",
+        "*://*.autoscout24.hr/*",
+        "*://*.autoscout24.pl/*",
+        "*://*.autoscout24.ro/*",
+        "*://*.autoscout24.se/*",
+        "*://*.autoscout24.tr/*"
       ]
     }
   ],

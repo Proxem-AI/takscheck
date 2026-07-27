@@ -48,16 +48,15 @@
     return Normalise.deepFind ? null : null;
   }
 
-  function isDetailPage() {
-    // AutoScout24 detail URLs contain /angebote/ (.de) or /aanbod/ /offre/ (.be), typically with an id.
-    return /\/(angebote|aanbod|offre|offer|offers)\//i.test(location.pathname) ||
-           (document.getElementById("__NEXT_DATA__") != null && /\-\d{5,}/.test(location.pathname));
-  }
-
   var lastUrl = null;
 
   function run() {
     if (location.href === lastUrl) return;
+    // The content script has read permission across all AutoScout24 pages, but a
+    // badge is only injected on a DETAIL page. The reliable detail-page signal is
+    // the presence of listingDetails in __NEXT_DATA__ (search/list pages carry
+    // pageProps.listings instead, and get no badge). This is more robust than
+    // matching localized URL path segments (/angebote/, /aanbod/, /offre/, ...).
     var nextData = readNextData();
     var details = findListingDetails(nextData);
     if (!details) { Badge.remove(); lastUrl = location.href; return; }
