@@ -65,18 +65,22 @@
   // and footnotes ("CO₂-Emissionen (kombiniert)*", "Kraftstoffart") so matching is
   // by stem, not exact string, and every hit is stored under the canonical key that
   // BivNormalise.fromMobileDe looks up.
+  // mobile.de serves the same detail page in the user's chosen UI language, so the
+  // spec labels arrive in German OR English (or another locale). Each stem matches
+  // both spellings and stores the hit under the same canonical key, so the
+  // normaliser downstream stays language agnostic.
   var LABEL_STEMS = [
-    { key: "erstzulassung", re: /^erstzulassung/ },
-    { key: "kraftstoffart", re: /^kraftstoff/ },
-    { key: "leistung", re: /^leistung/ },
-    { key: "hubraum", re: /^hubraum/ },
+    { key: "erstzulassung", re: /^(erstzulassung|first registration|first reg)/ },
+    { key: "kraftstoffart", re: /^(kraftstoff|fuel)/ },
+    { key: "leistung", re: /^(leistung|power)/ },
+    { key: "hubraum", re: /^(hubraum|cubic capacity|displacement|engine size)/ },
     { key: "co2-emissionen", re: /^co[\s.₂2-]*emission/ },
     { key: "schadstoffklasse", re: /^schadstoffklasse/ },
-    { key: "emissionsklasse", re: /^emissionsklasse/ },
-    { key: "zul. gesamtgewicht", re: /^zul.*gesamtgewicht/ },
+    { key: "emissionsklasse", re: /^(emissionsklasse|emission class|emission standard)/ },
+    { key: "zul. gesamtgewicht", re: /^(zul.*gesamtgewicht|gross.*weight|permissible.*weight)/ },
     { key: "gesamtgewicht", re: /^gesamtgewicht/ },
-    { key: "leergewicht", re: /^leergewicht/ },
-    { key: "preis", re: /^preis/ }
+    { key: "leergewicht", re: /^(leergewicht|kerb.*weight|curb.*weight|unladen)/ },
+    { key: "preis", re: /^(preis|price)/ }
   ];
   function norm(s) { return (s || "").replace(/\s+/g, " ").trim().toLowerCase().replace(/:$/, ""); }
   function canonLabel(raw) {

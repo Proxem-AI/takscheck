@@ -147,7 +147,7 @@
   // "1.995 cm3" -> 1995, "128 g/km" -> 128, "140 kW (190 PS)" -> 140.
   function intFrom(v) {
     if (v == null) return null;
-    var s = String(v).replace(/[.\s ]/g, "");
+    var s = String(v).replace(/[.,\s ]/g, "");
     var m = s.match(/-?\d+/);
     return m ? parseInt(m[0], 10) : null;
   }
