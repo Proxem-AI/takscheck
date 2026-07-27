@@ -40,7 +40,17 @@ the regional tax office from the certificate of conformity.
     first, with a fallback to the labelled German **Technische Daten** table
     (stable label text, not hashed class names).
   Both normalise into the same `Vehicle` shape, run the same engine, and inject
-  the same two badges via **Shadow DOM**, re-running on SPA navigation.
+  the same panel via **Shadow DOM**, re-running on SPA navigation.
+- **Panel design** (`ui/badge.js`): Iris's approved overlay. The tax amount is
+  the hero of each result block (30px, weight 800, near-black on white). Header
+  with mark, title, Estimate pill and region chip; a compact vehicle summary;
+  two result blocks with a per-result confidence chip (sage = high, calm amber =
+  low, never red), a native `<details>` assumptions expander, and a link to the
+  official simulator. Three states: full data, low confidence (an "approx." tag
+  plus a plain sentence naming the guessed input), and a neutral dashed
+  "not enough data" block (the other tax still computes). Light and dark aware.
+  Currency uses the euro glyph with a dot thousands separator (e.g. the glyph
+  then "1.847"), the Belgian convention.
 - **Options page** (`options.html`): region selection (Flanders default), stored
   in `chrome.storage.sync`.
 - **Regression harness** (`test/harness.mjs`): runs the Flemish engine against
