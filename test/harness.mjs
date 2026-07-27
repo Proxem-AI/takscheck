@@ -24,7 +24,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
 const tariffs = JSON.parse(readFileSync(join(root, "core", "tariffs.json"), "utf8"));
-const { createTaxEngine } = require(join(root, "core", "tax.js"));
+const { createTaxEngine, mapFuel } = require(join(root, "core", "tax.js"));
 const engine = createTaxEngine(tariffs);
 
 const TOL = 0.15; // Pax recorded +/- 0.15 EUR of rounding noise in the c grid
@@ -71,17 +71,28 @@ const extraCases = [
   {
     label: "petrol Euro6 130g, 12 years old -> LC floor 10%",
     vehicle: { fuel: "petrol", co2: 130, euroNorm: 6, firstRegistration: "2014-01" },
-    expected: Math.max(61.50, Math.round(bivRaw(130, 1.0, 27.43) * 0.10 * 100) / 100)
+    expected: Math.max(55.88, Math.round(bivRaw(130, 1.0, 27.43) * 0.10 * 100) / 100)
   },
   {
-    label: "petrol Euro6 25g/km (very clean) -> min floor 61.50",
+    // Combustion minimum BIV floor is 55.88 (simulator-confirmed via the 330e
+    // PHEV case below); the EV flat 61.50 is a separate statutory amount.
+    label: "petrol Euro6 25g/km (very clean) -> min floor 55.88",
     vehicle: { fuel: "petrol", co2: 25, euroNorm: 6, firstRegistration: REG_NEW },
-    expected: 61.50
+    expected: 55.88
   },
   {
     label: "EV first registered 2022 -> historic exemption 0",
     vehicle: { fuel: "electric", firstRegistration: "2022-06" },
     expected: 0
+  },
+  {
+    // BMW 330e plug-in hybrid, AutoScout24 fuel "Elektrisch/Benzine", CO2 35 g/km,
+    // first registration 01/2022, cc 1998. Previously misread as a BEV and given the
+    // pre-2026 EV exemption (BIV 0). Must now take the CO2/hybrid path and floor at
+    // the combustion minimum 55.88 (official Vlaamse Belastingdienst simulator).
+    label: "BMW 330e PHEV (Elektrisch/Benzine, CO2 35, EZ 2022) -> hybrid path 55.88",
+    vehicle: { fuel: mapFuel("Elektrisch/Benzine"), co2: 35, firstRegistration: "2022-01", displacementCc: 1998, fiscalHp: 13, powerKw: 135 },
+    expected: 55.88
   }
 ];
 
@@ -99,9 +110,13 @@ console.log("   (new car, 15/01/2026, fiscal PK 9, assessment year 2026)\n");
 let maxDelta = 0;
 for (const tc of officialCases) {
   total++;
+  // Real BEVs report no cylinder capacity; only combustion cars carry cc. The
+  // zero-emission guard keys on cc, so the EV case must not fake a 1600cc engine.
+  var isEv = tc.fuel === "electric" || tc.fuel === "hydrogen";
   const vehicle = {
     fuel: tc.fuel, co2: tc.co2, euroNorm: tc.euroNorm,
-    firstRegistration: REG_NEW, fiscalHp: 9, powerKw: 85, displacementCc: 1600
+    firstRegistration: REG_NEW, fiscalHp: 9, powerKw: 85,
+    displacementCc: isEv ? null : 1600
   };
   const r = engine.computeBIV(vehicle, "flanders", REF);
   const got = r.amount;

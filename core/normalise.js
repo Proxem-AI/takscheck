@@ -57,6 +57,21 @@
     return n != null && n >= 0 && n <= 6 ? Math.round(n) : null;
   }
 
+  // Parse a CO2 emission value. Accepts a raw number, or a spec-row string of the
+  // form "35 g/km (gem.)" / "35 g/km (comb.)": drops the parenthetical, accepts a
+  // comma decimal, and reads the g/km figure. A bare numeric string is accepted as
+  // a whole value, but noisy label text like "CO2-emissie" yields null (so the "2"
+  // in "CO2" is never mistaken for a value).
+  function co2FromText(v) {
+    if (v == null) return null;
+    if (typeof v === "number") return isFinite(v) && v >= 0 ? Math.round(v) : null;
+    var s = String(v).replace(/\([^)]*\)/g, " ");
+    var m = s.match(/(\d+(?:[.,]\d+)?)\s*g\s*\/?\s*km/i);
+    if (m) return Math.round(parseFloat(m[1].replace(",", ".")));
+    if (/^\s*\d+(?:[.,]\d+)?\s*$/.test(s)) return Math.round(parseFloat(s.replace(",", ".")));
+    return null;
+  }
+
   // Map AutoScout24 listingDetails into the common Vehicle.
   function fromAutoScout24(details) {
     if (!details || typeof details !== "object") return null;
@@ -84,10 +99,21 @@
       "rawDisplacementInCCM", "cubicCapacity", "displacementInCCM"
     ]) || deepFind(details, /displacement|cubiccapacity|ccm/i));
 
-    var co2 = num(pick(details, [
+    // CO2: prefer the explicit emission keys, then fall back to a deep search that
+    // only accepts values that actually look like an emission (a g/km figure or a
+    // bare number), so a CO2 efficiency class ("A+") or "n/a" is never picked.
+    var co2 = co2FromText(pick(details, [
       "vehicle.co2emissionInGramPerKmWithFallback", "co2emissionInGramPerKmWithFallback",
       "vehicle.co2Emission", "co2Emission", "co2"
-    ]) || deepFind(details, /co2/i));
+    ]));
+    if (co2 == null || co2 <= 0) {
+      var co2Deep = deepFind(details, /co2/i, function (v) {
+        return v != null && co2FromText(v) != null && co2FromText(v) > 0;
+      });
+      var parsed = co2FromText(co2Deep);
+      if (parsed != null && parsed > 0) co2 = parsed;
+    }
+    if (co2 != null && co2 <= 0) co2 = null;
 
     var euro = parseEuroNorm(pick(details, [
       "vehicle.emissionClass.formatted", "vehicle.emissionClass", "emissionClass",
@@ -210,6 +236,7 @@
     fromAutoScout24: fromAutoScout24,
     fromMobileDe: fromMobileDe,
     pick: pick,
-    deepFind: deepFind
+    deepFind: deepFind,
+    co2FromText: co2FromText
   };
 })(typeof globalThis !== "undefined" ? globalThis : this);

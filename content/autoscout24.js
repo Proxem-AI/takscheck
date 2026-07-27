@@ -48,6 +48,27 @@
     return Normalise.deepFind ? null : null;
   }
 
+  // DOM fallback: read the CO2 spec row ("CO2-emissie" / "CO2-uitstoot" /
+  // "CO2-Emission") when __NEXT_DATA__ carried no usable g/km figure. Only used
+  // for combustion / hybrid cars; a value is filled in only when it is missing.
+  function readCo2FromSpecs() {
+    var labelRe = /co(?:2|₂)[\s.\-]*(emissie|uitstoot|emission|ausstoss|combined)/i;
+    var els = document.querySelectorAll("dt, th, td, span, div, li, p");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var txt = (el.textContent || "").replace(/\s+/g, " ").trim();
+      if (!txt || txt.length > 60) continue;
+      if (!labelRe.test(txt)) continue;
+      var c = Normalise.co2FromText(txt);
+      if (c == null) {
+        var sib = el.nextElementSibling;
+        if (sib) c = Normalise.co2FromText((sib.textContent || "").trim());
+      }
+      if (c != null && c > 0) return c;
+    }
+    return null;
+  }
+
   var lastUrl = null;
 
   function run() {
@@ -63,6 +84,12 @@
 
     var vehicle = Normalise.fromAutoScout24(details);
     if (!vehicle) { Badge.remove(); lastUrl = location.href; return; }
+    // CO2 missing from the data blob but a combustion/hybrid car: read it from the
+    // rendered spec row so the engine never falls back to the EV exemption branch.
+    if ((vehicle.co2 == null || vehicle.co2 <= 0) && vehicle.fuel !== "electric" && vehicle.fuel !== "hydrogen") {
+      var domCo2 = readCo2FromSpecs();
+      if (domCo2 != null && domCo2 > 0) vehicle.co2 = domCo2;
+    }
     lastUrl = location.href;
 
     Promise.all([loadTariffs(), getRegion()]).then(function (arr) {

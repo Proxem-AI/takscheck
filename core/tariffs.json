@@ -27,7 +27,7 @@
         "petrol": { "0": 1515.37, "1": 677.70, "2": 202.65, "3": 127.12, "4": 30.51, "5": 27.43, "6": 27.43 }
       },
       "ageCorrection": { "startPct": 1.0, "stepPerYear": 0.10, "floorPct": 0.10, "floorFromYear": 9 },
-      "min": 61.50,
+      "min": 55.88,
       "max": 10000.0,
       "evFlat": 61.50,
       "evExemptBeforeYear": 2026

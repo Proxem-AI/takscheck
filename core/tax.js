@@ -70,10 +70,17 @@
   function mapFuel(raw) {
     if (!raw) return null;
     var s = String(raw).toLowerCase();
-    if (/(electric\s*\/\s*(gasoline|petrol|diesel)|plug.?in|phev)/.test(s)) return "phev";
+    // Independent token detection: a label can carry both an electric and a
+    // combustion token (e.g. "Elektrisch/Benzine" = plug-in hybrid). Only a
+    // label with an electric token and NO combustion token is a real BEV.
+    var hasElectric = /(electric|elektr|\bbev\b|\bev\b)/.test(s);
+    var hasCombustion = /(petrol|gasoline|benzin|benzine|essence|super|diesel|gazole|mazout|lpg|autogas|gpl|cng|aardgas|gnc|methane|hybrid|hev|phev|plug.?in)/.test(s);
+    // Plug-in / any electric+combustion mix: taxed on CO2 like a petrol car.
+    if (/(plug.?in|phev)/.test(s)) return "phev";
+    if (hasElectric && hasCombustion) return "phev";
     if (/(hybrid|hev|full.?hybrid|mild.?hybrid)/.test(s)) return "hybrid";
     if (/(hydrogen|waterstof|h2|fuel.?cell)/.test(s)) return "hydrogen";
-    if (/(electric|elektr|bev|\bev\b)/.test(s)) return "electric";
+    if (hasElectric) return "electric";
     if (/(diesel|gazole|mazout)/.test(s)) return "diesel";
     if (/(lpg|autogas|gpl)/.test(s)) return "lpg";
     if (/(cng|aardgas|gnc|natural.?gas|methane)/.test(s)) return "cng";
@@ -83,6 +90,16 @@
 
   function isElectricLike(fuel) {
     return fuel === "electric" || fuel === "hydrogen";
+  }
+
+  // True zero-emission vehicle: an electric/hydrogen fuel token with NO sign of
+  // a combustion engine. The CO2 and cc guards mean a mislabelled plug-in hybrid
+  // (electric token but real CO2 / cylinder capacity) never wins the EV exemption.
+  function isZeroEmission(vehicle) {
+    if (!isElectricLike(vehicle.fuel)) return false;
+    if (vehicle.co2 != null && vehicle.co2 > 0) return false;
+    if (vehicle.displacementCc != null && vehicle.displacementCc > 0) return false;
+    return true;
   }
 
   // Which air-component column a fuel uses in the Flemish BIV.
@@ -172,7 +189,9 @@
     }
 
     // Electric / hydrogen: flat minimum for new EVs, historic exemption before 2026.
-    if (isElectricLike(vehicle.fuel)) {
+    // isZeroEmission guards against a plug-in hybrid mislabelled as electric: if
+    // CO2 or a cylinder capacity is present the car is taxed, never exempted.
+    if (isZeroEmission(vehicle)) {
       var fr = parseFirstReg(vehicle.firstRegistration);
       if (fr && fr.year < cfg.evExemptBeforeYear) {
         return result(0, "high", ["EV/hydrogen first registered before " + cfg.evExemptBeforeYear + ", historic BIV exemption applies"], "EV exemption");
@@ -181,7 +200,9 @@
     }
 
     var fuelForFactor = vehicle.fuel;
-    if (fuelForFactor === "phev") fuelForFactor = "petrol"; // PHEV taxed on its WLTP CO2 by the formula
+    // PHEV / hybrid (and any electric-token car that reached here because it has
+    // CO2 or a combustion engine) are taxed on their CO2 like a petrol car.
+    if (fuelForFactor === "phev" || fuelForFactor === "hybrid" || fuelForFactor === "electric" || fuelForFactor === "hydrogen") fuelForFactor = "petrol";
     var f = cfg.fuelFactor[fuelForFactor];
     if (f == null) { f = cfg.fuelFactor.other; assumptions.push("unknown fuel, using fuel factor f = " + f); lower("medium"); }
 
@@ -408,8 +429,9 @@
     var regCfg = t[region].roadTax;
     var fr = parseFirstReg(vehicle.firstRegistration);
 
-    // Region-specific EV handling.
-    if (isElectricLike(vehicle.fuel)) {
+    // Region-specific EV handling. isZeroEmission guards against a plug-in hybrid
+    // mislabelled as electric (CO2 or cc present): such a car is taxed, not exempt.
+    if (isZeroEmission(vehicle)) {
       if (region === "brussels") {
         return mk(0, "high", ["electric/hydrogen: exempt from Brussels road tax"]);
       }
