@@ -31,7 +31,15 @@
     });
   }
 
-  // Collect schema.org Car/Vehicle/Product JSON-LD blocks.
+  // Collect schema.org Car/Vehicle/Product JSON-LD blocks. Returns the actual
+  // vehicle node (or null). A block may carry an @graph whose entries are mostly
+  // non-vehicle (Organization, BreadcrumbList): we must NOT return that wrapper
+  // just because it has an @graph, we must dig for the real vehicle node.
+  function isVehicleNode(o) {
+    if (!o || typeof o !== "object") return false;
+    var type = String(o["@type"] || "");
+    return /car|vehicle|product/i.test(type) || !!o.vehicleEngine || !!o.dateVehicleFirstRegistered;
+  }
   function readJsonLd() {
     var nodes = document.querySelectorAll('script[type="application/ld+json"]');
     for (var i = 0; i < nodes.length; i++) {
@@ -41,57 +49,77 @@
       for (var k = 0; k < arr.length; k++) {
         var o = arr[k];
         if (!o || typeof o !== "object") continue;
-        if (o["@graph"]) return o;
-        var type = String(o["@type"] || "");
-        if (/car|vehicle|product/i.test(type) || o.vehicleEngine || o.dateVehicleFirstRegistered) return o;
+        if (isVehicleNode(o)) return o;
+        if (o["@graph"] && Array.isArray(o["@graph"])) {
+          for (var g = 0; g < o["@graph"].length; g++) {
+            if (isVehicleNode(o["@graph"][g])) return o["@graph"][g];
+          }
+        }
       }
     }
     return null;
   }
 
-  // Build a { labelLower: valueString } map from the labelled Technische Daten.
-  // German labels are stable; class names are not. Handle dl/dt-dd, table rows,
-  // and generic label/value element pairs.
-  var LABELS = [
-    "erstzulassung", "ez", "kraftstoff", "kraftstoffart", "leistung", "hubraum",
-    "co2-emissionen", "co₂-emissionen", "co2-emission", "schadstoffklasse",
-    "emissionsklasse", "zul. gesamtgewicht", "gesamtgewicht", "leergewicht", "preis"
+  // Build a { canonicalLabel: valueString } map from the labelled Technische Daten.
+  // German labels are stable; class names are not. The real labels carry suffixes
+  // and footnotes ("CO₂-Emissionen (kombiniert)*", "Kraftstoffart") so matching is
+  // by stem, not exact string, and every hit is stored under the canonical key that
+  // BivNormalise.fromMobileDe looks up.
+  var LABEL_STEMS = [
+    { key: "erstzulassung", re: /^erstzulassung/ },
+    { key: "kraftstoffart", re: /^kraftstoff/ },
+    { key: "leistung", re: /^leistung/ },
+    { key: "hubraum", re: /^hubraum/ },
+    { key: "co2-emissionen", re: /^co[\s.₂2-]*emission/ },
+    { key: "schadstoffklasse", re: /^schadstoffklasse/ },
+    { key: "emissionsklasse", re: /^emissionsklasse/ },
+    { key: "zul. gesamtgewicht", re: /^zul.*gesamtgewicht/ },
+    { key: "gesamtgewicht", re: /^gesamtgewicht/ },
+    { key: "leergewicht", re: /^leergewicht/ },
+    { key: "preis", re: /^preis/ }
   ];
   function norm(s) { return (s || "").replace(/\s+/g, " ").trim().toLowerCase().replace(/:$/, ""); }
+  function canonLabel(raw) {
+    var k = norm(raw).replace(/[*†‡\s]+$/, "").trim();
+    if (!k || k.length > 48) return null;
+    for (var i = 0; i < LABEL_STEMS.length; i++) if (LABEL_STEMS[i].re.test(k)) return LABEL_STEMS[i].key;
+    return null;
+  }
+  function cleanVal(s) { return (s || "").replace(/\s+/g, " ").trim(); }
 
   function readTechData() {
     var map = {};
+    function put(canon, val) {
+      val = cleanVal(val);
+      if (canon && val && map[canon] == null) map[canon] = val;
+    }
     // dl / dt-dd
     var dts = document.querySelectorAll("dt");
     for (var i = 0; i < dts.length; i++) {
-      var key = norm(dts[i].textContent);
       var dd = dts[i].nextElementSibling;
-      if (dd && dd.tagName === "DD" && LABELS.indexOf(key) !== -1 && map[key] == null) {
-        map[key] = dd.textContent.replace(/\s+/g, " ").trim();
-      }
+      if (dd && dd.tagName === "DD") put(canonLabel(dts[i].textContent), dd.textContent);
     }
     // table rows (th/td or two tds)
     var rows = document.querySelectorAll("tr");
     for (var r = 0; r < rows.length; r++) {
       var cells = rows[r].children;
-      if (cells.length >= 2) {
-        var k2 = norm(cells[0].textContent);
-        if (LABELS.indexOf(k2) !== -1 && map[k2] == null) {
-          map[k2] = cells[1].textContent.replace(/\s+/g, " ").trim();
-        }
-      }
+      if (cells.length >= 2) put(canonLabel(cells[0].textContent), cells[1].textContent);
     }
-    // generic: an element whose exact text is a label, value in the next sibling
-    if (Object.keys(map).length < 3) {
-      var all = document.querySelectorAll("span,div,p,li");
-      for (var a = 0; a < all.length && a < 6000; a++) {
-        var el = all[a];
-        if (el.children.length) continue;
-        var k3 = norm(el.textContent);
-        if (LABELS.indexOf(k3) !== -1 && map[k3] == null) {
-          var sib = el.nextElementSibling;
-          if (sib && !sib.children.length) map[k3] = sib.textContent.replace(/\s+/g, " ").trim();
-        }
+    // generic label -> value: a leaf element whose text is a known label, value in
+    // the next sibling. Covers mobile.de's div-pair spec layout with hashed class
+    // names. No element-count cap: the spec block can sit late in the document.
+    var all = document.querySelectorAll("div, span, p, li, th, td, dt");
+    for (var a = 0; a < all.length; a++) {
+      var el = all[a];
+      if (el.children.length) continue;
+      var canon = canonLabel(el.textContent);
+      if (!canon || map[canon] != null) continue;
+      var sib = el.nextElementSibling;
+      if (sib) put(canon, sib.textContent);
+      // label and value split across two wrapper divs (label is the sole child).
+      if (map[canon] == null && el.parentElement && el.parentElement.children.length === 1) {
+        var pv = el.parentElement.nextElementSibling;
+        if (pv && cleanVal(pv.textContent).length <= 48) put(canon, pv.textContent);
       }
     }
     return map;
