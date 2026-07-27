@@ -33,14 +33,36 @@
       "evExemptBeforeYear": 2026
     },
     "roadTax": {
-      "scale": "annualScale",
+      "model": "validated-2026",
       "min": 58.55,
       "evFlat": 102.96,
       "evExemptBeforeYear": 2026,
       "oldtimerFlat": 95.84,
       "oldtimerAgeYears": 30,
-      "confidence": "low",
-      "note": "Combustion annual road tax uses the shared representative fiscal-HP scale. Flemish per-CV cents and the diesel/CO2 eco-modulation are not yet pinned against the Flemish road-tax simulator. EV flat 102.96 and minimum 58.55 are simulator-confirmed."
+      "referenceDenominator": 284.20,
+      "co2SlopePerGram": 1.07515,
+      "co2FloorGram": 35,
+      "pkBareme": {
+        "4": 81.64, "5": 102.16, "6": 147.70, "7": 193.03, "8": 238.66,
+        "9": 284.20, "10": 329.31, "11": 427.50, "12": 525.47, "13": 623.35,
+        "14": 721.42, "15": 819.41, "16": 1073.35, "17": 1327.50, "18": 1581.55,
+        "19": 1835.08, "20": 2089.13
+      },
+      "pkBaremeAbove20PerPk": 113.78,
+      "ecoBaseAt130": {
+        "petrol": { "0": 445.47, "1": 373.79, "2": 365.87, "3": 337.96, "4": 293.15, "5": 284.20, "6": 284.20 },
+        "diesel": { "0": 607.14, "1": 502.14, "2": 492.14, "3": 472.14, "4": 418.60, "5": 400.68, "6": 391.71 }
+      },
+      "lpg": {
+        "reduction": 146.26,
+        "avbByPk": [
+          { "pkMax": 7, "avb": 89.16 },
+          { "pkMax": 13, "avb": 148.68 },
+          { "pkMax": null, "avb": 208.20 }
+        ]
+      },
+      "confidence": "input-driven",
+      "reindexNote": "Simulator-validated model (Pax section 12, all 19 rows to the cent). verkeersbelasting = (R(PK) / referenceDenominator) x U, floored at min. U = ecoBaseAt130(fuel,euro) + co2SlopePerGram x (max(co2FloorGram, co2) - 130). Diesel Euro 0-3 bases and LPG bands beyond 13 PK are extrapolated (untested). Amounts include opdeciemen and the 2026 index. The Flemish road-tax index refreshes every 1 July: re-scrape the simulator after the next indexation and update pkBareme, ecoBaseAt130, lpg and min."
     }
   },
   "brussels": {
@@ -136,7 +158,15 @@
       { "fromYearMonth": "2018-09", "cycle": "wltp", "confidence": "low" },
       { "fromYearMonth": "0000-01", "cycle": "nedc", "confidence": "high" }
     ],
-    "fiscalHpFromCcDivisor": 200,
+    "fiscalPkByCc": [
+      { "ccMax": 750, "pk": 4 }, { "ccMax": 950, "pk": 5 }, { "ccMax": 1150, "pk": 6 },
+      { "ccMax": 1350, "pk": 7 }, { "ccMax": 1550, "pk": 8 }, { "ccMax": 1750, "pk": 9 },
+      { "ccMax": 1950, "pk": 10 }, { "ccMax": 2150, "pk": 11 }, { "ccMax": 2350, "pk": 12 },
+      { "ccMax": 2550, "pk": 13 }, { "ccMax": 2750, "pk": 14 }, { "ccMax": 3050, "pk": 15 },
+      { "ccMax": 3300, "pk": 16 }, { "ccMax": 3450, "pk": 17 }, { "ccMax": 3650, "pk": 18 },
+      { "ccMax": 3950, "pk": 19 }, { "ccMax": 4050, "pk": 20 }
+    ],
+    "fiscalPkAbove4050PerCc": 230,
     "fiscalHpMin": 4,
     "evFiscalHpByKw": [
       { "kwMax": 30, "cv": 4 },

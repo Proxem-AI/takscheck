@@ -138,6 +138,19 @@
     return list[list.length - 1][valueKey];
   }
 
+  // Official Belgian belastbare-kracht table: cylinder capacity to fiscal PK.
+  // Stepped, not a division (the old cc / 200 shortcut understated by a full
+  // bracket for most modern engines). Above the table it rises about +1 PK per
+  // fiscalPkAbove4050PerCc cc, per the simulator sweep (research section 12.2).
+  function ccToFiscalPk(cc, inf) {
+    var table = inf.fiscalPkByCc;
+    for (var i = 0; i < table.length; i++) {
+      if (cc <= table[i].ccMax) return table[i].pk;
+    }
+    var last = table[table.length - 1];
+    return last.pk + Math.ceil((cc - last.ccMax) / inf.fiscalPkAbove4050PerCc);
+  }
+
   // Returns { value, confidence, assumption } for fiscal HP.
   function deriveFiscalHp(vehicle, inf) {
     if (vehicle.fiscalHp != null && vehicle.fiscalHp > 0) {
@@ -148,8 +161,8 @@
       return { value: cv, confidence: "low", assumption: "EV fiscal HP estimated from kW (approximate table)" };
     }
     if (vehicle.displacementCc != null && vehicle.displacementCc > 0) {
-      var v = Math.max(inf.fiscalHpMin, Math.round(vehicle.displacementCc / inf.fiscalHpFromCcDivisor));
-      return { value: v, confidence: "medium", assumption: "fiscal HP derived as cc / " + inf.fiscalHpFromCcDivisor };
+      var v = Math.max(inf.fiscalHpMin, ccToFiscalPk(vehicle.displacementCc, inf));
+      return { value: v, confidence: "medium", assumption: "fiscal HP derived from cc via the official belastbare-kracht table" };
     }
     if (vehicle.powerKw != null) {
       // last-resort rough estimate when displacement is unavailable (list cards)
@@ -420,6 +433,76 @@
     return table[String(scale.minFiscalHp)];
   }
 
+  // Flemish fiscal-PK reference bareme R(PK): the 2026 opdeciemen-and-index
+  // inclusive road tax for petrol / CNG / hybrid-petrol at Euro 6, CO2 130 g.
+  function baremeR(fiscalPk, rcfg) {
+    var pk = Math.max(4, Math.round(fiscalPk));
+    var table = rcfg.pkBareme;
+    if (table[String(pk)] != null) return table[String(pk)];
+    if (pk > 20) return table["20"] + (pk - 20) * rcfg.pkBaremeAbove20PerPk;
+    return table["4"];
+  }
+
+  // Validated Flemish annual road tax (research section 12).
+  //   verkeersbelasting = ( R(PK) / referenceDenominator ) x U , floored at min
+  //   U = ecoBaseAt130(fuel, euro) + co2SlopePerGram x ( max(co2FloorGram, co2) - 130 )
+  // Returns { amount, confidence, assumptions } or a needsMoreData descriptor.
+  function roadTaxFlandersModel(vehicle, rcfg, inf, fhp, assumptions) {
+    if (vehicle.co2 == null) {
+      return { needsMoreData: true, reason: "CO2 not listed; the Flemish road tax needs CO2 for the eco modulation." };
+    }
+
+    // Euro norm: use the ad value, otherwise infer from first registration.
+    var euro = vehicle.euroNorm;
+    var euroKnown = euro != null;
+    if (!euroKnown) {
+      euro = inferEuroNorm(vehicle.firstRegistration, inf.euroNormByFirstReg);
+      if (euro == null) euro = 6;
+      assumptions.push("Euro " + euro + " inferred from the first-registration date");
+    }
+
+    // PHEV / hybrid-petrol / CNG ride the petrol eco scale on their own CO2;
+    // only diesel carries the diesel base surcharge. There is no hybrid discount.
+    var ecoFuel = vehicle.fuel === "diesel" ? "diesel" : "petrol";
+    var baseTable = rcfg.ecoBaseAt130[ecoFuel];
+    var ref130 = baseTable[String(euro)] != null ? baseTable[String(euro)] : baseTable["6"];
+    var effCo2 = Math.max(rcfg.co2FloorGram, vehicle.co2);
+    var u = ref130 + rcfg.co2SlopePerGram * (effCo2 - 130);
+    var rpk = baremeR(fhp.value, rcfg);
+    var vb = (rpk / rcfg.referenceDenominator) * u;
+
+    var billed;
+    if (vehicle.fuel === "lpg") {
+      // LPG pays a reduced base road tax plus an AVB supplement banded by PK.
+      var reduced = Math.max(0, vb - rcfg.lpg.reduction);
+      var avb = rcfg.lpg.avbByPk[rcfg.lpg.avbByPk.length - 1].avb;
+      for (var i = 0; i < rcfg.lpg.avbByPk.length; i++) {
+        var band = rcfg.lpg.avbByPk[i];
+        if (band.pkMax == null || fhp.value <= band.pkMax) { avb = band.avb; break; }
+      }
+      billed = reduced + avb;
+      assumptions.push("LPG: reduced base road tax + AVB supplement " + avb.toFixed(2));
+    } else {
+      billed = vb;
+    }
+    billed = Math.max(rcfg.min, billed);
+
+    // Confidence from input quality (the model itself is simulator-validated).
+    //   high   : fiscal PK on the ad, and CO2 + euronorm + fuel all known
+    //   medium : PK cc-derived for a pure ICE (petrol / diesel / CNG)
+    //   low    : PK cc-derived for a PHEV / hybrid (cc understates fiscal PK),
+    //            or CO2 / euronorm had to be guessed
+    var pkFromAd = vehicle.fiscalHp != null && vehicle.fiscalHp > 0;
+    var isPhevLike = vehicle.fuel === "phev" || vehicle.fuel === "hybrid";
+    var conf;
+    if (!euroKnown) conf = "low";
+    else if (pkFromAd) conf = "high";
+    else if (isPhevLike) conf = "low";
+    else conf = "medium";
+
+    return { amount: billed, confidence: conf, assumptions: assumptions };
+  }
+
   function roadTax(region, vehicle, t, inf, refDate) {
     var scale = t.annualScale;
     var assumptions = [];
@@ -460,6 +543,18 @@
     }
     assumptions.push(fhp.assumption);
 
+    // Flanders: the simulator-validated eco-modulated model (research section 12).
+    // Brussels and Wallonia keep the representative fiscal-HP scale below.
+    if (region === "flanders") {
+      var fl = roadTaxFlandersModel(vehicle, regCfg, inf, fhp, assumptions);
+      if (fl.needsMoreData) {
+        return { amount: null, needsMoreData: true, reason: fl.reason, confidence: "none",
+          basis: region + " annual road tax", assumptions: assumptions, simulatorUrl: simUrl };
+      }
+      fl.assumptions.push("validated Flemish model: (R(PK) / " + regCfg.referenceDenominator + ") x U(CO2, euro, fuel), floor " + regCfg.min);
+      return mk(fl.amount, fl.confidence, fl.assumptions);
+    }
+
     var amount = annualScaleAmount(fhp.value, scale);
 
     // Region modifiers.
@@ -473,8 +568,6 @@
         if (band.cvMax == null || fhp.value <= band.cvMax) { amount += band.amount; assumptions.push("Brussels LPG supplement +" + band.amount); break; }
       }
     }
-    if (region === "flanders" && amount < regCfg.min) amount = regCfg.min;
-
     assumptions.push("representative fiscal-HP scale, all-in with decimes (estimate; per-region cents not yet pinned)");
     return mk(amount, confidence, assumptions);
 
