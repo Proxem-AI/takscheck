@@ -13,11 +13,11 @@
   var I18N = {
     nl: {
       title: "TaksCheck - Instellingen",
-      sub: "Schattingen van de Belgische autobelasting op autoadvertenties van AutoScout24 en mobile.de.",
+      sub: "Schattingen van de Belgische autobelasting op auto-advertenties van AutoScout24 en mobile.de.",
       regionHeading: "Belastingregio",
       regionNote: "De Belgische autobelasting wordt bepaald door het officiële adres van de houder, niet door waar de auto verkocht wordt. Kies je regio.",
       regions: {
-        flanders: { name: "Vlaanderen", desc: "CO2-formule BIV (gevalideerd). Standaard.", plate: "VLAANDEREN" },
+        flanders: { name: "Vlaanderen", desc: "CO2-formule (BIV, gevalideerd). Standaard.", plate: "VLAANDEREN" },
         brussels: { name: "Brussel", desc: "Klassieke tabel fiscale pk / kW. Geen CO2.", plate: "BRUSSEL" },
         wallonia: { name: "Wallonië", desc: "Hervormd 2025: kW x CO2 x massa x energie.", plate: "WALLONIË" }
       },
@@ -32,7 +32,7 @@
       regions: {
         flanders: { name: "Flandre", desc: "Formule CO2 (TMC, validée). Par défaut.", plate: "FLANDRE" },
         brussels: { name: "Bruxelles", desc: "Table classique puissance fiscale / kW. Sans CO2.", plate: "BRUXELLES" },
-        wallonia: { name: "Wallonie", desc: "Réformée 2025 : kW x CO2 x masse x énergie.", plate: "WALLONIE" }
+        wallonia: { name: "Wallonie", desc: "Réformée 2025: kW x CO2 x masse x énergie.", plate: "WALLONIE" }
       },
       saved: "Enregistré. Rechargez l'annonce pour mettre à jour.",
       disc: "Les montants sont des estimations informatives, pas des avis d'imposition officiels. Le montant contraignant est fixé par l'administration fiscale régionale sur la base du certificat de conformité du véhicule."

@@ -22,7 +22,7 @@
       language: "Taal",
       settings: "Instellingen",
       simulator: "Officiële simulator",
-      reg: { vl: "VLAANDEREN", br: "BRUSSEL", wa: "WALLONIE" }
+      reg: { vl: "VLAANDEREN", br: "BRUSSEL", wa: "WALLONIË" }
     },
     fr: {
       status_on: "Actif sur cette annonce",
