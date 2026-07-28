@@ -14,6 +14,13 @@
   var Badge = globalThis.BivBadge;
   var tariffsPromise = null;
 
+  // Tell the service worker whether a car ad is present on this tab, so it can
+  // paint the ruby toolbar match dot and the popup can read the status. Fire and
+  // forget; the SW handles missing tab ids and eviction.
+  function notifyMatch(matched) {
+    try { chrome.runtime.sendMessage({ type: "takscheck:match", matched: !!matched }); } catch (e) {}
+  }
+
   function loadTariffs() {
     if (!tariffsPromise) {
       tariffsPromise = fetch(chrome.runtime.getURL("core/tariffs.json")).then(function (r) { return r.json(); });
@@ -142,12 +149,12 @@
   function run() {
     if (location.href === lastUrl) return;
     var jsonld = readJsonLd();
-    if (!isDetailPage(jsonld)) { Badge.remove(); lastUrl = location.href; return; }
+    if (!isDetailPage(jsonld)) { Badge.remove(); notifyMatch(false); lastUrl = location.href; return; }
 
     var tech = readTechData();
     var vehicle = Normalise.fromMobileDe({ jsonld: jsonld, tech: tech });
     if (!vehicle || (vehicle.firstRegistration == null && vehicle.co2 == null && vehicle.powerKw == null)) {
-      Badge.remove(); lastUrl = location.href; return;
+      Badge.remove(); notifyMatch(false); lastUrl = location.href; return;
     }
     lastUrl = location.href;
 
@@ -157,6 +164,7 @@
         var engine = Tax.createTaxEngine(tariffs);
         var all = engine.computeAll(vehicle, region);
         Badge.render(all, vehicle, region);
+        notifyMatch(true);
         console.debug("[BIV+Rijtaks] mobile.de", region, vehicle, all);
       } catch (e) {
         console.warn("[BIV+Rijtaks] mobile.de compute failed", e);

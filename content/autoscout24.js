@@ -12,6 +12,13 @@
   var Badge = globalThis.BivBadge;
   var tariffsPromise = null;
 
+  // Tell the service worker whether a car ad is present on this tab, so it can
+  // paint the ruby toolbar match dot and the popup can read the status. Fire and
+  // forget; the SW handles missing tab ids and eviction.
+  function notifyMatch(matched) {
+    try { chrome.runtime.sendMessage({ type: "takscheck:match", matched: !!matched }); } catch (e) {}
+  }
+
   function loadTariffs() {
     if (!tariffsPromise) {
       tariffsPromise = fetch(chrome.runtime.getURL("core/tariffs.json")).then(function (r) { return r.json(); });
@@ -80,10 +87,10 @@
     // matching localized URL path segments (/angebote/, /aanbod/, /offre/, ...).
     var nextData = readNextData();
     var details = findListingDetails(nextData);
-    if (!details) { Badge.remove(); lastUrl = location.href; return; }
+    if (!details) { Badge.remove(); notifyMatch(false); lastUrl = location.href; return; }
 
     var vehicle = Normalise.fromAutoScout24(details);
-    if (!vehicle) { Badge.remove(); lastUrl = location.href; return; }
+    if (!vehicle) { Badge.remove(); notifyMatch(false); lastUrl = location.href; return; }
     // CO2 missing from the data blob but a combustion/hybrid car: read it from the
     // rendered spec row so the engine never falls back to the EV exemption branch.
     if ((vehicle.co2 == null || vehicle.co2 <= 0) && vehicle.fuel !== "electric" && vehicle.fuel !== "hydrogen") {
@@ -98,6 +105,7 @@
         var engine = Tax.createTaxEngine(tariffs);
         var all = engine.computeAll(vehicle, region);
         Badge.render(all, vehicle, region);
+        notifyMatch(true);
         // eslint-disable-next-line no-console
         console.debug("[BIV+Rijtaks]", region, vehicle, all);
       } catch (e) {

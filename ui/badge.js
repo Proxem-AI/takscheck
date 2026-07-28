@@ -221,6 +221,33 @@
     return "#";
   }
 
+  // Inject the bundled IBM Plex Mono faces once into the page document so the
+  // Shadow DOM can match the family by name (@font-face is document-scoped and
+  // resolvable from inside the shadow tree). font-display:swap keeps the euro
+  // figures visible in the SF Mono fallback until the woff2 loads. Files ship
+  // under fonts/ and are listed in the manifest web_accessible_resources. Plex
+  // Mono is a static family, so only the real cuts are declared: 600 SemiBold
+  // (euro amount) and 700 Bold (plate + source tag).
+  var FONTS_INJECTED = false;
+  function ensureFonts() {
+    if (FONTS_INJECTED) return;
+    FONTS_INJECTED = true;
+    try {
+      if (typeof chrome === "undefined" || !chrome.runtime || !chrome.runtime.getURL) return;
+      var semibold = chrome.runtime.getURL("fonts/IBMPlexMono-SemiBold.woff2");
+      var bold = chrome.runtime.getURL("fonts/IBMPlexMono-Bold.woff2");
+      var css =
+        '@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;' +
+        'src:url("' + semibold + '") format("woff2");font-display:swap}' +
+        '@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;' +
+        'src:url("' + bold + '") format("woff2");font-display:swap}';
+      var style = document.createElement("style");
+      style.id = "takscheck-fonts";
+      style.textContent = css;
+      (document.head || document.documentElement).appendChild(style);
+    } catch (e) {}
+  }
+
   var EXT = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M3 1h6v6M9 1 1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   // The plate mark, exactly Iris's wordmark-lockup glyph (34x24 viewBox).
   var PLATE =
@@ -341,12 +368,12 @@
     // header (light)
     ".tc-head{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--mist2);" +
       "border-bottom:1px solid var(--line);cursor:pointer}" +
-    ".tc-mark{width:26px;height:18px;flex:none;filter:drop-shadow(0 1px 1.5px rgba(16,24,40,.22))}" +
-    ".tc-name{font-weight:800;font-size:14px;letter-spacing:-.02em;color:var(--ink)}" +
+    ".tc-mark{width:26px;height:18.4px;flex:none;filter:drop-shadow(0 1px 1.5px rgba(16,24,40,.22))}" +
+    ".tc-name{font-weight:800;font-size:13px;letter-spacing:-.01em;color:var(--ink)}" +
     ".tc-name .c{color:var(--ruby)}" +
     ".tc-toggle{margin-left:auto;display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}" +
-    ".tc-toggle button{border:0;background:transparent;color:var(--slate);padding:3px 10px;cursor:pointer;" +
-      "font-weight:750;font-family:inherit;font-size:11px;line-height:1.4}" +
+    ".tc-toggle button{border:0;background:transparent;color:var(--slate);padding:3px 9px;cursor:pointer;" +
+      "font-weight:750;font-family:inherit;font-size:10.5px;line-height:1.4}" +
     ".tc-toggle button.on{background:var(--blue);color:#fff}" +
     // vehicle
     ".tc-vehicle{padding:8px 12px;background:var(--mist);border-bottom:1px solid var(--line);" +
@@ -359,7 +386,7 @@
     ".tc-row + .tc-row{border-left:1px solid var(--line)}" +
     ".tc-k{display:block;color:var(--slate);font-size:10.5px;line-height:1.3;min-height:40px}" +
     ".tc-k b{display:block;color:var(--ink);font-size:11px;font-weight:800;letter-spacing:.01em;margin-bottom:1px}" +
-    ".tc-v{display:block;font-weight:750;font-size:17px;letter-spacing:-.02em;color:var(--ink);" +
+    ".tc-v{display:block;font-weight:600;font-size:17px;letter-spacing:-.01em;color:var(--ink);" +
       'font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}' +
     ".tc-approx{font-family:inherit;font-size:11px;font-weight:600;color:var(--slate);letter-spacing:0}" +
     // The "not enough data" tag wraps to two lines in Dutch but one in French;
@@ -371,17 +398,17 @@
     ".tc-notes{padding:0 12px 2px}" +
     ".tc-note{font-size:12px;line-height:1.45;color:var(--slate);margin:8px 0 0}" +
     ".tc-note b{color:var(--ink);font-weight:700}" +
-    ".tc-sim{display:inline-flex;align-items:center;gap:5px;margin:10px 12px 2px;font-size:12px;" +
+    ".tc-sim{display:inline-flex;align-items:center;gap:5px;margin:10px 12px 10px;font-size:12px;" +
       "font-weight:700;color:var(--blue);text-decoration:none}" +
     ".tc-sim:hover{text-decoration:underline}" +
     // footer: region plate + verdict
     ".tc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;" +
-      "padding:9px 12px;background:var(--mist2);border-top:1px solid var(--line);margin-top:10px}" +
-    ".tc-plate{display:inline-flex;align-items:stretch;height:20px;border:1px solid #b9c1cb;border-radius:5px;" +
-      "overflow:hidden;background:#fff}" +
-    ".tc-eu{background:var(--blue);color:#fff;font-size:9px;font-weight:800;" +
+      "padding:9px 12px;background:var(--mist2);border-top:1px solid var(--line);margin-top:0}" +
+    ".tc-plate{display:inline-flex;align-items:stretch;height:21px;border:1px solid #b9c1cb;border-radius:5px;" +
+      "overflow:hidden;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.04)}" +
+    ".tc-eu{background:var(--blue);color:#fff;font-size:9px;font-weight:700;" +
       'font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;display:flex;align-items:center;justify-content:center;width:14px}' +
-    ".tc-reg{padding:0 8px;color:var(--ink);font-weight:800;font-size:10.5px;letter-spacing:.05em;" +
+    ".tc-reg{padding:0 9px;color:var(--ink);font-weight:700;font-size:11px;letter-spacing:.06em;" +
       'display:flex;align-items:center;font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace}' +
     // Traffic-light verdict, Iris's soft treatment (2026-07-28): a pale tinted
     // pill + a coloured round dot + darker coloured text (not a solid filled
@@ -504,6 +531,7 @@
 
   function render(all, vehicle, region) {
     LAST = { all: all, vehicle: vehicle, region: region };
+    ensureFonts();
 
     var host = document.getElementById(HOST_ID);
     if (!host) {

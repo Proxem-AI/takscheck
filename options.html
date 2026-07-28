@@ -1,55 +1,102 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TaksCheck - Settings</title>
+<title id="pgTitle">TaksCheck</title>
 <style>
-  :root{color-scheme:light dark}
-  body{margin:0;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    background:#f7f8fa;color:#1a1d24;padding:28px 20px}
-  @media (prefers-color-scheme:dark){body{background:#0f1216;color:#e7ebf0}
-    .card{background:#171b21;border-color:#2a3038}.opt{border-color:#2a3038}.opt:hover{background:#1e242c}}
+  /* IBM Plex Mono, bundled: used for the region plate tags so they read as the
+     same physical-plate motif as the on-ad badge. Static family, real cuts only. */
+  @font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;
+    src:url("fonts/IBMPlexMono-SemiBold.woff2") format("woff2");font-display:swap}
+  @font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;
+    src:url("fonts/IBMPlexMono-Bold.woff2") format("woff2");font-display:swap}
+
+  :root{
+    color-scheme:light dark;
+    --bg:#EEF1F4;--card:#FFFFFF;--ink:#101720;--slate:#5A6472;--line:#E1E5EA;--line-strong:#CCD3DB;
+    --blue:#1B54C7;--ruby:#841922;--panel2:#F7F9FB;--good:#14572E;--good-bg:#E3F1E8;--radius:14px;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0a0d11;--card:#13181e;--ink:#eef2f6;--slate:#9aa5b2;--line:#232a32;--line-strong:#333c46;
+      --panel2:#0f141a;--good:#7fd4a2;--good-bg:#12291d;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:15px;line-height:1.55;padding:24px 20px;-webkit-font-smoothing:antialiased}
   .wrap{max-width:520px;margin:0 auto}
-  h1{font-size:20px;margin:0 0 4px}
-  .sub{color:#5b6472;font-size:13px;margin:0 0 20px}
-  .card{background:#fff;border:1px solid #e2e6ec;border-radius:14px;padding:18px 20px;margin-bottom:16px}
-  h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:#5b6472;margin:0 0 12px}
-  .opt{display:flex;gap:12px;align-items:flex-start;border:1px solid #e2e6ec;border-radius:10px;
-    padding:12px 14px;margin-bottom:8px;cursor:pointer}
-  .opt:hover{background:#fafbfc}
-  .opt input{margin-top:3px}
-  .opt b{display:block;font-size:14px}
-  .opt span{font-size:12.5px;color:#5b6472}
-  .saved{font-size:12.5px;color:#1a7f4b;height:16px;margin-top:4px}
-  .note{font-size:12px;color:#8a94a2;margin-top:8px}
-  .disc{background:#fdf3dd;border:1px solid #e6c766;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#6b4e00}
-  @media (prefers-color-scheme:dark){.disc{background:#2a2312;border-color:#5c4a1a;color:#f0d68a}}
+
+  .fhead{display:flex;align-items:center;gap:9px;margin:0 0 4px}
+  .fmark{width:28px;height:20px;flex:none;filter:drop-shadow(0 1px 1.5px rgba(16,24,40,.22))}
+  .fname{font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink)}
+  .fname .c{color:var(--ruby)}
+  .ftoggle{margin-left:auto;display:inline-flex;border:1px solid var(--line-strong);border-radius:7px;overflow:hidden}
+  .ftoggle button{border:0;background:transparent;color:var(--slate);padding:3px 9px;cursor:pointer;
+    font-family:inherit;font-weight:750;font-size:11px;line-height:1.4}
+  .ftoggle button.on{background:var(--blue);color:#fff}
+  .ftoggle button:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(27,84,199,.28)}
+
+  .fsub{color:var(--slate);font-size:12.5px;margin:0 0 16px}
+
+  .fcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:13px}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);margin:0 0 6px;font-weight:800}
+  .note{font-size:12px;color:var(--slate);margin:0 0 12px;line-height:1.5}
+
+  .frow{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;
+    padding:11px 13px;margin-bottom:8px;cursor:pointer;background:var(--card)}
+  .frow input[type=radio]{appearance:none;-webkit-appearance:none;margin:0;flex:none;width:16px;height:16px;
+    border-radius:50%;border:2px solid var(--line-strong);margin-top:2px;display:grid;place-items:center;
+    cursor:pointer;background:var(--card)}
+  .frow input[type=radio]:checked{border-color:var(--blue)}
+  .frow input[type=radio]:checked::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--blue)}
+  .frow input[type=radio]:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(27,84,199,.28)}
+  .frow.sel{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset}
+  .frow:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,84,199,.28)}
+  .ftext{flex:1;min-width:0}
+  .ftext b{display:block;font-size:13.5px;color:var(--ink)}
+  .ftext .rs{font-size:12px;color:var(--slate)}
+
+  .fplate{display:inline-flex;align-items:stretch;height:19px;border:1px solid #b9c1cb;border-radius:5px;
+    overflow:hidden;background:#fff;margin-left:auto;flex:none;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+  .fplate .eu{background:var(--blue);color:#fff;width:13px;display:flex;align-items:center;justify-content:center;
+    font-size:8.5px;font-weight:700;font-family:var(--mono)}
+  .fplate .rg{padding:0 8px;color:#101720;font-weight:700;font-size:10px;letter-spacing:.05em;
+    display:flex;align-items:center;font-family:var(--mono)}
+
+  .fsaved{font-size:12px;font-weight:700;color:var(--good);background:var(--good-bg);
+    border-radius:6px;padding:3px 9px;display:inline-block;margin-top:4px}
+  .fsaved[hidden]{display:none}
+
+  .fdisc{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);
+    border-radius:10px;padding:12px 14px;font-size:12px;color:var(--slate);line-height:1.5}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>TaksCheck</h1>
-  <p class="sub">Belgian vehicle-tax estimates on AutoScout24 and mobile.de car ads.</p>
+  <header class="fhead">
+    <svg class="fmark" viewBox="0 0 34 24" aria-hidden="true">
+      <rect x="1" y="1" width="32" height="22" rx="4.5" fill="#1B54C7"/>
+      <path d="M9.1 2.8 H28.5 A2.7 2.7 0 0 1 31.2 5.5 V18.5 A2.7 2.7 0 0 1 28.5 21.2 H9.1 Z" fill="#fff"/>
+      <path d="M12.4 12 L16.4 16 L25 6" fill="none" stroke="#841922" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="fname">Taks<span class="c">Check</span></span>
+    <span class="ftoggle" id="langToggle" role="group" aria-label="Taal / Langue">
+      <button type="button" data-lang="nl">NL</button>
+      <button type="button" data-lang="fr">FR</button>
+    </span>
+  </header>
+  <p class="fsub" id="sub"></p>
 
-  <div class="card">
-    <h2>Tax region</h2>
-    <p class="note" style="margin-top:0">Belgian vehicle tax is set by the registered keeper's official address, not where the car is sold. Pick your region.</p>
-    <label class="opt"><input type="radio" name="region" value="flanders">
-      <span><b>Flanders</b><span>CO2 formula BIV (validated). Default.</span></span></label>
-    <label class="opt"><input type="radio" name="region" value="brussels">
-      <span><b>Brussels</b><span>Traditional fiscal-HP / kW table. No CO2.</span></span></label>
-    <label class="opt"><input type="radio" name="region" value="wallonia">
-      <span><b>Wallonia</b><span>Reformed 2025: kW x CO2 x mass x energy.</span></span></label>
-    <div class="saved" id="saved"></div>
+  <div class="fcard">
+    <h2 id="regionHeading"></h2>
+    <p class="note" id="regionNote"></p>
+    <div id="regions"></div>
+    <span class="fsaved" id="saved" hidden></span>
   </div>
 
-  <div class="disc">
-    Figures are informational estimates, not official tax assessments. The binding amount is set by the regional
-    tax administration from the vehicle's certificate of conformity. Flanders BIV is calibrated against the official
-    Vlaamse Belastingdienst simulator; Brussels, Wallonia and all annual road-tax figures are lower-confidence and
-    pending further validation.
-  </div>
+  <div class="fdisc" id="disc"></div>
 </div>
 <script src="options.js"></script>
 </body>
