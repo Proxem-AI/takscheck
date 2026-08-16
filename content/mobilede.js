@@ -98,6 +98,40 @@
   }
   function cleanVal(s) { return (s || "").replace(/\s+/g, " ").trim(); }
 
+  // Case-insensitive copies of the label stems, matched against the ORIGINAL text
+  // (not lowercased), so we can strip the leading label off an inline "label value"
+  // string and keep the value in its real casing.
+  var STEM_CI = {};
+  for (var _si = 0; _si < LABEL_STEMS.length; _si++) {
+    STEM_CI[LABEL_STEMS[_si].key] = new RegExp(LABEL_STEMS[_si].re.source, "i");
+  }
+  // Given an element's text and the canonical key it matched, return the value that
+  // follows the label inline ("Leistung: 140 kW" -> "140 kW", "First registration
+  // 05/2020" -> "05/2020"). Returns "" when the text is label-only or has no tail.
+  function valueAfterLabel(rawText, canon) {
+    var s = cleanVal(rawText);
+    // Preferred: an explicit "Label: value" colon separator ("Leistung: 140 kW",
+    // "Kraftstoffart: Diesel"). Take everything after the first colon.
+    var ci = s.indexOf(":");
+    if (ci > -1) {
+      var afterColon = s.slice(ci + 1).trim();
+      return afterColon.length && afterColon.length <= 64 ? afterColon : "";
+    }
+    // No colon: only accept when the label is a whole word immediately followed by
+    // whitespace and then a digit ("First registration 05/2020", "Leistung 140 kW").
+    // This deliberately rejects partial-word stem matches (e.g. "CO2-Emissionen",
+    // where the stem matches "CO2-Emission" and the trailing "en" is not a value).
+    var re = STEM_CI[canon];
+    if (!re) return "";
+    var m = s.match(re);
+    if (!m) return "";
+    var next = s.charAt(m.index + m[0].length);
+    if (next !== "" && !/\s/.test(next)) return "";
+    var rest = s.slice(m.index + m[0].length).trim();
+    if (!/^\d/.test(rest)) return "";
+    return rest.length && rest.length <= 64 ? rest : "";
+  }
+
   function readTechData() {
     var map = {};
     function put(canon, val) {
@@ -125,51 +159,120 @@
       if (el.children.length) continue;
       var canon = canonLabel(el.textContent);
       if (!canon || map[canon] != null) continue;
+      // (1) value inline in the SAME element after the label ("Leistung: 140 kW").
+      var inlineV = valueAfterLabel(el.textContent, canon);
+      if (inlineV) put(canon, inlineV);
+      // (2) value in the next sibling element.
       var sib = el.nextElementSibling;
-      if (sib) put(canon, sib.textContent);
-      // label and value split across two wrapper divs (label is the sole child).
+      if (map[canon] == null && sib) put(canon, sib.textContent);
+      // (3) label and value split across two wrapper divs (label is the sole child):
+      // take the label wrapper's next sibling.
       if (map[canon] == null && el.parentElement && el.parentElement.children.length === 1) {
         var pv = el.parentElement.nextElementSibling;
-        if (pv && cleanVal(pv.textContent).length <= 48) put(canon, pv.textContent);
+        if (pv && cleanVal(pv.textContent).length <= 64) put(canon, pv.textContent);
+      }
+    }
+    // (4) row/container pairing: a wrapper with exactly two element children where
+    // the first is a known label and the second is the value. Covers redesigns that
+    // nest the label and value in sibling wrappers under a shared row (hashed class
+    // names), which the leaf pass above does not always reach.
+    var rowsC = document.querySelectorAll("li, div, tr, dl");
+    for (var c = 0; c < rowsC.length; c++) {
+      var kids = rowsC[c].children;
+      if (kids.length === 2) {
+        var canonPair = canonLabel(kids[0].textContent);
+        if (canonPair && map[canonPair] == null) {
+          var vtext = cleanVal(kids[1].textContent);
+          if (vtext && vtext.length <= 64) put(canonPair, vtext);
+        }
+      } else if (kids.length === 1) {
+        // (5) label is the container's own leading text, value is a single child
+        // element ("<div>Leistung <b>140 kW</b></div>").
+        var ownText = "";
+        var cn = rowsC[c].childNodes;
+        for (var n = 0; n < cn.length; n++) if (cn[n].nodeType === 3) ownText += cn[n].textContent;
+        var canonOwn = canonLabel(ownText);
+        if (canonOwn && map[canonOwn] == null) {
+          var cvtext = cleanVal(kids[0].textContent);
+          if (cvtext && cvtext.length <= 64) put(canonOwn, cvtext);
+        }
       }
     }
     return map;
   }
 
   function isDetailPage(jsonld) {
-    // mobile.de ad detail URLs, e.g. /auto-inserat/<slug>/<id>.html
-    if (/\/(auto-inserat|fahrzeuge\/details|inserat)\//i.test(location.pathname)) return true;
-    if (/\/\d{6,}\.html/i.test(location.pathname)) return true;
+    var path = location.pathname;
+    var qs   = location.search || "";
+    // mobile.de ad detail URLs, old format, e.g. /auto-inserat/<slug>/<id>.html
+    if (/\/(auto-inserat|fahrzeuge\/details|inserat)\//i.test(path)) return true;
+    if (/\/\d{6,}\.html/i.test(path)) return true;
+    // Current format: /fahrzeuge/details.html?id=<digits> (the ad id lives in the
+    // query string, not the path). Accept the details path ending in .html or a
+    // slash together with a numeric id query param.
+    if (/\/fahrzeuge\/details(\.html)?\/?$/i.test(path) && /[?&]id=\d{6,}/i.test(qs)) return true;
     // fallback: a Car JSON-LD with a first-registration date is a strong detail signal
     return !!(jsonld && (jsonld.dateVehicleFirstRegistered || jsonld.vehicleEngine));
   }
 
-  var lastUrl = null;
+  // URL for which the badge has been drawn. Set only on a successful extraction so
+  // a later mutation at the same URL cannot cause a redundant redraw.
+  var lastRenderedUrl = null;
+  // Bounded retry window per URL, to catch SPA content (JSON-LD, spec table) that
+  // renders after document_idle without a URL change. Keyed by URL so a soft nav
+  // to a new ad gets a fresh window. No infinite loop: retries stop after the time
+  // budget, and only run while we are on a detail page whose data is not yet ready.
+  var RETRY_WINDOW_MS = 6000;
+  var RETRY_INTERVAL_MS = 600;
+  var windowStart = {};
+  var retryTimer = null;
 
   function run() {
-    if (location.href === lastUrl) return;
+    var url = location.href;
+    if (url === lastRenderedUrl) return;
+
     var jsonld = readJsonLd();
-    if (!isDetailPage(jsonld)) { Badge.remove(); notifyMatch(false); lastUrl = location.href; return; }
-
-    var tech = readTechData();
-    var vehicle = Normalise.fromMobileDe({ jsonld: jsonld, tech: tech });
-    if (!vehicle || (vehicle.firstRegistration == null && vehicle.co2 == null && vehicle.powerKw == null)) {
-      Badge.remove(); notifyMatch(false); lastUrl = location.href; return;
+    var detail = isDetailPage(jsonld);
+    var vehicle = null;
+    if (detail) {
+      var tech = readTechData();
+      vehicle = Normalise.fromMobileDe({ jsonld: jsonld, tech: tech });
     }
-    lastUrl = location.href;
+    var hasData = !!(vehicle && (vehicle.firstRegistration != null || vehicle.co2 != null || vehicle.powerKw != null));
 
-    Promise.all([loadTariffs(), getRegion()]).then(function (arr) {
-      var tariffs = arr[0], region = arr[1];
-      try {
-        var engine = Tax.createTaxEngine(tariffs);
-        var all = engine.computeAll(vehicle, region);
-        Badge.render(all, vehicle, region);
-        notifyMatch(true);
-        console.debug("[BIV+Rijtaks] mobile.de", region, vehicle, all);
-      } catch (e) {
-        console.warn("[BIV+Rijtaks] mobile.de compute failed", e);
-      }
-    });
+    if (hasData) {
+      lastRenderedUrl = url;
+      delete windowStart[url];
+      if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+      Promise.all([loadTariffs(), getRegion()]).then(function (arr) {
+        var tariffs = arr[0], region = arr[1];
+        try {
+          var engine = Tax.createTaxEngine(tariffs);
+          var all = engine.computeAll(vehicle, region);
+          Badge.render(all, vehicle, region);
+          notifyMatch(true);
+          console.debug("[BIV+Rijtaks] mobile.de", region, vehicle, all);
+        } catch (e) {
+          console.warn("[BIV+Rijtaks] mobile.de compute failed", e);
+        }
+      });
+      return;
+    }
+
+    // No usable data yet. Remove any stale badge and report no match.
+    Badge.remove();
+    notifyMatch(false);
+
+    // Retry only while we appear to be on a detail page (data may still be loading).
+    // A page that is not a detail page will never become one, so we do not retry it.
+    if (!detail) return;
+    if (windowStart[url] == null) windowStart[url] = Date.now();
+    if (Date.now() - windowStart[url] < RETRY_WINDOW_MS && !retryTimer) {
+      retryTimer = setTimeout(function () {
+        retryTimer = null;
+        if (location.href === url) run();
+      }, RETRY_INTERVAL_MS);
+    }
   }
 
   function debounce(fn, ms) {
@@ -194,10 +297,21 @@
     };
   });
   window.addEventListener("popstate", function () { window.dispatchEvent(new Event("biv:locationchange")); });
-  window.addEventListener("biv:locationchange", function () { lastUrl = null; scheduled(); });
+  window.addEventListener("biv:locationchange", function () { scheduled(); });
 
   var obs = new MutationObserver(debounce(function () {
-    if (location.href !== lastUrl) scheduled();
+    if (location.href !== lastRenderedUrl) scheduled();
   }, 500));
   obs.observe(document.documentElement, { childList: true, subtree: true });
+
+  // Test-only hook: expose the pure gate and DOM readers to the Node fixture
+  // harness. Guarded by a flag that only the harness sets, so it is completely
+  // inert in the browser (the global does not exist there).
+  if (typeof globalThis !== "undefined" && globalThis.__TC_EXPORT_FOR_TEST__) {
+    globalThis.__tcTest = {
+      isDetailPage: isDetailPage,
+      readTechData: readTechData,
+      readJsonLd: readJsonLd
+    };
+  }
 })();
