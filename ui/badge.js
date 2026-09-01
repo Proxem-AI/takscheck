@@ -47,7 +47,7 @@
       co2na: "CO2 onbekend",
       tokens: { co2: "de CO2-waarde", power: "het vermogen (kW)", cc: "de cilinderinhoud (cc)", data: "meer gegevens" },
       conf: {
-        caption: "Betrouwbaarheid",
+        caption: "Nauwkeurigheid",
         tier: { high: "hoog", medium: "gemiddeld", low: "laag" },
         aria: { high: "Betrouwbaarheid hoog", medium: "Betrouwbaarheid gemiddeld", low: "Betrouwbaarheid laag" }
       },
