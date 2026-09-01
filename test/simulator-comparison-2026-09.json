@@ -1,0 +1,1524 @@
+{
+  "name": "Official Vlaamse Belastingdienst simulator comparison set",
+  "capturedBy": "Pax, Proxem AI",
+  "capturedOn": "2026-09-01",
+  "tariffVersionAtCapture": "2026.09",
+  "method": "Driven through the public simulator wizard at belastingen.fenb.be/ui/public/vkb/simulatie with a real Chrome browser, one case at a time, serially, spaced 8 to 12 seconds apart. The JSON API behind the wizard returns HTTP 403 to any request that does not originate from the app itself, including same origin fetch from the page, so every value below was produced by the wizard exactly as a member of the public would run it. No proxy, no captcha service, no retry on failure.",
+  "fixedInputs": "personenwagen, natural person, no chassis number lookup, simulation year 2026. Every case was registered on 15/09/2026 unless stated otherwise, which puts the assessment period in the 1 July 2026 indexation window (01/09/2026 to 31/08/2027).",
+  "notes": [
+    "The simulator asks for the NEDC CO2 value when the first registration is before 01/01/2021 and the WLTP value from 01/01/2021 onwards. The boundary was pinned to the day by reading the wizard question label at 01/10/2020, 31/12/2020 and 01/01/2021 without submitting a calculation.",
+    "engineAtCapture and deltaAtCapture are a snapshot of core/tax.js at tariff version 2026.09 on 2026-09-01. They are the baseline, not a target. When the engine is corrected these deltas should shrink towards zero.",
+    "For LPG the simulator reports the base road tax and the accijnscompenserende belasting separately. roadTaxTotal is the sum, which is what the engine returns as one number.",
+    "Do not edit the official block. It is measured ground truth."
+  ],
+  "cases": [
+    {
+      "id": "AGE-NEW",
+      "group": "age-correction",
+      "label": "Age 0 (new): diesel 148g E6 PK15",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 1423.56,
+        "roadTaxVB": 1233.64,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1233.64,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 1398.9,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 24.66,
+        "bivPct": 1.763,
+        "roadTaxEur": 48.46,
+        "roadTaxPct": 4.089
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "AGE-1Y",
+      "group": "age-correction",
+      "label": "Age 1y8m: diesel 148g E6 PK15",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2025",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 1281.2,
+        "roadTaxVB": 1233.64,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1233.64,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 1259.01,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 22.19,
+        "bivPct": 1.762,
+        "roadTaxEur": 48.46,
+        "roadTaxPct": 4.089
+      },
+      "intermediates": {
+        "ageCompletedYears": 1,
+        "leeftijdscorrectie": 0.9,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "AGE-3Y",
+      "group": "age-correction",
+      "label": "Age 3y8m: diesel 148g E6 PK15",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2023",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 996.49,
+        "roadTaxVB": 1233.64,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1233.64,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 979.23,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 17.26,
+        "bivPct": 1.763,
+        "roadTaxEur": 48.46,
+        "roadTaxPct": 4.089
+      },
+      "intermediates": {
+        "ageCompletedYears": 3,
+        "leeftijdscorrectie": 0.7,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "AGE-5Y",
+      "group": "age-correction",
+      "label": "Age 5y8m: diesel 148g E6 PK15",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2021",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 711.78,
+        "roadTaxVB": 1233.64,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1233.64,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 699.45,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 12.33,
+        "bivPct": 1.763,
+        "roadTaxEur": 48.46,
+        "roadTaxPct": 4.089
+      },
+      "intermediates": {
+        "ageCompletedYears": 5,
+        "leeftijdscorrectie": 0.5,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "AGE-7Y",
+      "group": "age-correction",
+      "label": "Age 7y8m: diesel 148g E6 PK15 (RED BMW 730d control)",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2019",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 726.22,
+        "roadTaxVB": 1320.76,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1320.76,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 419.67,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 306.55,
+        "bivPct": 73.045,
+        "roadTaxEur": 135.58,
+        "roadTaxPct": 11.44
+      },
+      "intermediates": {
+        "ageCompletedYears": 7,
+        "leeftijdscorrectie": 0.29999999999999993,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "AGE-8Y",
+      "group": "age-correction",
+      "label": "Age 8y8m: diesel 148g E6 PK15",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2018",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 484.14,
+        "roadTaxVB": 1320.76,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1320.76,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 279.78,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 204.36,
+        "bivPct": 73.043,
+        "roadTaxEur": 135.58,
+        "roadTaxPct": 11.44
+      },
+      "intermediates": {
+        "ageCompletedYears": 8,
+        "leeftijdscorrectie": 0.19999999999999996,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "AGE-16Y",
+      "group": "age-correction",
+      "label": "Age 16y8m: diesel 148g E6 PK15",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2010",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 148,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 242.07,
+        "roadTaxVB": 1320.76,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1320.76,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 139.89,
+        "roadTax": 1185.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 102.18,
+        "bivPct": 73.043,
+        "roadTaxEur": 135.58,
+        "roadTaxPct": 11.44
+      },
+      "intermediates": {
+        "ageCompletedYears": 16,
+        "leeftijdscorrectie": 0.1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 794.67,
+        "rawBivPreCorrection": 1398.9,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 411.06
+      }
+    },
+    {
+      "id": "CO2-095",
+      "group": "co2-curve",
+      "label": "CO2 95: new diesel E6 PK15",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 95,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 684.48,
+        "roadTaxVB": 1062.62,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1062.62,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 659.82,
+        "roadTax": 1020.89
+      },
+      "deltaAtCapture": {
+        "bivEur": 24.66,
+        "bivPct": 3.737,
+        "roadTaxEur": 41.73,
+        "roadTaxPct": 4.088
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 55.59,
+        "rawBivPreCorrection": 659.82,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 354.08
+      }
+    },
+    {
+      "id": "CO2-130",
+      "group": "co2-curve",
+      "label": "CO2 130: new diesel E6 PK15",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 993.88,
+        "roadTaxVB": 1175.56,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1175.56,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 969.22,
+        "roadTax": 1129.38
+      },
+      "deltaAtCapture": {
+        "bivEur": 24.66,
+        "bivPct": 2.544,
+        "roadTaxEur": 46.18,
+        "roadTaxPct": 4.089
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 969.22,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 391.71
+      }
+    },
+    {
+      "id": "CO2-200",
+      "group": "co2-curve",
+      "label": "CO2 200: new diesel E6 PK15",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 200,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 5468.36,
+        "roadTaxVB": 1401.42,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1401.42,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 5443.7,
+        "roadTax": 1346.38
+      },
+      "deltaAtCapture": {
+        "bivEur": 24.66,
+        "bivPct": 0.453,
+        "roadTaxEur": 55.04,
+        "roadTaxPct": 4.088
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 4839.47,
+        "rawBivPreCorrection": 5443.7,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 466.97
+      }
+    },
+    {
+      "id": "CO2-250",
+      "group": "co2-curve",
+      "label": "CO2 250: new diesel E6 PK15",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 250,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 14539.31,
+        "roadTaxVB": 1562.75,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1562.75,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 13969.29,
+        "roadTax": 1501.37
+      },
+      "deltaAtCapture": {
+        "bivEur": 570.02,
+        "bivPct": 4.081,
+        "roadTaxEur": 61.38,
+        "roadTaxPct": 4.088
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 18461.12,
+        "rawBivPreCorrection": 19065.35,
+        "capHit": "max",
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 520.73
+      }
+    },
+    {
+      "id": "FUEL-PET",
+      "group": "fuel-type",
+      "label": "Fuel petrol: new 130g E6 PK9 (reference cell)",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 295.81,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 295.81,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 284.2
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 11.61,
+        "roadTaxPct": 4.085
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "FUEL-DIE",
+      "group": "fuel-type",
+      "label": "Fuel diesel: new 130g E6 PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 993.88,
+        "roadTaxVB": 407.73,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 407.73,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 969.22,
+        "roadTax": 391.71
+      },
+      "deltaAtCapture": {
+        "bivEur": 24.66,
+        "bivPct": 2.544,
+        "roadTaxEur": 16.02,
+        "roadTaxPct": 4.09
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 969.22,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 391.71
+      }
+    },
+    {
+      "id": "FUEL-LPG",
+      "group": "fuel-type",
+      "label": "Fuel LPG + petrol: new 130g E6 PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "lpg-petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 198.04,
+        "roadTaxVB": 143.48,
+        "roadTaxAVB": 148.68,
+        "roadTaxTotal": 292.16,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 196.93,
+        "roadTax": 286.62
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.564,
+        "roadTaxEur": 5.54,
+        "roadTaxPct": 1.933
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 0.88,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 169.5,
+        "rawBivPreCorrection": 196.93,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "FUEL-CNG",
+      "group": "fuel-type",
+      "label": "Fuel CNG (aardgas): new 130g E6 PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "cng",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 264.68,
+        "roadTaxVB": 295.81,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 295.81,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 263.57,
+        "roadTax": 284.2
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.421,
+        "roadTaxEur": 11.61,
+        "roadTaxPct": 4.085
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 0.93,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 236.14,
+        "rawBivPreCorrection": 263.57,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "FUEL-HYB",
+      "group": "fuel-type",
+      "label": "Fuel hybrid petrol: new 130g E6 PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "hybrid-petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 295.81,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 295.81,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 284.2
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 11.61,
+        "roadTaxPct": 4.085
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "FUEL-EV",
+      "group": "fuel-type",
+      "label": "Fuel electric: new 0g PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "electric",
+        "co2": 0,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 61.5,
+        "roadTaxVB": 107.16,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 107.16,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 61.5,
+        "roadTax": 107.18
+      },
+      "deltaAtCapture": {
+        "bivEur": 0,
+        "bivPct": 0,
+        "roadTaxEur": -0.02,
+        "roadTaxPct": -0.019
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": null,
+        "co2CoreTerm": null,
+        "rawBivPreCorrection": null,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": null,
+        "roadTaxUterm": null
+      }
+    },
+    {
+      "id": "PK-04",
+      "group": "fiscal-pk-steps",
+      "label": "PK 4: new petrol 130g E6",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 4,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 85,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 85,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 81.64
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 3.36,
+        "roadTaxPct": 4.116
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 4,
+        "baremeRpk": 81.64,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "PK-07",
+      "group": "fiscal-pk-steps",
+      "label": "PK 7: new petrol 130g E6",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 7,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 200.87,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 200.87,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 193.03
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 7.84,
+        "roadTaxPct": 4.062
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 7,
+        "baremeRpk": 193.03,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "PK-11",
+      "group": "fiscal-pk-steps",
+      "label": "PK 11: new petrol 130g E6",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 11,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 444.97,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 444.97,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 427.5
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 17.47,
+        "roadTaxPct": 4.087
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 11,
+        "baremeRpk": 427.5,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "PK-15",
+      "group": "fiscal-pk-steps",
+      "label": "PK 15: new petrol 130g E6",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 852.91,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 852.91,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 819.41
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 33.5,
+        "roadTaxPct": 4.088
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "PK-20",
+      "group": "fiscal-pk-steps",
+      "label": "PK 20: new petrol 130g E6",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 20,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 393.53,
+        "roadTaxVB": 2174.33,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 2174.33,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 392.42,
+        "roadTax": 2089.13
+      },
+      "deltaAtCapture": {
+        "bivEur": 1.11,
+        "bivPct": 0.283,
+        "roadTaxEur": 85.2,
+        "roadTaxPct": 4.078
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 20,
+        "baremeRpk": 2089.13,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "EURO4-DPF",
+      "group": "euronorm-and-soot-filter",
+      "label": "Euro 4 diesel with soot filter: new 130g PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 130,
+        "euroNorm": 4,
+        "fiscalPk": 9,
+        "sootFilter": true,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 1001.19,
+        "roadTaxVB": 417.05,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 417.05,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 986.51,
+        "roadTax": 418.6
+      },
+      "deltaAtCapture": {
+        "bivEur": 14.68,
+        "bivPct": 1.488,
+        "roadTaxEur": -1.55,
+        "roadTaxPct": -0.37
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 621.52,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 986.51,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 418.6,
+        "roadTaxUterm": 418.6
+      }
+    },
+    {
+      "id": "EURO4-NODPF",
+      "group": "euronorm-and-soot-filter",
+      "label": "Euro 4 diesel without soot filter: new 130g PK9",
+      "vehicle": {
+        "state": "new",
+        "firstRegistration": "15/09/2026",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 130,
+        "euroNorm": 4,
+        "fiscalPk": 9,
+        "sootFilter": false,
+        "simulatorCo2Cycle": "WLTP",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 1011.87,
+        "roadTaxVB": 445.03,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 445.03,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 986.51,
+        "roadTax": 418.6
+      },
+      "deltaAtCapture": {
+        "bivEur": 25.36,
+        "bivPct": 2.571,
+        "roadTaxEur": 26.43,
+        "roadTaxPct": 6.314
+      },
+      "intermediates": {
+        "ageCompletedYears": 0,
+        "leeftijdscorrectie": 1,
+        "fuelFactorF": 1,
+        "airComponentC": 621.52,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 986.51,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 418.6,
+        "roadTaxUterm": 418.6
+      }
+    },
+    {
+      "id": "NEDC-095",
+      "group": "nedc-branch",
+      "label": "NEDC branch, CO2 95: diesel E6 PK15, dfit 01/01/2019",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2019",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 95,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 283.44,
+        "roadTaxVB": 1149.74,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1149.74,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 197.94,
+        "roadTax": 1020.89
+      },
+      "deltaAtCapture": {
+        "bivEur": 85.5,
+        "bivPct": 43.195,
+        "roadTaxEur": 128.85,
+        "roadTaxPct": 12.621
+      },
+      "intermediates": {
+        "ageCompletedYears": 7,
+        "leeftijdscorrectie": 0.29999999999999993,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 55.59,
+        "rawBivPreCorrection": 659.82,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 354.08
+      }
+    },
+    {
+      "id": "NEDC-130",
+      "group": "nedc-branch",
+      "label": "NEDC branch, CO2 130: diesel E6 PK15, dfit 01/01/2019",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2019",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 503.49,
+        "roadTaxVB": 1262.68,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1262.68,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 290.77,
+        "roadTax": 1129.38
+      },
+      "deltaAtCapture": {
+        "bivEur": 212.72,
+        "bivPct": 73.157,
+        "roadTaxEur": 133.3,
+        "roadTaxPct": 11.803
+      },
+      "intermediates": {
+        "ageCompletedYears": 7,
+        "leeftijdscorrectie": 0.29999999999999993,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 969.22,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 391.71
+      }
+    },
+    {
+      "id": "NEDC-200",
+      "group": "nedc-branch",
+      "label": "NEDC branch, CO2 200: diesel E6 PK15, dfit 01/01/2019",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2019",
+        "registrationDate": "15/09/2026",
+        "fuel": "diesel",
+        "co2": 200,
+        "euroNorm": 6,
+        "fiscalPk": 15,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 2204.52,
+        "roadTaxVB": 1488.54,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 1488.54,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 1633.11,
+        "roadTax": 1346.38
+      },
+      "deltaAtCapture": {
+        "bivEur": 571.41,
+        "bivPct": 34.989,
+        "roadTaxEur": 142.16,
+        "roadTaxPct": 10.559
+      },
+      "intermediates": {
+        "ageCompletedYears": 7,
+        "leeftijdscorrectie": 0.29999999999999993,
+        "fuelFactorF": 1,
+        "airComponentC": 604.23,
+        "co2CoreTerm": 4839.47,
+        "rawBivPreCorrection": 5443.7,
+        "capHit": null,
+        "fiscalPkUsed": 15,
+        "baremeRpk": 819.41,
+        "roadTaxEcoBaseAt130": 391.71,
+        "roadTaxUterm": 466.97
+      }
+    },
+    {
+      "id": "NEDC-PET",
+      "group": "nedc-branch",
+      "label": "NEDC branch petrol 130g E6 PK9, dfit 01/01/2019",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2019",
+        "registrationDate": "15/09/2026",
+        "fuel": "petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 323.39,
+        "roadTaxVB": 326.03,
+        "roadTaxAVB": 0,
+        "roadTaxTotal": 326.03,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 117.73,
+        "roadTax": 284.2
+      },
+      "deltaAtCapture": {
+        "bivEur": 205.66,
+        "bivPct": 174.688,
+        "roadTaxEur": 41.83,
+        "roadTaxPct": 14.719
+      },
+      "intermediates": {
+        "ageCompletedYears": 7,
+        "leeftijdscorrectie": 0.29999999999999993,
+        "fuelFactorF": 1,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 364.99,
+        "rawBivPreCorrection": 392.42,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    },
+    {
+      "id": "NEDC-LPG",
+      "group": "nedc-branch",
+      "label": "NEDC branch LPG+petrol 130g E6 PK9, dfit 01/01/2019",
+      "vehicle": {
+        "state": "second-hand",
+        "firstRegistration": "01/01/2019",
+        "registrationDate": "15/09/2026",
+        "fuel": "lpg-petrol",
+        "co2": 130,
+        "euroNorm": 6,
+        "fiscalPk": 9,
+        "sootFilter": null,
+        "simulatorCo2Cycle": "NEDC",
+        "vehicleType": "personenwagen",
+        "taxpayer": "natural person",
+        "simulationYear": 2026
+      },
+      "official": {
+        "biv": 198.43,
+        "roadTaxVB": 173.7,
+        "roadTaxAVB": 148.68,
+        "roadTaxTotal": 322.38,
+        "assessmentPeriod": {
+          "from": "01/09/2026",
+          "to": "31/08/2027"
+        }
+      },
+      "engineAtCapture": {
+        "biv": 59.08,
+        "roadTax": 286.62
+      },
+      "deltaAtCapture": {
+        "bivEur": 139.35,
+        "bivPct": 235.867,
+        "roadTaxEur": 35.76,
+        "roadTaxPct": 12.476
+      },
+      "intermediates": {
+        "ageCompletedYears": 7,
+        "leeftijdscorrectie": 0.29999999999999993,
+        "fuelFactorF": 0.88,
+        "airComponentC": 27.43,
+        "co2CoreTerm": 169.5,
+        "rawBivPreCorrection": 196.93,
+        "capHit": null,
+        "fiscalPkUsed": 9,
+        "baremeRpk": 284.2,
+        "roadTaxEcoBaseAt130": 284.2,
+        "roadTaxUterm": 284.2
+      }
+    }
+  ]
+}
