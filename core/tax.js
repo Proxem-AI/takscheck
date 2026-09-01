@@ -65,6 +65,35 @@
     return String(year).padStart(4, "0") + "-" + String(month).padStart(2, "0");
   }
 
+  // ---- indexation windows --------------------------------------------------
+
+  // Flemish BIV and road tax amounts are re-indexed every 1 July. A tariff block
+  // may carry indexWindows: override sets, newest first, each keyed by the date
+  // from which it applies. The applicable window is chosen by the date the tax
+  // is assessed (registration date for the BIV, assessment period start for the
+  // road tax), which is why a car registered 15/01/2026 and one registered
+  // 15/09/2026 are billed off different tables for identical inputs.
+  function isoDay(refDate) {
+    var d = refDate ? new Date(refDate) : new Date();
+    if (isNaN(d)) d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  function pickIndexWindow(cfg, refDate) {
+    var windows = cfg && cfg.indexWindows;
+    if (!windows || !windows.length) return cfg;
+    var key = isoDay(refDate);
+    for (var i = 0; i < windows.length; i++) {
+      if (key >= windows[i].from) {
+        var merged = {}, k;
+        for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) merged[k] = cfg[k];
+        for (k in windows[i]) if (Object.prototype.hasOwnProperty.call(windows[i], k)) merged[k] = windows[i][k];
+        return merged;
+      }
+    }
+    return cfg;
+  }
+
   // ---- fuel normalisation --------------------------------------------------
 
   function mapFuel(raw) {
@@ -192,7 +221,7 @@
   // ---- Flanders BIV --------------------------------------------------------
 
   function bivFlanders(vehicle, t, inf, refDate) {
-    var cfg = t.flanders.biv;
+    var cfg = pickIndexWindow(t.flanders.biv, refDate);
     var assumptions = [];
     var confidence = "high";
 
@@ -240,21 +269,56 @@
       lower("medium");
     }
 
-    // CO2 cycle: Flanders uses the published value as-is (assumes WLTP), but flag NEDC-era cars.
+    // CO2 measurement cycle. This selects a BRANCH, not a nuance: the official
+    // simulator asks for the NEDC CO2 value below first registration 01/01/2021
+    // and the WLTP value from that date, and the two run through different
+    // numerators. Source: Pax's 29 case capture of the official Vlaamse
+    // Belastingdienst wizard, 2026-09-01, cases AGE-7Y / AGE-8Y / AGE-16Y and
+    // NEDC-095 / NEDC-130 / NEDC-200 / NEDC-PET / NEDC-LPG, recorded in
+    // test/simulator-comparison-2026-09.json and asserted by
+    // test/simulator-comparison-harness.mjs --strict. Do NOT collapse this back
+    // to a single WLTP formula from trade press: doing so under-quoted every
+    // pre-2021 car by up to 236 percent. See tariffs.json
+    // provenance.constants["flanders.biv.nedcCo2Offset"].
     var cycle = inferCo2Cycle(vehicle.firstRegistration, inf.co2CycleByFirstReg);
     if (cycle.cycle === "nedc") {
-      assumptions.push("pre-2018 car: CO2 treated as NEDC and used as published (Flanders uses the certificate value)");
+      assumptions.push("first registered before 1 Jan 2021: NEDC branch of the BIV formula (CO2 x f + " + cfg.nedcCo2Offset.toFixed(2) + ")");
       lower("medium");
     } else if (cycle.confidence === "low") {
-      assumptions.push("2018 transition-window registration: WLTP assumed for CO2");
+      assumptions.push("registration close to the NEDC/WLTP boundary: WLTP assumed for CO2");
       lower("low");
     }
 
+    // Diesel below Euro 5 carries a soot filter question the ad data does not
+    // answer. With a filter the car is billed on the Euro 5 air component
+    // (official EURO4-DPF 1001.19), without one on its own (EURO4-NODPF
+    // 1011.87). Unknown is NOT treated as a free default: it is stated in the
+    // assumptions and it lowers the confidence.
+    var airEuro = euro;
+    if (vehicle.fuel === "diesel" && euro < 5) {
+      if (vehicle.sootFilter === true) {
+        airEuro = 5;
+        assumptions.push("diesel below Euro 5 with a soot filter: billed on the Euro 5 air component");
+      } else if (vehicle.sootFilter === false) {
+        assumptions.push("diesel below Euro 5 without a soot filter: billed on its own Euro " + euro + " air component");
+      } else {
+        assumptions.push("diesel below Euro 5: the soot filter is unknown and no ad exposes it, so the dearer no-filter column is used; a filter would lower this");
+        lower("low");
+      }
+    }
+
     var col = airColumn(vehicle.fuel);
-    var c = cfg.airComponent[col][String(euro)];
+    var c = cfg.airComponent[col][String(airEuro)];
     if (c == null) { c = cfg.airComponent[col]["6"]; assumptions.push("air component defaulted to Euro 6"); lower("medium"); }
 
-    var inner = (vehicle.co2 * f * cfg.q) / cfg.divisor;
+    // The NEDC additive sits AFTER the fuel factor, not before. The LPG case
+    // settles the ordering: f = 0.88 applied to (CO2 + 63) gives a core term of
+    // 487.00, applied to the CO2 alone it gives 632.89, and official NEDC-LPG
+    // is 632.89 + 28.54 air, x 0.30 age = 198.43.
+    var numerator = cycle.cycle === "nedc"
+      ? (vehicle.co2 * f + cfg.nedcCo2Offset)
+      : (vehicle.co2 * f * cfg.q);
+    var inner = numerator / cfg.divisor;
     var core = Math.pow(inner, cfg.exponent) * cfg.factor;
     var raw = core + c;
 
@@ -278,7 +342,7 @@
       amount: round2(amount),
       needsMoreData: false,
       confidence: confidence,
-      basis: "Flanders CO2 formula (q=" + cfg.q + ", Euro " + euro + ", LC=" + Math.round(lc * 100) + "%)",
+      basis: "Flanders CO2 formula (" + cycle.cycle.toUpperCase() + " branch, Euro " + euro + ", LC=" + Math.round(lc * 100) + "%)",
       assumptions: assumptions,
       simulatorUrl: t.simulatorUrls.flanders
     };
@@ -464,9 +528,36 @@
     // PHEV / hybrid-petrol / CNG ride the petrol eco scale on their own CO2;
     // only diesel carries the diesel base surcharge. There is no hybrid discount.
     var ecoFuel = vehicle.fuel === "diesel" ? "diesel" : "petrol";
+
+    // Same soot filter rule as the BIV air component: a diesel below Euro 5
+    // with a filter is billed on the Euro 5 eco base (official EURO4-DPF
+    // 417.05 against EURO4-NODPF 445.03). Unknown is stated, not defaulted
+    // silently. The confidence for the road tax is derived further down from
+    // input quality, so the note carries the warning.
+    var ecoEuro = euro;
+    if (vehicle.fuel === "diesel" && euro < 5) {
+      if (vehicle.sootFilter === true) {
+        ecoEuro = 5;
+        assumptions.push("diesel below Euro 5 with a soot filter: billed on the Euro 5 road tax base");
+      } else if (vehicle.sootFilter !== false) {
+        assumptions.push("diesel below Euro 5: soot filter unknown, billed on the dearer no-filter base");
+      }
+    }
+
     var baseTable = rcfg.ecoBaseAt130[ecoFuel];
-    var ref130 = baseTable[String(euro)] != null ? baseTable[String(euro)] : baseTable["6"];
-    var effCo2 = Math.max(rcfg.co2FloorGram, vehicle.co2);
+    var ref130 = baseTable[String(ecoEuro)] != null ? baseTable[String(ecoEuro)] : baseTable["6"];
+
+    // NEDC branch: the road tax carries a pure CO2 offset, a different
+    // correction from the BIV numerator and not interchangeable with it.
+    // 148 g NEDC behaves like 169.48 g WLTP for the BIV and like 175 g WLTP
+    // here. Measured at exactly 27.00 g across eight independent observations
+    // (three CO2 levels, three fuels, two PK steps) in
+    // test/simulator-comparison-2026-09.json.
+    var cycle = inferCo2Cycle(vehicle.firstRegistration, inf.co2CycleByFirstReg);
+    var co2Offset = cycle.cycle === "nedc" ? (rcfg.nedcCo2OffsetGram || 0) : 0;
+    if (co2Offset) assumptions.push("first registered before 1 Jan 2021: NEDC branch, CO2 read as " + (vehicle.co2 + co2Offset) + " g");
+
+    var effCo2 = Math.max(rcfg.co2FloorGram, vehicle.co2 + co2Offset);
     var u = ref130 + rcfg.co2SlopePerGram * (effCo2 - 130);
     var rpk = baremeR(fhp.value, rcfg);
     var vb = (rpk / rcfg.referenceDenominator) * u;
@@ -509,7 +600,7 @@
     var confidence = "low"; // annual road tax is estimate-tier across the board (see tariffs note)
     var simUrl = t.simulatorUrls[region];
 
-    var regCfg = t[region].roadTax;
+    var regCfg = pickIndexWindow(t[region].roadTax, refDate);
     var fr = parseFirstReg(vehicle.firstRegistration);
 
     // Region-specific EV handling. isZeroEmission guards against a plug-in hybrid

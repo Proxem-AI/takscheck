@@ -58,20 +58,29 @@ const officialCases = [
 
 // ---- A few more: engine-consistency / boundary cases ----------------------
 // These exercise age correction, floors and PHEV against hand-computed values.
-function bivRaw(co2, f, c) {
-  const inner = (co2 * f * 1.245) / 246;
-  return Math.pow(inner, 6) * 4500 + c;
+// Pre-correction BIV, branch aware. The official simulator uses the NEDC CO2
+// value below first registration 01/01/2021 and the WLTP value from that date,
+// and the numerator differs: CO2 x f x 1.245 on WLTP, CO2 x f + 63.00 on NEDC.
+// This helper carried only the WLTP numerator until 2026-09-01, which is why
+// the 12 year old car below was asserted at the wrong amount: the expectation
+// was computed from the same missing branch the engine was missing. The
+// official capture that settles it is test/simulator-comparison-2026-09.json.
+function bivRaw(co2, f, c, cycle) {
+  const numerator = cycle === "nedc" ? (co2 * f + 63.0) : (co2 * f * 1.245);
+  return Math.pow(numerator / 246, 6) * 4500 + c;
 }
 const extraCases = [
   {
     label: "petrol Euro6 130g, 3 years old -> LC 70%",
     vehicle: { fuel: "petrol", co2: 130, euroNorm: 6, firstRegistration: "2023-01" },
-    expected: Math.round(bivRaw(130, 1.0, 27.43) * 0.7 * 100) / 100
+    expected: Math.round(bivRaw(130, 1.0, 27.43, "wltp") * 0.7 * 100) / 100
   },
   {
-    label: "petrol Euro6 130g, 12 years old -> LC floor 10%",
+    // First registered 2014, so this one sits on the NEDC branch and exercises
+    // both the 10 percent age correction floor and the NEDC numerator.
+    label: "petrol Euro6 130g, 12 years old -> LC floor 10%, NEDC branch",
     vehicle: { fuel: "petrol", co2: 130, euroNorm: 6, firstRegistration: "2014-01" },
-    expected: Math.max(55.88, Math.round(bivRaw(130, 1.0, 27.43) * 0.10 * 100) / 100)
+    expected: Math.max(55.88, Math.round(bivRaw(130, 1.0, 27.43, "nedc") * 0.10 * 100) / 100)
   },
   {
     // Combustion minimum BIV floor is 55.88 (simulator-confirmed via the 330e

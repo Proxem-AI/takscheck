@@ -52,7 +52,11 @@ function toVehicle(c) {
     euroNorm: ev ? null : v.euroNorm,
     firstRegistration: iso(v.firstRegistration),
     fiscalHp: v.fiscalPk,
-    displacementCc: ev ? null : 1600
+    displacementCc: ev ? null : 1600,
+    // The wizard asks a diesel below Euro 5 whether a soot filter is fitted, and
+    // the answer moves both taxes. The fixture records it, so pass it through:
+    // null means the question did not apply to that case.
+    sootFilter: v.sootFilter
   };
 }
 
