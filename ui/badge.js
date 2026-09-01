@@ -49,7 +49,7 @@
       conf: {
         caption: "Nauwkeurigheid",
         tier: { high: "hoog", medium: "gemiddeld", low: "laag" },
-        aria: { high: "Betrouwbaarheid hoog", medium: "Betrouwbaarheid gemiddeld", low: "Betrouwbaarheid laag" }
+        aria: { high: "Nauwkeurigheid hoog", medium: "Nauwkeurigheid gemiddeld", low: "Nauwkeurigheid laag" }
       },
       expander: {
         label: "Waarom dit bedrag?",
