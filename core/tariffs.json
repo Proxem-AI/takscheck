@@ -1,8 +1,45 @@
 {
-  "version": "2026.07",
-  "updated": "2026-07-27",
+  "version": "2026.09",
+  "updated": "2026-09-01",
   "source": "Vlaamse Belastingdienst simulator (belastingen.fenb.be) calibration, WIGB art. 97ter-sexies, Bruxelles Fiscalite tariff PDF, SPW Finances bareme 1 Jul 2025. See README.",
   "currency": "EUR",
+  "provenance": {
+    "note": "Per-constant source and validity. Flemish road tax and BIV amounts reindex every 1 July. Anything whose validUntil has passed is drifted and must be re-verified against the Belgisch Staatsblad bericht for that 1 July before it is trusted. Confidence low means the value was not confirmed against a primary source and may be wrong.",
+    "lastAudit": "2026-09-01",
+    "auditedBy": "Felix, Proxem AI",
+    "primarySources": {
+      "vcf": "Vlaamse Codex Fiscaliteit van 13 december 2013, consolidated text, codex.vlaanderen.be (document 1023499, consolidation date 2026-06-11)",
+      "bericht": "Jaarlijks bericht tot aanpassing van de verkeersbelasting en de BIV, VCF art. 2.2.4.0.3 en 2.3.4.1.4, published in the Belgisch Staatsblad in June of each year",
+      "simulator": "Vlaamse Belastingdienst simulator, belastingen.fenb.be, captured via browser (API is WAF blocked to scripts)"
+    },
+    "constants": {
+      "flanders.biv.q": { "value": 1.245, "source": "vcf", "ref": "art. 2.3.4.1.2/1, tweede lid, 3: q = 1,07 in 2021, +0,035 per year, so 1,245 in 2026", "validFrom": "2026-01-01", "validUntil": "2026-12-31", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.divisor": { "value": 246, "source": "vcf", "ref": "art. 2.3.4.1.2/1, eerste lid", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.exponent": { "value": 6, "source": "vcf", "ref": "art. 2.3.4.1.2/1, eerste lid", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.factor": { "value": 4500, "source": "vcf", "ref": "art. 2.3.4.1.2/1, eerste lid", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.fuelFactor": { "source": "vcf", "ref": "art. 2.3.4.1.2/1, tweede lid, 2: lpg 0,88, aardgas 0,93, aardgas+benzine 0,744, andere 1", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.ageCorrection": { "source": "vcf", "ref": "art. 2.3.4.1.2/1, tweede lid, 5. Percentage table set by decree, not indexed, unchanged since 2021-01-01", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.airComponent": { "source": "bericht", "ref": "VCF base amounts at 1 July 2015 (diesel euro 6 454,07, benzine euro 6 20,61) times the indexation coefficient. Stored values equal base times 1,3307, which is the 1 July 2025 coefficient.", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "DRIFTED, one indexation round stale. The 1 July 2026 bericht was not retrievable, so the values were left as they are rather than guessed." },
+      "flanders.biv.min": { "value": 55.88, "source": "bericht", "ref": "VCF art. 2.3.4.1.3 base 41,99 indexed. 55,88 is the confirmed 1 July 2025 figure.", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "DRIFTED, one indexation round stale." },
+      "flanders.biv.max": { "value": 13969.29, "source": "bericht", "ref": "VCF art. 2.3.4.1.3 base 10.497,70 indexed. 13.969,29 is the confirmed 1 July 2025 figure (previous year 13.694,25). Corrected on 2026-09-01 from a placeholder 10000, which under-reported BIV for any vehicle above roughly 226 g CO2/km.", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "DRIFTED, one indexation round stale, but no longer fabricated." },
+      "flanders.biv.evFlat": { "value": 61.50, "source": "vcf", "ref": "art. 2.3.4.1.1, tweede lid: 61,50 euro for electric or hydrogen vehicles first registered after 31 December 2025. Decree amount, not indexed.", "validFrom": "2026-01-01", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.roadTax.evFlat": { "value": 107.18, "source": "trade press", "ref": "VCF art. 2.2.4.0.1, par. 9 sets 93,60 euro for electric or hydrogen vehicles registered after 31 December 2025. Stored value is that amount indexed and increased by the 10 percent opdeciemen. The previous 102,96 equals 93,60 x 1,10 exactly, which is the pre-indexation figure. Multiple motoring and fleet outlets give 107,18 for 1 July 2026 to 30 June 2027, consistent with 102,96 x 1,041.", "validFrom": "2026-07-01", "validUntil": "2027-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "Updated on 2026-09-01. Secondary sources only, the official bericht was not retrievable. Re-verify against the Belgisch Staatsblad." },
+      "flanders.roadTax.min": { "value": 58.55, "source": "bericht", "ref": "Confirmed 1 July 2025 minimumbelasting 53,23 plus 10 percent opdeciemen = 58,55.", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "DRIFTED, one indexation round stale." },
+      "flanders.roadTax.oldtimerFlat": { "value": 95.84, "source": "bericht", "ref": "Confirmed 1 July 2025 oldtimer forfait (down from 103,35).", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "DRIFTED, one indexation round stale." },
+      "flanders.roadTax.pkBareme": { "source": "simulator", "ref": "Scale shape only. The green road tax formula divides R(PK) by referenceDenominator, so the absolute level cancels and only the ratios matter. Stored values equal the official 1 July 2025 PK scale (4 PK 93,60 up to 20 PK 2.394,96) divided by a constant 1,1464, so the ratios are correct even though the levels are not published amounts.", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "2026-09-01", "confidence": "medium", "status": "Scale-free, so indexation drift does not affect output. Do not read these as euro amounts." },
+      "flanders.roadTax.ecoBaseAt130": { "source": "simulator", "ref": "Fitted to 19 simulator rows to the cent. Diesel euro 0 to 3 rows are extrapolated and untested.", "validFrom": "2025-07-01", "validUntil": "2026-06-30", "verified": "not re-verified", "confidence": "medium", "status": "DRIFTED, one indexation round stale. Not re-verified, the simulator API is WAF blocked." },
+      "flanders.roadTax.lpg": { "source": "simulator", "ref": "Bands beyond 13 PK extrapolated.", "validUntil": "2026-06-30", "verified": "not re-verified", "confidence": "low", "status": "DRIFTED and partly extrapolated." },
+      "brussels.tmc": { "source": "Bruxelles Fiscalite tariff PDF", "verified": "not re-verified", "confidence": "low", "status": "Not in scope of the 2026-09-01 audit. Treat as unverified." },
+      "brussels.roadTax": { "source": "annualScale", "verified": "not re-verified", "confidence": "low", "status": "Not in scope of the 2026-09-01 audit. Treat as unverified." },
+      "wallonia.tmc": { "source": "SPW Finances bareme 1 Jul 2025", "verified": "not re-verified", "confidence": "low", "status": "Not in scope of the 2026-09-01 audit. Treat as unverified." },
+      "wallonia.roadTax.evFlat": { "value": 102.96, "source": "unknown", "ref": "This is the Flemish figure copied across. Wallonia operates a separate reduced forfait and no Walloon source was found for it.", "verified": "not verified", "confidence": "low", "status": "SUSPECT. Deliberately left unchanged on 2026-09-01 because no Walloon source could be found. Do not assume it tracks the Flemish amount." },
+      "annualScale": { "source": "representative scale", "verified": "not re-verified", "confidence": "low", "status": "Flagged low confidence since 2026-07. Not in scope of the 2026-09-01 audit." }
+    },
+    "openIssues": [
+      "The 1 July 2026 Belgisch Staatsblad bericht with the indexed 2026-2027 amounts could not be retrieved: the Vlabel simulator API returns HTTP 403 to non-browser clients, vlaanderen.be no longer publishes the tables as text, and the trade press has not yet republished them. Every constant marked DRIFTED needs a browser capture of the simulator or the bericht itself.",
+      "Flemish BIV for a 7 year 8 month diesel at 148 g/km, euro 6, computes to 419,67 with the statutory LC of 30 percent while the official simulator reports 726,22. The gap is not explained by the age correction, which matches the decree exactly. It is unattributed and needs a fresh simulator capture with all inputs recorded."
+    ]
+  },
   "simulatorUrls": {
     "flanders": "https://belastingen.fenb.be/ui/public/vkb/simulatie",
     "brussels": "https://fisc.brussels/mytax/nl/tc",
@@ -26,16 +63,16 @@
         "diesel": { "0": 3809.99, "1": 1117.79, "2": 828.45, "3": 656.51, "4": 621.52, "5": 611.26, "6": 604.23 },
         "petrol": { "0": 1515.37, "1": 677.70, "2": 202.65, "3": 127.12, "4": 30.51, "5": 27.43, "6": 27.43 }
       },
-      "ageCorrection": { "startPct": 1.0, "stepPerYear": 0.10, "floorPct": 0.10, "floorFromYear": 9 },
+      "ageCorrection": { "startPct": 1.0, "stepPerYear": 0.10, "floorPct": 0.10, "floorFromYear": 9, "source": "VCF art. 2.3.4.1.2/1, tweede lid, 5 (LC table: 100/90/80/70/60/50/40/30/20/10 per completed year, floor 10 percent from 96 full months). Verified against the consolidated Vlaamse Codex Fiscaliteit on 2026-09-01. This is a percentage table set by decree, it is NOT indexed. Do not replace it with a decelerating curve: the 100/90/80/70/60/54/48/42 variant circulating in the motoring press is not the statutory table." },
       "min": 55.88,
-      "max": 10000.0,
+      "max": 13969.29,
       "evFlat": 61.50,
       "evExemptBeforeYear": 2026
     },
     "roadTax": {
       "model": "validated-2026",
       "min": 58.55,
-      "evFlat": 102.96,
+      "evFlat": 107.18,
       "evExemptBeforeYear": 2026,
       "oldtimerFlat": 95.84,
       "oldtimerAgeYears": 30,

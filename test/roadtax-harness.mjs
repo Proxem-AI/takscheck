@@ -49,7 +49,7 @@ const rows = [
   { n: 14, fuel: "lpg",    pk: 9,  co2: 130, euro: 6, reg: REG_NEW, expected: 286.62,  note: "VB 137.94 + AVB 148.68" },
   { n: 15, fuel: "phev",   pk: 13, co2: 35,  euro: 6, reg: REG_NEW, expected: 399.32,  note: "BMW 330e cell" },
   { n: 16, fuel: "phev",   pk: 9,  co2: 130, euro: 6, reg: REG_NEW, expected: 284.20,  note: "no PHEV break" },
-  { n: 17, fuel: "electric", pk: null, co2: 0, euro: null, reg: "2026-01", expected: 102.96, note: "new EV flat" },
+  { n: 17, fuel: "electric", pk: null, co2: 0, euro: null, reg: "2026-01", expected: 107.18, note: "new EV flat, 1 Jul 2026 indexation (was 102.96 for 1 Jul 2025 to 30 Jun 2026)" },
   { n: 18, fuel: "electric", pk: null, co2: 0, euro: null, reg: "2020-06", expected: 0.00,   note: "retained exemption" },
   { n: 19, fuel: "petrol", pk: 4,  co2: 1,   euro: 6, reg: REG_NEW, expected: 58.55,   note: "minimum floor" }
 ];
