@@ -4,7 +4,7 @@
   "source": "Vlaamse Belastingdienst simulator (belastingen.fenb.be) calibration, WIGB art. 97ter-sexies, Bruxelles Fiscalite tariff PDF, SPW Finances bareme 1 Jul 2025. See README.",
   "currency": "EUR",
   "provenance": {
-    "note": "Per-constant source and validity. Flemish road tax and BIV amounts reindex every 1 July. Since 2026-09-01 the amounts are no longer a single stale set: flanders.biv.indexWindows and flanders.roadTax.indexWindows carry one override set per indexation window, newest first, and the engine selects by the date the tax is assessed. The block outside indexWindows is the 1 July 2025 window and is still live for anything assessed before 1 July 2026, which is why the two older harnesses keep asserting those amounts. Confidence low means the value was not confirmed against a primary source and may be wrong.",
+    "note": "Per-constant source and validity. Flemish road tax and BIV amounts reindex every 1 July. Since 2026-09-01 the amounts are no longer a single stale set: flanders.biv.indexWindows and flanders.roadTax.indexWindows carry one override set per indexation window, newest first, and the engine selects by the date the tax is assessed. Since 2026-09-07 the selection honours the until bound as well as the from bound, so an expired table is never served silently: past its until date the engine keeps computing but labels the figure stale and forces the input tier down, and after twelve months it withdraws the amounts. q is not part of the 1 July indexation, it moves on 1 January, so it has its own series in flanders.biv.qWindows. Every dated window in this file is asserted by test/window-expiry-check.mjs, which fails the build once today is past the earliest until. The block outside indexWindows is the 1 July 2025 window and is still live for anything assessed before 1 July 2026, which is why the two older harnesses keep asserting those amounts. Confidence low means the value was not confirmed against a primary source and may be wrong.",
     "lastAudit": "2026-09-01",
     "auditedBy": "Felix, Proxem AI",
     "primarySources": {
@@ -14,7 +14,7 @@
       "comparisonSet": "test/simulator-comparison-2026-09.json: 29 vehicles driven through the public simulator wizard by Pax on 2026-09-01, one variable isolated per case, plus 5 label only probes that pinned the NEDC/WLTP boundary to the day. Asserted by test/simulator-comparison-harness.mjs --strict on every build."
     },
     "constants": {
-      "flanders.biv.q": { "value": 1.245, "source": "vcf", "ref": "art. 2.3.4.1.2/1, tweede lid, 3: q = 1,07 in 2021, +0,035 per year, so 1,245 in 2026. Applies to the WLTP branch ONLY, that is first registration from 01/01/2021. Below that date the numerator is CO2 x f + nedcCo2Offset and q does not appear at all.", "validFrom": "2026-01-01", "validUntil": "2026-12-31", "verified": "2026-09-01", "confidence": "high" },
+      "flanders.biv.qWindows[2026-01-01].q": { "value": 1.245, "source": "vcf", "ref": "art. 2.3.4.1.2/1, tweede lid, 3: q = 1,07 in 2021, +0,035 per year, so 1,245 in 2026. Applies to the WLTP branch ONLY, that is first registration from 01/01/2021. Below that date the numerator is CO2 x f + nedcCo2Offset and q does not appear at all.", "validFrom": "2026-01-01", "validUntil": "2026-12-31", "verified": "2026-09-01", "confidence": "high", "status": "Moved out of the base block into flanders.biv.qWindows on 2026-09-07. It was the only dated constant sitting outside the window structure, so it would have gone stale on 1 January 2027 with nothing in the code able to notice." },
       "flanders.biv.nedcCo2Offset": { "value": 63.00, "source": "comparisonSet", "ref": "The simulator asks for the NEDC CO2 value below first registration 01/01/2021 and the WLTP value from that date, and the numerator differs by branch: CO2 x f x q on WLTP, CO2 x f + 63,00 on NEDC. Inverting the sixth power on the official pre correction figures gives a constant additive 63,00 at 95, 130, 148 and 200 g (implied numerators 158, 193, 211, 263). The additive sits AFTER the fuel factor: on NEDC-LPG, f = 0,88 applied to (CO2 + 63) gives a core term of 487,00 while applied to the CO2 alone it gives 632,89, and the official figure is 632,89. Reproduces AGE-7Y, AGE-8Y, AGE-16Y, NEDC-095, NEDC-130, NEDC-200, NEDC-PET and NEDC-LPG. Before this branch existed the engine under quoted every pre 2021 car, mean +97,63 percent and worst +235,9 percent on the BIV.", "verified": "2026-09-01", "confidence": "high", "status": "Measured and reproducible on 8 independent official rows. The STATUTORY NAMING is the weak part: the consolidated VCF text for art. 2.3.4.1.2/1 that sets the 63,00 could not be retrieved, so the article reference is not yet citable and the value is likely to move at the next annual adjustment. Do not remove this branch on the strength of a trade press formula: that is exactly the failure this fixed." },
       "flanders.biv.sootFilterRule": { "source": "comparisonSet", "ref": "A diesel below Euro 5 is asked in the wizard whether a soot filter is fitted (Beschikt uw voertuig over een roetfilter). With a filter the car is billed on the Euro 5 column of BOTH the BIV air component and the road tax eco base, without one on its own euronorm column. Official EURO4-DPF BIV 1001,19 and road tax 417,05 against EURO4-NODPF 1011,87 and 445,03. The Euro 5 diesel air component derived from the statutory base, 636,20, equals the measured filter figure to the cent, which is what identifies the rule as a column switch rather than a separate discount.", "verified": "2026-09-01", "confidence": "medium", "status": "Measured at Euro 4 only. The same column switch is ASSUMED for Euro 0 to 3 and is not observed. No car ad exposes a soot filter field, so vehicle.sootFilter is normally null: the engine then bills the dearer no filter column, says so in its assumptions and lowers its confidence rather than defaulting silently. See openIssues." },
       "flanders.biv.divisor": { "value": 246, "source": "vcf", "ref": "art. 2.3.4.1.2/1, eerste lid", "verified": "2026-09-01", "confidence": "high" },
@@ -62,9 +62,15 @@
     "brussels": "https://fisc.brussels/mytax/nl/tc",
     "wallonia": "https://finances.wallonie.be/home/fiscalite/fiscalite-des-vehicules/tableaux-des-baremes/taxe-de-mise-en-circulation-1.html"
   },
+  "scope": {
+    "validatedRegions": ["flanders"],
+    "note": "v1 ships Flanders only. Brussels and Wallonia are encoded but have never been round tripped against an official source: brussels.tmc, brussels.roadTax and wallonia.tmc all carry confidence low in provenance, and wallonia.roadTax.evFlat is marked SUSPECT because it is the Flemish figure copied across. Rendering those in the same typography as a Flemish figure checked against 29 official simulator runs claims more than the evidence supports. Any region absent from validatedRegions returns a not-validated descriptor instead of an amount, and the badge points the user at that region's own official simulator. To bring a region back, validate it the way Flanders was validated and add it to this list.",
+    "reviewedBy": "Lex, Proxem AI, pre-publication legal review 2026-09-06"
+  },
   "flanders": {
     "biv": {
-      "q": 1.245,
+      "from": "2025-07-01",
+      "until": "2026-06-30",
       "divisor": 246,
       "exponent": 6,
       "factor": 4500,
@@ -86,6 +92,14 @@
       "max": 13969.29,
       "evFlat": 61.50,
       "evExemptBeforeYear": 2026,
+      "qWindows": [
+        {
+          "from": "2026-01-01",
+          "until": "2026-12-31",
+          "q": 1.245,
+          "note": "q for calendar year 2026. VCF art. 2.3.4.1.2/1, tweede lid, 3: q = 1,07 in 2021 and rises 0,035 per calendar year. Confirmed against the 29 case official simulator set on 2026-09-01. q sits inside a term raised to the sixth power, so a 2,8 percent error in q is roughly 18 percent on the CO2 component, and it hits the WLTP branch, which is every car first registered from 01/01/2021. Do NOT compute the next value programmatically from a start year: the escalator can be stopped by decree and a formula that keeps climbing on its own is a silent wrong answer by design. Add the 2027 window here once the value is confirmed."
+        }
+      ],
       "indexWindows": [
         {
           "from": "2026-07-01",
@@ -101,6 +115,8 @@
       ]
     },
     "roadTax": {
+      "from": "2025-07-01",
+      "until": "2026-06-30",
       "model": "validated-2026",
       "min": 58.55,
       "evFlat": 107.18,
