@@ -22,7 +22,12 @@
         wallonia: { name: "Wallonië", desc: "Hervormd 2025: kW x CO2 x massa x energie.", plate: "WALLONIË" }
       },
       saved: "Opgeslagen. Herlaad de advertentie om bij te werken.",
-      disc: "De bedragen zijn informatieve schattingen, geen officiële aanslagen. Het bindende bedrag wordt bepaald door de gewestelijke belastingdienst op basis van het gelijkvormigheidsattest van het voertuig."
+      unvalidated: "Nog niet gevalideerd",
+      unvalidatedNote: "Voor deze regio toont TaksCheck geen bedragen: de berekening is nog niet getoetst aan een officiële bron. Je krijgt een link naar de officiële simulator van de regio.",
+      disc: [
+        "TaksCheck schat de BIV en de jaarlijkse verkeersbelasting op basis van de gegevens in de advertentie. Het is geen officiële aanslag en geen fiscaal advies. Advertenties zijn soms onvolledig, en de tarieven worden elk jaar op 1 juli geïndexeerd. Wat u werkelijk betaalt, bepaalt de Vlaamse Belastingdienst op basis van het gelijkvormigheidsattest van het voertuig. Controleer de officiële simulator voordat u koopt.",
+        "TaksCheck is een onafhankelijk hulpmiddel van Proxem AI, zonder band met de Vlaamse Belastingdienst, AutoScout24 of mobile.de."
+      ]
     },
     fr: {
       title: "TaksCheck - Paramètres",
@@ -35,7 +40,12 @@
         wallonia: { name: "Wallonie", desc: "Réformée 2025: kW x CO2 x masse x énergie.", plate: "WALLONIE" }
       },
       saved: "Enregistré. Rechargez l'annonce pour mettre à jour.",
-      disc: "Les montants sont des estimations informatives, pas des avis d'imposition officiels. Le montant contraignant est fixé par l'administration fiscale régionale sur la base du certificat de conformité du véhicule."
+      unvalidated: "Pas encore validé",
+      unvalidatedNote: "Pour cette région, TaksCheck n'affiche pas de montants: le calcul n'a pas encore été confronté à une source officielle. Vous recevez un lien vers le simulateur officiel de la région.",
+      disc: [
+        "TaksCheck estime la taxe de mise en circulation et la taxe de circulation annuelle à partir des données de l'annonce. Ce n'est pas un avis d'imposition officiel ni un conseil fiscal. Les annonces sont parfois incomplètes, et les tarifs sont indexés chaque année au 1er juillet. Le montant réellement dû est fixé par l'administration fiscale flamande (Vlaamse Belastingdienst) sur la base du certificat de conformité du véhicule. Vérifiez le simulateur officiel avant d'acheter.",
+        "TaksCheck est un outil indépendant de Proxem AI, sans lien avec le Vlaamse Belastingdienst, AutoScout24 ou mobile.de."
+      ]
     }
   };
 
@@ -47,6 +57,13 @@
   var lang = "nl";
   var region = "flanders";
   var savedTimer = null;
+  // Which regions v1 stands behind. Read from core/tariffs.json rather than
+  // repeated here, so this page and the engine can never disagree about it.
+  var validated = null;
+
+  function isValidated(key) {
+    return !validated || validated.indexOf(key) !== -1;
+  }
 
   function detectLang() {
     var n = "";
@@ -77,9 +94,12 @@
       var r = t.regions[key];
       var sel = key === region ? " sel" : "";
       var checked = key === region ? " checked" : "";
-      return '<label class="frow' + sel + '" data-region="' + key + '">' +
+      var ok = isValidated(key);
+      var tag = ok ? "" : '<span class="funval">' + t.unvalidated + "</span>";
+      return '<label class="frow' + sel + (ok ? "" : " unval") + '" data-region="' + key + '">' +
         '<input type="radio" name="region" value="' + key + '"' + checked + '>' +
-        '<span class="ftext"><b>' + r.name + '</b><span class="rs">' + r.desc + "</span></span>" +
+        '<span class="ftext"><b>' + r.name + tag + '</b><span class="rs">' +
+          (ok ? r.desc : t.unvalidatedNote) + "</span></span>" +
         plate(r.plate) +
       "</label>";
     }).join("");
@@ -120,7 +140,12 @@
     el.sub.textContent = t.sub;
     el.regionHeading.textContent = t.regionHeading;
     el.regionNote.textContent = t.regionNote;
-    el.disc.textContent = t.disc;
+    el.disc.innerHTML = "";
+    t.disc.forEach(function (para) {
+      var pEl = document.createElement("p");
+      pEl.textContent = para;
+      el.disc.appendChild(pEl);
+    });
     el.saved.hidden = true;
     Array.prototype.forEach.call(el.toggle.querySelectorAll("button"), function (b) {
       b.classList.toggle("on", b.getAttribute("data-lang") === lang);
@@ -138,15 +163,27 @@
     render();
   });
 
-  // Load persisted region + language, then paint.
-  if (STORE) {
-    STORE.get({ region: "flanders", lang: null }, function (cfg) {
-      region = (cfg && cfg.region) || "flanders";
-      lang = (cfg && cfg.lang) || detectLang();
-      render();
+  function loadScope() {
+    return new Promise(function (resolve) {
+      try {
+        fetch(chrome.runtime.getURL("core/tariffs.json"))
+          .then(function (r) { return r.json(); })
+          .then(function (j) { validated = (j && j.scope && j.scope.validatedRegions) || null; resolve(); })
+          .catch(function () { resolve(); });
+      } catch (e) { resolve(); }
     });
-  } else {
-    lang = detectLang();
-    render();
   }
+
+  function loadPrefs() {
+    return new Promise(function (resolve) {
+      if (!STORE) { lang = detectLang(); resolve(); return; }
+      STORE.get({ region: "flanders", lang: null }, function (cfg) {
+        region = (cfg && cfg.region) || "flanders";
+        lang = (cfg && cfg.lang) || detectLang();
+        resolve();
+      });
+    });
+  }
+
+  Promise.all([loadScope(), loadPrefs()]).then(render);
 })();

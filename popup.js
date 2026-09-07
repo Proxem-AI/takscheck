@@ -22,7 +22,12 @@
       language: "Taal",
       settings: "Instellingen",
       simulator: "Officiële simulator",
-      reg: { vl: "VLAANDEREN", br: "BRUSSEL", wa: "WALLONIË" }
+      reg: { vl: "VLAANDEREN", br: "BRUSSEL", wa: "WALLONIË" },
+      unval: "Voor deze regio toont TaksCheck geen bedragen: de berekening is nog niet getoetst aan een officiële bron.",
+      note: [
+        "TaksCheck schat de BIV en de jaarlijkse verkeersbelasting op basis van de gegevens in de advertentie. Het is geen officiële aanslag en geen fiscaal advies. Advertenties zijn soms onvolledig, en de tarieven worden elk jaar op 1 juli geïndexeerd. Wat u werkelijk betaalt, bepaalt de Vlaamse Belastingdienst op basis van het gelijkvormigheidsattest van het voertuig. Controleer de officiële simulator voordat u koopt.",
+        "TaksCheck is een onafhankelijk hulpmiddel van Proxem AI, zonder band met de Vlaamse Belastingdienst, AutoScout24 of mobile.de."
+      ]
     },
     fr: {
       status_on: "Actif sur cette annonce",
@@ -31,7 +36,12 @@
       language: "Langue",
       settings: "Paramètres",
       simulator: "Simulateur officiel",
-      reg: { vl: "FLANDRE", br: "BRUXELLES", wa: "WALLONIE" }
+      reg: { vl: "FLANDRE", br: "BRUXELLES", wa: "WALLONIE" },
+      unval: "Pour cette région, TaksCheck n'affiche pas de montants: le calcul n'a pas encore été confronté à une source officielle.",
+      note: [
+        "TaksCheck estime la taxe de mise en circulation et la taxe de circulation annuelle à partir des données de l'annonce. Ce n'est pas un avis d'imposition officiel ni un conseil fiscal. Les annonces sont parfois incomplètes, et les tarifs sont indexés chaque année au 1er juillet. Le montant réellement dû est fixé par l'administration fiscale flamande (Vlaamse Belastingdienst) sur la base du certificat de conformité du véhicule. Vérifiez le simulateur officiel avant d'acheter.",
+        "TaksCheck est un outil indépendant de Proxem AI, sans lien avec le Vlaamse Belastingdienst, AutoScout24 ou mobile.de."
+      ]
     }
   };
 
@@ -52,8 +62,18 @@
     segs: Array.prototype.slice.call(document.querySelectorAll(".seg")),
     langBtns: Array.prototype.slice.call(document.querySelectorAll("[data-set-lang]")),
     settingsLink: document.getElementById("settingsLink"),
-    simLink: document.getElementById("simLink")
+    simLink: document.getElementById("simLink"),
+    note: document.getElementById("note"),
+    unval: document.getElementById("unval")
   };
+
+  // Which regions v1 stands behind, read from core/tariffs.json so the popup and
+  // the engine cannot disagree about it.
+  function isValidated(code) {
+    var list = tariffs && tariffs.scope && tariffs.scope.validatedRegions;
+    if (!list) return true;
+    return list.indexOf(REG_TO_STORE[code]) !== -1;
+  }
 
   function L() { return I18N[lang] || I18N.nl; }
 
@@ -80,16 +100,26 @@
     });
     el.segs.forEach(function (s) { s.textContent = t.reg[s.getAttribute("data-reg")]; });
     el.rsw.setAttribute("aria-label", t.region);
+    el.note.innerHTML = "";
+    t.note.forEach(function (para) {
+      var node = document.createElement("p");
+      node.textContent = para;
+      el.note.appendChild(node);
+    });
+    el.unval.textContent = t.unval;
     el.langBtns.forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-set-lang") === lang); });
   }
 
   function paintRegion() {
     pop.setAttribute("data-region", reg);
     el.segs.forEach(function (s) {
-      var on = s.getAttribute("data-reg") === reg;
+      var code = s.getAttribute("data-reg");
+      var on = code === reg;
       s.classList.toggle("sel", on);
+      s.classList.toggle("unval", !isValidated(code));
       s.setAttribute("aria-checked", on ? "true" : "false");
     });
+    el.unval.hidden = isValidated(reg);
     var url = simUrl();
     if (url) { el.simLink.href = url; el.simLink.removeAttribute("aria-disabled"); }
     else { el.simLink.href = "#"; }

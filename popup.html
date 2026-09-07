@@ -76,6 +76,20 @@
   .pop-link:first-child{border-top:0}
   .pop-link svg{width:15px;height:15px;flex:none;color:var(--link)}
   .pop-link .arw{margin-left:auto;width:13px;height:13px;opacity:.6}
+
+  /* Notice. Lex's five sentence statement plus the affiliation line. It sits
+     here as well as on the options page because this is where a user comes to
+     understand the number, and it costs nothing. */
+  .pop-note{border-top:1px solid var(--line);margin:0 -13px;padding:11px 13px 12px;background:var(--panel-2)}
+  .pop-note p{margin:0 0 8px;font-size:11px;line-height:1.45;color:var(--ink-soft)}
+  .pop-note p:last-child{margin-bottom:0}
+
+  /* A region outside the validated scope stays selectable and is marked, so the
+     user chooses it knowing TaksCheck will not quote a figure for it. */
+  .rsw .seg.unval{color:#7A4E00;background:#FBEBCF}
+  .rsw .seg.unval.sel{background:#F6DDAE;color:#5F3D00;box-shadow:0 0 0 2px #C77700 inset}
+  .pop-unval{margin:7px 0 0;font-size:11px;line-height:1.4;color:var(--ink-soft)}
+  .pop-unval[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -99,6 +113,7 @@
         <button class="seg" type="button" role="radio" aria-checked="false" data-reg="br"></button>
         <button class="seg" type="button" role="radio" aria-checked="false" data-reg="wa"></button>
       </div>
+      <p class="pop-unval" id="unval" hidden></p>
     </div>
 
     <div class="field">
@@ -121,6 +136,7 @@
         <svg class="arw" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </div>
+    <div class="pop-note" id="note"></div>
   </div>
 </div>
 <script src="popup.js"></script>

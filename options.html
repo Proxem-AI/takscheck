@@ -71,6 +71,15 @@
 
   .fdisc{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);
     border-radius:10px;padding:12px 14px;font-size:12px;color:var(--slate);line-height:1.5}
+  .fdisc p{margin:0 0 9px}
+  .fdisc p:last-child{margin-bottom:0}
+
+  /* A region outside the validated scope is offered but visibly marked, so the
+     user picks it knowing what it does. Amber pairing from the badge, AA. */
+  .funval{display:inline-block;margin-left:7px;vertical-align:1px;background:#FBEBCF;color:#7A4E00;
+    font-size:10px;font-weight:800;letter-spacing:.02em;padding:1px 7px;border-radius:5px}
+  @media (prefers-color-scheme:dark){.funval{background:#3a2c10;color:#f0cf92}}
+  .frow.unval .ftext .rs{color:var(--slate)}
 </style>
 </head>
 <body>
