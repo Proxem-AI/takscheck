@@ -1,6 +1,31 @@
 # TaksCheck
 
-A Manifest V3 Chrome extension prototype that reads an AutoScout24 or mobile.de
+## Disclaimer
+
+TaksCheck produces an estimate of Belgian vehicle tax from the data in a
+car advert. It is not an official assessment and not tax advice. The
+binding amount is set by the regional tax authority from the vehicle's
+certificate of conformity.
+
+Flemish rates are re-indexed every 1 July, and the BIV q coefficient
+changes every 1 January. The rate tables in core/tariffs.json carry the
+window they are valid for. Figures computed outside that window are
+labelled stale in the interface and are withdrawn entirely after twelve
+months.
+
+Scope of validation: Flanders only. Verified against the official Vlaamse
+Belastingdienst simulator on 1 September 2026, 27 of 29 cases exact to the
+cent on BIV and 28 of 29 on road tax, with the residual differences
+attributable to the simulator's own rounding. See
+test/simulator-comparison-2026-09.json.
+
+TaksCheck is an independent tool by Proxem AI. It is not affiliated with,
+endorsed by or connected to the Vlaamse Belastingdienst, AutoScout24 or
+mobile.de.
+
+## What it is
+
+A Manifest V3 Chrome extension that reads an AutoScout24 or mobile.de
 car ad and shows two estimated Belgian vehicle taxes as an on-ad badge:
 
 - **BIV / TMC** the one-off registration tax (belasting op de inverkeerstelling)
@@ -17,25 +42,42 @@ the regional tax office from the certificate of conformity.
 
 - **Tax engine** (`core/tax.js`), a pure, framework-free module encoding all
   three regions:
-  - **Flanders** BIV: the CO2 formula `((CO2 x f x q)/246)^6 x 4500 + c) x LC`,
-    with the confirmed 2026 constants (q = 1.245, the calibrated air-component
-    `c` grid, fuel factors, the LC age table, the 61.50 EUR EV minimum). This is
-    the validated priority and matches the official simulator to the cent.
+  - **Flanders** BIV: two branches, not one. From first registration
+    01/01/2021 the numerator is `CO2 x f x q` (WLTP); before that date it is
+    `CO2 x f + 63.00` (NEDC) and q does not appear at all. Both run through
+    `(numerator/246)^6 x 4500 + c`, then the LC age correction. Constants are
+    the calibrated air-component `c` grid, the fuel factors, the statutory LC
+    table and the 61.50 EUR EV flat. q is 1.245 for calendar year 2026 and
+    lives in `flanders.biv.qWindows` with its own validity dates, because it
+    moves every 1 January while the amounts move every 1 July. This is the
+    validated priority and matches the official simulator to the cent.
   - **Brussels** TMC: the traditional higher-of fiscal-HP / kW dual table, the
     15-year federal age schedule, EV flat 78.88 EUR.
   - **Wallonia** TMC: the reformed 2025 formula `MB x (CO2/X) x (MMA/1838) x C`
     with the kW base table, energy coefficient, mass ratio, 50 / 9000 bounds.
-  - Annual road tax per region on the representative fiscal-HP scale, with the
-    simulator-confirmed Flemish EV flat (102.96 EUR) and minimum (58.55 EUR).
+  - Annual road tax per region on the representative fiscal-HP scale. The
+    Flemish EV flat is 107.16 EUR and the minimum 60.94 EUR in the window from
+    1 July 2026; the preceding window carries 107.18 and 58.55. 102.96 EUR is
+    the WALLOON EV forfait, which this README previously attributed to Flanders
+    and called simulator-confirmed. It is neither: the provenance block marks
+    it SUSPECT, sourced from "unknown", and notes it is the Flemish figure
+    copied into the wrong region.
 - **Updateable tariff tables** as JSON (`core/tariffs.json`), baked in as the
   default. The logic reads the numbers from this file, so tariffs can be updated
   without touching code.
 - **Derivations** from the research: fiscal HP from cc (cc / 200), Euro norm and
   WLTP/NEDC cycle inferred from the first-registration date, MMA fallback tiering
   (ad value, then kerb weight + payload, then body-type default).
-- **Confidence + assumptions**: every result carries a confidence level and the
-  list of assumptions used. The badge surfaces confidence as an "approx." / "env."
-  tag plus a short localised note; the full assumptions list stays in the
+- **Input completeness + assumptions**: every result carries a tier and the
+  list of assumptions used. The tier measures how complete the ADVERT was, which
+  is all it can measure: high means the fiscal PK was stated and CO2, Euro norm
+  and fuel were all known, low means a plug-in hybrid or a guessed Euro norm.
+  It is captioned "Gegevens uit de advertentie" and "Donnees de l'annonce" for
+  that reason. It is not a claim about how close the figure is to the right
+  answer, and it cannot be: a meter fed by the advert has no way to detect the
+  formula being wrong. Model confidence belongs in the comparison result above,
+  because something measured that. The badge also shows an "approx." / "env."
+  tag and a short localised note; the full assumptions list stays in the
   `[BIV+Rijtaks]` console debug line to keep the on-ad badge clean.
 - **Two per-site detail-page adapters feeding one shared pipeline**
   (normaliser to tax engine to Shadow-DOM badge). Only extraction differs:
@@ -55,9 +97,12 @@ the regional tax office from the certificate of conformity.
   region plate tag and a single-hue verdict (low = neutral, medium = pale ruby
   tint, high = full ruby fill, no green or amber); and an estimate disclaimer.
   Palette is one blue `#1B54C7`, one ruby `#841922`, plus neutrals. States: full
-  data, low confidence (an "approx." / "env." tag plus a localised sentence), and
-  a "not enough data" cell naming the missing input while the other tax still
-  computes. Currency uses the euro glyph with a dot thousands separator (e.g. the
+  data, partial data (an "approx." / "env." tag plus a localised sentence), a
+  "not enough data" cell naming the missing input while the other tax still
+  computes, a stale-rates state that keeps the figures and labels them, and an
+  expired state that withdraws them. A blank cell always names its own reason:
+  the advert was short of a field, the region is not validated, or the rates are
+  too old to stand behind. Currency uses the euro glyph with a dot thousands separator (e.g. the
   glyph then "1.847"), the Belgian convention.
 - **Options page** (`options.html`): region selection (Flanders default), stored
   in `chrome.storage.sync`.
@@ -85,19 +130,33 @@ If a badge shows "not enough data", the ad did not expose a required field
 ## Run the regression harness
 
 ```bash
-node test/harness.mjs
-# or
 npm test
 ```
 
-The harness proves the Flemish engine against government ground truth. It runs
-the test vehicles Pax recorded from the official Vlaamse Belastingdienst
-simulator (research section 0.9: petrol and diesel across Euro 0-6 at 130 and
-100 g/km, LPG, CNG, and a new EV) plus age-correction and floor boundary cases,
-and asserts each matches within +/- 0.15 EUR.
+`npm test` runs five stages, in this order:
 
-**Current result: 23/23 pass, max delta 0.000 EUR** against the 19 official
-simulator values. The engine reproduces the simulator exactly.
+| Stage | What it proves |
+| --- | --- |
+| `test/window-expiry-check.mjs` | Every dated window in `core/tariffs.json` is still live. Fails the build once today is past the newest window of any series, with 60 days of warning first. |
+| `test/harness.mjs` | 27 assertions: the official Vlaamse Belastingdienst BIV ground truth, engine boundary cases, and the v1 scope gate. |
+| `test/roadtax-harness.mjs` | 19 rows of the official road-tax table, to the cent. |
+| `test/simulator-comparison-harness.mjs --strict` | The 29 case official simulator capture, 58 comparisons across BIV and road tax. |
+| `test/badge-states.mjs` | 33 assertions: the badge renders correctly in the current, stale, expired and unvalidated-region states, in NL and FR, and carries the wording the legal review fixed. |
+
+**Current result: 27 of 29 cases exact to the cent on BIV and 28 of 29 on road
+tax** against the official simulator, captured 1 September 2026, Flanders only.
+Three residuals: one cent on `AGE-1Y` and `NEDC-200` (BIV), two cents on
+`FUEL-DIE` (road tax), all attributable to the simulator's own rounding. No row
+is outside 0.05 EUR. Full record: `test/simulator-comparison-2026-09.json`.
+
+The window expiry check can be shown to bite by faking the clock:
+
+```bash
+TAKSCHECK_TODAY=2027-01-01 npm test   # exits 1: the q window lapsed on 2026-12-31
+```
+
+That environment variable is a test hook for demonstrating the ratchet. It is
+not for use in CI.
 
 ### About the live simulator
 
@@ -118,8 +177,9 @@ simulator wizard in a browser (or via browser automation, as Pax did) and read
   com, it, es, at, bg, hr, pl, ro, se, tr).
 - **mobile.de detail pages** (`*.mobile.de`, including `suchen.mobile.de` and
   `www.mobile.de`): JSON-LD first, Technische Daten table fallback.
-- All three regional formulas, with **Flanders BIV validated** against the
-  official simulator.
+- **Flanders only.** The BIV and the annual road tax, both validated against
+  the official simulator. Brussels and Wallonia are encoded but scoped out, see
+  below.
 
 **Deferred to the next phase**
 
@@ -127,7 +187,13 @@ simulator wizard in a browser (or via browser automation, as Pax did) and read
   infinite-scroll handling. Badges currently appear on detail pages only.
 - **Brussels and Wallonia validation.** Their formulas are encoded from the
   research but not round-tripped against an official simulator (Brussels has no
-  public simulator; Wallonia was not driven). Spot-check before relying on them.
+  public simulator; Wallonia was not driven). They are therefore OUT OF SCOPE
+  for v1: `scope.validatedRegions` in `core/tariffs.json` holds v1 to Flanders,
+  and the other two regions return a "not yet validated" panel with a link to
+  their own official simulator instead of a figure. Presenting an unvalidated
+  amount in the same typography as a Flemish amount checked against 29 official
+  runs claims more than the evidence supports. They return by being validated
+  the way Flanders was and added to that list.
 - **Annual road-tax precision.** The per-CV cents come from a representative
   shared scale and drift by indexation window. Only the Flemish EV flat and
   minimum are simulator-pinned. Re-scrape the three official baremes to pin them.
@@ -161,8 +227,28 @@ content/mobilede.js      mobile.de detail-page adapter (JSON-LD + Technische Dat
 ui/badge.js              Shadow-DOM TaksCheck badge renderer (shared, bilingual NL / FR)
 options.html / options.js  region selection UI
 sw.js                    ephemeral MV3 service worker
-test/harness.mjs         regression harness vs the official Flemish simulator
+test/harness.mjs         BIV ground truth, boundary cases, v1 scope gate
+test/roadtax-harness.mjs official road-tax table, 19 rows
+test/simulator-comparison-harness.mjs  29 case official simulator capture
+test/badge-states.mjs    badge wording and the four panel states, NL and FR
+test/window-expiry-check.mjs  fails the build once a tariff window lapses
+LICENSE                  Apache License 2.0
 ```
+
+## Licence
+
+Apache License 2.0. See `LICENSE`.
+
+Apache 2.0 over MIT for the express limitation of liability: for a tax
+calculator, where the whole concern is responsibility for a wrong output, the
+stronger and more explicit clause is the right one.
+
+Note what that does and does not cover. The warranty disclaimer binds anyone
+who takes this source code under the licence. It does not bind an end user who
+installs the packaged extension from a store, because that person is not a
+licensee of the code. The licence protects the repository; the notice at the
+top of this file and the notice rendered in the extension protect the product.
+Both are needed and neither substitutes for the other.
 
 ## Privacy
 
