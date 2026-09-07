@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "TaksCheck",
   "version": "0.1.0",
-  "description": "See the real Belgian car tax on any car ad: BIV / TMC (registration) and Rijtaks / TC (annual road tax), in NL or FR. Estimate only, not an official assessment.",
+  "description": "Estimate the Belgian car tax on any car ad: BIV / TMC and Rijtaks / TC, Flanders, in NL or FR. Not an official assessment.",
   "permissions": ["storage"],
   "icons": {
     "16": "icons/icon16.png",
