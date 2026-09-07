@@ -141,7 +141,7 @@ npm test
 | `test/harness.mjs` | 27 assertions: the official Vlaamse Belastingdienst BIV ground truth, engine boundary cases, and the v1 scope gate. |
 | `test/roadtax-harness.mjs` | 19 rows of the official road-tax table, to the cent. |
 | `test/simulator-comparison-harness.mjs --strict` | The 29 case official simulator capture, 58 comparisons across BIV and road tax. |
-| `test/badge-states.mjs` | 33 assertions: the badge renders correctly in the current, stale, expired and unvalidated-region states, in NL and FR, and carries the wording the legal review fixed. |
+| `test/badge-states.mjs` | 39 assertions: the badge renders correctly in the current, stale, expired and unvalidated-region states, in NL and FR, and carries the wording and the aria strings the legal review fixed. |
 
 **Current result: 27 of 29 cases exact to the cent on BIV and 28 of 29 on road
 tax** against the official simulator, captured 1 September 2026, Flanders only.

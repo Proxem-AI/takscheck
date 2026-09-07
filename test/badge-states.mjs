@@ -117,18 +117,44 @@ console.log("\n== Stale: the figure stays, the claim comes down ==\n");
   check("euro amount is still rendered when stale", all.biv.amount != null && /€/.test(nl.html));
   check("NL stale sentence is shown",
     nl.text.includes("Let op: deze tarieven zijn van 1 juli 2026 en zijn sindsdien geïndexeerd.") &&
-    nl.text.includes("Het werkelijke bedrag ligt hoger."), nl.text.slice(-260));
+    nl.text.includes("Het werkelijke bedrag is daardoor waarschijnlijk hoger.") &&
+    nl.text.includes("Controleer de officiële simulator voor het actuele bedrag."), nl.text.slice(-300));
+  // The direction is stated as a likelihood, not as fact. Indexation has only
+  // ever moved upward, but that is inductive and a decree can cut a rate, so an
+  // unqualified "ligt hoger" would be an affirmative claim about a number this
+  // panel cannot compute. Same defect the caption was sent back for.
+  check("NL states the direction as likelihood, not as fact",
+    !/bedrag ligt hoger/.test(nl.text), nl.text.slice(-300));
   check("stale disclaimer carries the warning treatment", nl.html.includes("tc-disc-warn"));
   check("official simulator link is promoted", nl.html.includes("tc-sim-lead"));
   check("input tier is forced down a step (high becomes medium)",
     all.biv.confidence === "medium", String(all.biv.confidence));
   check("NL tier word follows the tier down",
     nl.text.includes("deels geschat"), nl.text.slice(0, 200));
+  check("NL aria-label follows the tier down with it",
+    nl.html.includes('aria-label="Gegevens uit de advertentie: deels geschat"'));
+  // The road tax keeps a full meter here and that is correct, not a bug. Its own
+  // index window runs to 2027-06-30 and is still live; only q has lapsed, and q
+  // touches the BIV alone. More to the point, the meter measures how complete
+  // the ADVERT was, and the advert is still complete whatever the rate tables
+  // are doing. That separation is the entire reason the caption changed, so it
+  // is worth asserting rather than assuming.
+  check("a figure whose own window is still live keeps its full meter",
+    all.rijtaks.confidence === "high" &&
+    nl.html.includes('aria-label="Gegevens uit de advertentie: volledig"'),
+    "rijtaks " + all.rijtaks.confidence);
+  check("the stale sentence is in the accessible text, not conveyed by colour alone",
+    /Let op:/.test(nl.text));
 
   const fr = render("fr", all, petrol, "flanders");
+  check("FR aria-label follows the tier down with it",
+    fr.html.includes("aria-label=\"Données de l'annonce: partiellement estimées\""));
   check("FR stale sentence is shown",
     fr.text.includes("Attention: ces tarifs datent du 1er juillet 2026 et ont été indexés depuis.") &&
-    fr.text.includes("Le montant réel est plus élevé."), fr.text.slice(-260));
+    fr.text.includes("Le montant réel est donc probablement plus élevé.") &&
+    fr.text.includes("Vérifiez le simulateur officiel pour le montant actuel."), fr.text.slice(-300));
+  check("FR states the direction as likelihood, not as fact",
+    !/montant réel est plus élevé/.test(fr.text), fr.text.slice(-300));
 }
 
 // ---- 4. expired: amounts withdrawn, panel and link stay --------------------
