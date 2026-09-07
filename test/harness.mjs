@@ -156,8 +156,37 @@ for (const tc of extraCases) {
   );
 }
 
+// ---- v1 scope gate --------------------------------------------------------
+// Brussels and Wallonia are encoded but were never round tripped against an
+// official source, so tariffs.scope.validatedRegions holds v1 to Flanders and
+// the public engine returns a not-validated descriptor for the other two. These
+// two rows assert the gate itself: if someone widens the scope without doing the
+// validation, the suite says so.
+console.log("\n== Group 3: v1 scope gate (Flanders only) ==\n");
+for (const region of ["brussels", "wallonia"]) {
+  const r = engine.computeBIV({ fuel: "petrol", powerKw: 110, displacementCc: 1800, firstRegistration: REG_NEW }, region, REF);
+  const ok = r.unvalidatedRegion === true && r.amount === null && !!r.simulatorUrl;
+  total++;
+  if (!ok) failures++;
+  console.log((ok ? "  PASS " : "  FAIL ") + (region + " returns the not-validated descriptor, no amount, own simulator link").padEnd(72));
+}
+{
+  const r = engine.computeBIV({ fuel: "petrol", co2: 130, euroNorm: 6, fiscalHp: 9, firstRegistration: REG_NEW }, "flanders", REF);
+  const ok = !r.unvalidatedRegion && r.amount != null;
+  total++;
+  if (!ok) failures++;
+  console.log((ok ? "  PASS " : "  FAIL ") + "flanders is inside the validated scope and still returns an amount".padEnd(72));
+}
+
 // ---- other-region smoke checks (documented expected values from research) --
-console.log("\n== Group 3: Brussels / Wallonia smoke checks (research worked examples) ==\n");
+// Run against a deliberately unscoped copy of the tariff table, so the Brussels
+// and Wallonia formulas keep their coverage while the shipped engine refuses to
+// present them. Scope is data, so widening it needs no product code.
+console.log("\n== Group 4: Brussels / Wallonia formula smoke checks (out of v1 scope) ==\n");
+const unscopedEngine = createTaxEngine({
+  ...tariffs,
+  scope: { ...tariffs.scope, validatedRegions: ["flanders", "brussels", "wallonia"] }
+});
 const smoke = [
   {
     label: "Brussels: petrol 110kW ~9CV new -> higher kW axis 1112.01",
@@ -179,7 +208,7 @@ const smoke = [
   }
 ];
 for (const s of smoke) {
-  const r = engine.computeBIV(s.vehicle, s.region, REF);
+  const r = unscopedEngine.computeBIV(s.vehicle, s.region, REF);
   const got = r.amount;
   const ok = Math.abs(got - s.approx) <= s.tol;
   console.log((ok ? "  OK   " : "  DIFF ") + s.label.padEnd(52) + " ~" + s.approx.toFixed(2).padStart(9) + "  got " + Number(got).toFixed(2).padStart(9));

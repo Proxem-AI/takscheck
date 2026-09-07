@@ -67,31 +67,116 @@
 
   // ---- indexation windows --------------------------------------------------
 
-  // Flemish BIV and road tax amounts are re-indexed every 1 July. A tariff block
-  // may carry indexWindows: override sets, newest first, each keyed by the date
-  // from which it applies. The applicable window is chosen by the date the tax
-  // is assessed (registration date for the BIV, assessment period start for the
-  // road tax), which is why a car registered 15/01/2026 and one registered
-  // 15/09/2026 are billed off different tables for identical inputs.
+  // Flemish BIV and road tax amounts are re-indexed every 1 July, and the BIV q
+  // coefficient moves separately every 1 January, so a tariff block carries two
+  // window series: indexWindows for the amounts and qWindows for q. Each entry
+  // is an override set with an explicit from and until, newest first. The
+  // applicable window is chosen by the date the tax is assessed (registration
+  // date for the BIV, assessment period start for the road tax), which is why a
+  // car registered 15/01/2026 and one registered 15/09/2026 are billed off
+  // different tables for identical inputs.
+  //
+  // BOTH BOUNDS ARE READ. Until 2026-09-07 the selection tested "from" alone,
+  // which serves an expired table forever with no signal anywhere in the output:
+  // on 1 July 2027 the key "2027-07-01" still satisfies >= "2026-07-01". The
+  // data knew when it stopped being true and the code never asked. pickWindow
+  // now returns the window it chose alongside the merged values, so the caller
+  // can render the vintage and detect staleness.
+  //
+  // Past the until date the answer is to disclose and degrade, never to refuse:
+  // the newest table we hold is still the best available answer, indexation has
+  // only ever moved upward, and turning a small labelled error into a total loss
+  // of function pushes the user back to guessing. Amounts are withdrawn only
+  // after a further twelve months, which is two missed indexations.
+  var STALE_GRACE_MONTHS = 12;
+
   function isoDay(refDate) {
     var d = refDate ? new Date(refDate) : new Date();
     if (isNaN(d)) d = new Date();
     return d.toISOString().slice(0, 10);
   }
 
-  function pickIndexWindow(cfg, refDate) {
-    var windows = cfg && cfg.indexWindows;
-    if (!windows || !windows.length) return cfg;
+  function pad(n, w) { return String(n).padStart(w, "0"); }
+
+  // Add whole months to a "YYYY-MM-DD" string, clamping to the last day of the
+  // target month. Pure string arithmetic, no timezone to get wrong.
+  function addMonths(iso, n) {
+    var y = +iso.slice(0, 4), m = +iso.slice(5, 7), d = +iso.slice(8, 10);
+    var t = y * 12 + (m - 1) + n;
+    var ny = Math.floor(t / 12), nm = (t % 12) + 1;
+    var last = new Date(Date.UTC(ny, nm, 0)).getUTCDate();
+    if (d > last) d = last;
+    return pad(ny, 4) + "-" + pad(nm, 2) + "-" + pad(d, 2);
+  }
+
+  // "current" | "stale" | "expired" for one window against the reference date.
+  function vintageOf(win, key) {
+    var from = win && win.from ? win.from : null;
+    var until = win && win.until ? win.until : null;
+    var status = "current";
+    if (until && key > until) {
+      status = key > addMonths(until, STALE_GRACE_MONTHS) ? "expired" : "stale";
+    }
+    return { from: from, until: until, status: status, asOf: key };
+  }
+
+  // Combine two vintages into the one the user is shown: the later "from",
+  // because that is the tariff set actually in play, the earlier "until",
+  // because that is the first thing to go out of date, and the worse status.
+  var VINTAGE_RANK = { current: 0, stale: 1, expired: 2 };
+  function worseVintage(a, b) {
+    if (!a) return b || null;
+    if (!b) return a;
+    return {
+      from: (a.from && b.from) ? (a.from > b.from ? a.from : b.from) : (a.from || b.from),
+      until: (a.until && b.until) ? (a.until < b.until ? a.until : b.until) : (a.until || b.until),
+      status: VINTAGE_RANK[a.status] >= VINTAGE_RANK[b.status] ? a.status : b.status,
+      asOf: a.asOf || b.asOf
+    };
+  }
+
+  function mergeWindow(cfg, win) {
+    var merged = {}, k;
+    for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) merged[k] = cfg[k];
+    for (k in win) if (Object.prototype.hasOwnProperty.call(win, k)) merged[k] = win[k];
+    return merged;
+  }
+
+  // Returns { values, vintage }. listKey is "indexWindows" or "qWindows".
+  function pickWindow(cfg, refDate, listKey) {
     var key = isoDay(refDate);
+    var windows = cfg && cfg[listKey];
+    if (!windows || !windows.length) return { values: cfg, vintage: vintageOf(cfg, key) };
+
+    // A window whose range contains the reference date wins outright.
     for (var i = 0; i < windows.length; i++) {
-      if (key >= windows[i].from) {
-        var merged = {}, k;
-        for (k in cfg) if (Object.prototype.hasOwnProperty.call(cfg, k)) merged[k] = cfg[k];
-        for (k in windows[i]) if (Object.prototype.hasOwnProperty.call(windows[i], k)) merged[k] = windows[i][k];
-        return merged;
+      if (key >= windows[i].from && (!windows[i].until || key <= windows[i].until)) {
+        return { values: mergeWindow(cfg, windows[i]), vintage: vintageOf(windows[i], key) };
       }
     }
-    return cfg;
+    // Past the newest window: keep its values, which are the best the file has,
+    // and let the vintage say how far out of date they are.
+    if (windows[0].until && key > windows[0].until) {
+      return { values: mergeWindow(cfg, windows[0]), vintage: vintageOf(windows[0], key) };
+    }
+    // Before the oldest window: the base block is the older data.
+    return { values: cfg, vintage: vintageOf(cfg, key) };
+  }
+
+  // The BIV q coefficient lives in its own 1 January series. Falling back to a
+  // bare constant is what created the 1 January 2027 failure in the first place,
+  // so there is no bare constant to fall back to: if no window covers the date
+  // the oldest one is used and the vintage is marked, which is visible, rather
+  // than returning NaN, which is not.
+  function pickQ(bivCfg, refDate) {
+    var picked = pickWindow(bivCfg, refDate, "qWindows");
+    if (picked.values && picked.values.q != null) return picked;
+    var list = (bivCfg && bivCfg.qWindows) || [];
+    var oldest = list[list.length - 1];
+    if (!oldest) return { values: picked.values, vintage: picked.vintage };
+    var v = vintageOf(oldest, isoDay(refDate));
+    v.status = v.status === "current" ? "stale" : v.status;
+    return { values: mergeWindow(bivCfg, oldest), vintage: v };
   }
 
   // ---- fuel normalisation --------------------------------------------------
@@ -221,7 +306,15 @@
   // ---- Flanders BIV --------------------------------------------------------
 
   function bivFlanders(vehicle, t, inf, refDate) {
-    var cfg = pickIndexWindow(t.flanders.biv, refDate);
+    var picked = pickWindow(t.flanders.biv, refDate, "indexWindows");
+    var cfg = picked.values;
+    // q moves on 1 January, the amounts move on 1 July, so the two series are
+    // picked separately. q is folded into the reported vintage only on the WLTP
+    // branch, because that is the only branch it appears in: an NEDC car uses
+    // CO2 x f + nedcCo2Offset and is not affected by q going out of date.
+    var qPick = pickQ(t.flanders.biv, refDate);
+    var q = qPick.values.q;
+    var vintage = picked.vintage;
     var assumptions = [];
     var confidence = "high";
 
@@ -256,6 +349,7 @@
         confidence: "none",
         basis: "Flanders CO2 formula",
         assumptions: assumptions,
+        dataVintage: vintage,
         simulatorUrl: t.simulatorUrls.flanders
       };
     }
@@ -315,9 +409,25 @@
     // settles the ordering: f = 0.88 applied to (CO2 + 63) gives a core term of
     // 487.00, applied to the CO2 alone it gives 632.89, and official NEDC-LPG
     // is 632.89 + 28.54 air, x 0.30 age = 198.43.
-    var numerator = cycle.cycle === "nedc"
-      ? (vehicle.co2 * f + cfg.nedcCo2Offset)
-      : (vehicle.co2 * f * cfg.q);
+    var numerator;
+    if (cycle.cycle === "nedc") {
+      numerator = vehicle.co2 * f + cfg.nedcCo2Offset;
+    } else {
+      if (q == null) {
+        return {
+          amount: null,
+          needsMoreData: true,
+          reason: "no BIV q coefficient is on file for this assessment date",
+          confidence: "none",
+          basis: "Flanders CO2 formula",
+          assumptions: assumptions,
+          dataVintage: vintage,
+          simulatorUrl: t.simulatorUrls.flanders
+        };
+      }
+      vintage = worseVintage(vintage, qPick.vintage);
+      numerator = vehicle.co2 * f * q;
+    }
     var inner = numerator / cfg.divisor;
     var core = Math.pow(inner, cfg.exponent) * cfg.factor;
     var raw = core + c;
@@ -344,13 +454,15 @@
       confidence: confidence,
       basis: "Flanders CO2 formula (" + cycle.cycle.toUpperCase() + " branch, Euro " + euro + ", LC=" + Math.round(lc * 100) + "%)",
       assumptions: assumptions,
+      dataVintage: vintage,
       simulatorUrl: t.simulatorUrls.flanders
     };
 
     function result(a, conf, notes, basis) {
       return {
         amount: round2(a), needsMoreData: false, confidence: conf,
-        basis: "Flanders " + basis, assumptions: notes, simulatorUrl: t.simulatorUrls.flanders
+        basis: "Flanders " + basis, assumptions: notes, dataVintage: vintage,
+        simulatorUrl: t.simulatorUrls.flanders
       };
     }
   }
@@ -600,7 +712,9 @@
     var confidence = "low"; // annual road tax is estimate-tier across the board (see tariffs note)
     var simUrl = t.simulatorUrls[region];
 
-    var regCfg = pickIndexWindow(t[region].roadTax, refDate);
+    var picked = pickWindow(t[region].roadTax, refDate, "indexWindows");
+    var regCfg = picked.values;
+    var vintage = picked.vintage;
     var fr = parseFirstReg(vehicle.firstRegistration);
 
     // Region-specific EV handling. isZeroEmission guards against a plug-in hybrid
@@ -630,7 +744,7 @@
     var fhp = deriveFiscalHp(vehicle, inf);
     if (fhp.value == null) {
       return { amount: null, needsMoreData: true, reason: "cannot determine fiscal HP (cc not listed)", confidence: "none",
-        basis: region + " annual road tax", assumptions: assumptions, simulatorUrl: simUrl };
+        basis: region + " annual road tax", assumptions: assumptions, dataVintage: vintage, simulatorUrl: simUrl };
     }
     assumptions.push(fhp.assumption);
 
@@ -640,7 +754,7 @@
       var fl = roadTaxFlandersModel(vehicle, regCfg, inf, fhp, assumptions);
       if (fl.needsMoreData) {
         return { amount: null, needsMoreData: true, reason: fl.reason, confidence: "none",
-          basis: region + " annual road tax", assumptions: assumptions, simulatorUrl: simUrl };
+          basis: region + " annual road tax", assumptions: assumptions, dataVintage: vintage, simulatorUrl: simUrl };
       }
       fl.assumptions.push("validated Flemish model: (R(PK) / " + regCfg.referenceDenominator + ") x U(CO2, euro, fuel), floor " + regCfg.min);
       return mk(fl.amount, fl.confidence, fl.assumptions);
@@ -664,8 +778,60 @@
 
     function mk(a, conf, notes) {
       return { amount: round2(a), needsMoreData: false, confidence: conf,
-        basis: region + " annual road tax", assumptions: notes, simulatorUrl: simUrl };
+        basis: region + " annual road tax", assumptions: notes, dataVintage: vintage, simulatorUrl: simUrl };
     }
+  }
+
+  // ---- scope and staleness -------------------------------------------------
+
+  var TIER_ORDER = ["none", "low", "medium", "high"];
+  function lowerOneStep(c) {
+    var i = TIER_ORDER.indexOf(c);
+    return i > 0 ? TIER_ORDER[i - 1] : (i === 0 ? c : "low");
+  }
+
+  // A region outside tariffs.scope.validatedRegions returns a descriptor instead
+  // of a figure. Rendering an unvalidated regional amount in the same typography
+  // as a Flemish amount checked against 29 official simulator runs claims more
+  // than the evidence supports, and our own tariff file marks the Walloon EV
+  // road tax SUSPECT. Data driven on purpose: a region returns by being
+  // validated and added to that list, not by an edit here.
+  function scopeBlock(region, t, basis) {
+    var allowed = t.scope && t.scope.validatedRegions;
+    if (!allowed || allowed.indexOf(region) !== -1) return null;
+    return {
+      amount: null,
+      needsMoreData: false,
+      unvalidatedRegion: true,
+      confidence: "none",
+      reason: "region not validated against an official source for this version",
+      basis: region + " " + basis,
+      assumptions: [],
+      dataVintage: null,
+      simulatorUrl: t.simulatorUrls[region]
+    };
+  }
+
+  // Disclose and degrade. Past its until date a figure still computes but drops
+  // one input tier, because a rate table that has missed an indexation is a
+  // weaker basis than a current one and the meter should say so. Only after a
+  // further twelve months are the amounts withdrawn: the 1 July 2026 Belgisch
+  // Staatsblad bericht was still not retrievable on 1 September 2026, so
+  // refusing to compute at midnight on the day a rate changes would punish the
+  // user for a document that does not exist yet.
+  function applyStaleness(res) {
+    var v = res && res.dataVintage;
+    if (!v || v.status === "current") return res;
+    if (v.status === "stale") {
+      res.confidence = lowerOneStep(res.confidence);
+      return res;
+    }
+    res.amount = null;
+    res.expired = true;
+    res.confidence = "none";
+    res.reason = "rate table expired: the " + (v.from || "current") + " tariffs are more than " +
+      STALE_GRACE_MONTHS + " months past their validity";
+    return res;
   }
 
   // ---- public engine -------------------------------------------------------
@@ -675,23 +841,34 @@
     var inf = tariffs.inference;
 
     function computeBIV(vehicle, region, refDate) {
-      if (region === "flanders") return bivFlanders(vehicle, tariffs, inf, refDate);
-      if (region === "brussels") return tmcBrussels(vehicle, tariffs, inf, refDate);
-      if (region === "wallonia") return tmcWallonia(vehicle, tariffs, inf, refDate);
+      var blocked = scopeBlock(region, tariffs, "registration tax");
+      if (blocked) return blocked;
+      if (region === "flanders") return applyStaleness(bivFlanders(vehicle, tariffs, inf, refDate));
+      if (region === "brussels") return applyStaleness(tmcBrussels(vehicle, tariffs, inf, refDate));
+      if (region === "wallonia") return applyStaleness(tmcWallonia(vehicle, tariffs, inf, refDate));
       throw new Error("unknown region: " + region);
     }
 
     function computeRijtaks(vehicle, region, refDate) {
       if (["flanders", "brussels", "wallonia"].indexOf(region) === -1) throw new Error("unknown region: " + region);
-      return roadTax(region, vehicle, tariffs, inf, refDate);
+      var blocked = scopeBlock(region, tariffs, "annual road tax");
+      if (blocked) return blocked;
+      return applyStaleness(roadTax(region, vehicle, tariffs, inf, refDate));
     }
 
     function computeAll(vehicle, region, refDate) {
+      var biv = computeBIV(vehicle, region, refDate);
+      var rij = computeRijtaks(vehicle, region, refDate);
       return {
         region: region,
         tariffVersion: tariffs.version,
-        biv: computeBIV(vehicle, region, refDate),
-        rijtaks: computeRijtaks(vehicle, region, refDate)
+        // One vintage for the panel: the later effective date, the earlier
+        // expiry, the worse status. Generated from the windows the engine
+        // actually selected, never hardcoded in the interface, so updating the
+        // JSON can never leave the label lying.
+        dataVintage: worseVintage(biv.dataVintage, rij.dataVintage),
+        biv: biv,
+        rijtaks: rij
       };
     }
 
@@ -707,6 +884,10 @@
     inferEuroNorm: inferEuroNorm,
     inferCo2Cycle: inferCo2Cycle,
     deriveFiscalHp: deriveFiscalHp,
+    pickWindow: pickWindow,
+    vintageOf: vintageOf,
+    addMonths: addMonths,
+    STALE_GRACE_MONTHS: STALE_GRACE_MONTHS,
     defaultMma: defaultMma,
     FUEL_CLASSES: FUEL_CLASSES
   };
