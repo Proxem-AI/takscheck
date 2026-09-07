@@ -133,7 +133,7 @@ If a badge shows "not enough data", the ad did not expose a required field
 npm test
 ```
 
-`npm test` runs five stages, in this order:
+`npm test` runs seven stages, in this order. Each is its own `node` process, chained with `&&`, so no stage can leak state into another and the first failure stops the run:
 
 | Stage | What it proves |
 | --- | --- |
@@ -142,6 +142,8 @@ npm test
 | `test/roadtax-harness.mjs` | 19 rows of the official road-tax table, to the cent. |
 | `test/simulator-comparison-harness.mjs --strict` | The 29 case official simulator capture, 58 comparisons across BIV and road tax. |
 | `test/badge-states.mjs` | 39 assertions: the badge renders correctly in the current, stale, expired and unvalidated-region states, in NL and FR, and carries the wording and the aria strings the legal review fixed. |
+| `test/mobilede-extract.mjs` | 41 assertions: the mobile.de detail-page gate and extractor against six DOM shapes plus the JSON-LD path, including the old URL format, on mock pages built with linkedom. |
+| `test/host-permissions.mjs` | 26 assertions: the three match-pattern lists in `manifest.json` agree, the six retained domains match and the ten removed ones do not, and the real content scripts render a badge on each retained domain. |
 
 **Current result: 27 of 29 cases exact to the cent on BIV and 28 of 29 on road
 tax** against the official simulator, captured 1 September 2026, Flanders only.
