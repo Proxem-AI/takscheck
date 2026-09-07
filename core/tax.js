@@ -859,6 +859,20 @@
     function computeAll(vehicle, region, refDate) {
       var biv = computeBIV(vehicle, region, refDate);
       var rij = computeRijtaks(vehicle, region, refDate);
+      // The two figures can expire on different dates: q lapses on 1 January and
+      // only touches the BIV, the amounts lapse on 1 July and touch both. The
+      // notice beside them is one sentence for the whole panel, and in the
+      // expired state that sentence says no amounts are shown. So once anything
+      // in the panel is expired, every figure in it is withdrawn. A panel is
+      // only as current as its oldest input, and a notice that contradicts the
+      // figure printed next to it is worse than either on its own.
+      var panel = worseVintage(biv.dataVintage, rij.dataVintage);
+      if (panel && panel.status === "expired") {
+        [biv, rij].forEach(function (res) {
+          if (res.dataVintage) res.dataVintage = panel;
+          applyStaleness(res);
+        });
+      }
       return {
         region: region,
         tariffVersion: tariffs.version,
@@ -866,7 +880,7 @@
         // expiry, the worse status. Generated from the windows the engine
         // actually selected, never hardcoded in the interface, so updating the
         // JSON can never leave the label lying.
-        dataVintage: worseVintage(biv.dataVintage, rij.dataVintage),
+        dataVintage: panel,
         biv: biv,
         rijtaks: rij
       };

@@ -1,0 +1,182 @@
+/*
+ * Badge rendering assertions, NL and FR.
+ *
+ * Two jobs. First, lock the wording the pre-publication legal review fixed on
+ * 2026-09-06, because it has moved before: the confidence caption went
+ * "Betrouwbaarheid" to "Nauwkeurigheid" to "Précision" over three commits, and
+ * the review's whole point is that a caption claiming output accuracy is a claim
+ * this meter cannot support. A string test is the cheapest way to stop that
+ * drifting back. Second, prove the four panel states actually render: current,
+ * stale, expired, and unvalidated region.
+ *
+ * Renders the real ui/badge.js into a linkedom document. No Chrome APIs are
+ * present, and every call site in the badge already guards for that.
+ *
+ * Run: node test/badge-states.mjs
+ */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
+import { parseHTML } from "linkedom";
+
+const require = createRequire(import.meta.url);
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const root = join(__dirname, "..");
+
+const tariffs = JSON.parse(readFileSync(join(root, "core", "tariffs.json"), "utf8"));
+const { createTaxEngine } = require(join(root, "core", "tax.js"));
+const engine = createTaxEngine(tariffs);
+
+const badgeSrc = readFileSync(join(root, "ui", "badge.js"), "utf8");
+
+let failures = 0;
+let total = 0;
+
+function check(label, ok, detail) {
+  total++;
+  if (!ok) failures++;
+  console.log((ok ? "  PASS " : "  FAIL ") + label + (ok || !detail ? "" : "\n         got: " + detail));
+}
+
+// Render the badge for one language and one engine result, returning the text
+// content and the raw markup of the shadow tree.
+function render(lang, all, vehicle, region) {
+  const { document, window } = parseHTML(
+    '<!doctype html><html lang="' + lang + '"><head></head><body></body></html>'
+  );
+  const sandbox = {
+    document,
+    window,
+    navigator: { language: lang },
+    location: { pathname: "/" },
+    globalThis: null
+  };
+  sandbox.globalThis = sandbox;
+  // The badge is an IIFE taking the global object. Feed it our sandbox.
+  const fn = new Function("globalThis", "document", "window", "navigator", "location", badgeSrc);
+  fn(sandbox, document, window, sandbox.navigator, sandbox.location);
+  sandbox.BivBadge.render(all, vehicle, region);
+  const host = document.getElementById("takscheck-host");
+  const html = host.shadowRoot.innerHTML;
+  const text = html.replace(/<style>[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return { html, text };
+}
+
+const petrol = { title: "Test", fuel: "petrol", co2: 130, euroNorm: 6, fiscalHp: 9, firstRegistration: "2023-05-15" };
+const noCo2 = { title: "Test", fuel: "petrol", euroNorm: 6, fiscalHp: 9, firstRegistration: "2023-05-15" };
+
+// The dates are taken from the tariff file, not from the engine, so these stay
+// meaningful when a new window is added.
+const qWindow = tariffs.flanders.biv.qWindows[0];
+const CURRENT = qWindow.until;                              // last live day
+const STALE = "2027-03-01";                                 // past q, inside grace
+const EXPIRED = "2028-06-01";                               // past the grace period
+
+console.log("Badge state and wording assertions  (tariffs v" + tariffs.version + ")\n");
+
+// ---- 1. the caption, both languages ---------------------------------------
+console.log("== Caption: what the meter measures is the advert, not the answer ==\n");
+{
+  const nl = render("nl", engine.computeAll(petrol, "flanders", CURRENT), petrol, "flanders");
+  check('NL caption reads "Gegevens uit de advertentie"', nl.text.includes("Gegevens uit de advertentie"));
+  check('NL tier word reads "volledig"', /Gegevens uit de advertentie\s*volledig/.test(nl.text));
+  check("NL aria-label matches the visible caption",
+    nl.html.includes('aria-label="Gegevens uit de advertentie: volledig"'));
+  check("NL carries no output-accuracy claim",
+    !/Nauwkeurigheid|Betrouwbaarheid/.test(nl.html), nl.text.slice(0, 160));
+
+  const fr = render("fr", engine.computeAll(petrol, "flanders", CURRENT), petrol, "flanders");
+  check("FR caption reads \"Données de l'annonce\"", fr.text.includes("Données de l'annonce"));
+  check('FR tier word reads "complètes"', /Données de l'annonce\s*complètes/.test(fr.text));
+  check("FR aria-label matches the visible caption",
+    fr.html.includes("aria-label=\"Données de l'annonce: complètes\""));
+  check("FR carries no output-accuracy claim",
+    !/Précision|Fiabilité/.test(fr.html), fr.text.slice(0, 160));
+}
+
+// ---- 2. the vintage line, generated from the data --------------------------
+console.log("\n== Vintage: generated from the selected window, never hardcoded ==\n");
+{
+  const nl = render("nl", engine.computeAll(petrol, "flanders", CURRENT), petrol, "flanders");
+  check("NL shows the estimate notice and the rate vintage",
+    nl.text.includes("Schatting op basis van deze advertentie. Geen officiële aanslag.") &&
+    nl.text.includes("Tarieven van 1 juli 2026."), nl.text.slice(-220));
+
+  const fr = render("fr", engine.computeAll(petrol, "flanders", CURRENT), petrol, "flanders");
+  check("FR shows the estimate notice and the rate vintage",
+    fr.text.includes("Estimation basée sur cette annonce. Pas un avis d'imposition officiel.") &&
+    fr.text.includes("Tarifs du 1er juillet 2026."), fr.text.slice(-220));
+}
+
+// ---- 3. stale: disclose and degrade, do not refuse -------------------------
+console.log("\n== Stale: the figure stays, the claim comes down ==\n");
+{
+  const all = engine.computeAll(petrol, "flanders", STALE);
+  const nl = render("nl", all, petrol, "flanders");
+  check("euro amount is still rendered when stale", all.biv.amount != null && /€/.test(nl.html));
+  check("NL stale sentence is shown",
+    nl.text.includes("Let op: deze tarieven zijn van 1 juli 2026 en zijn sindsdien geïndexeerd.") &&
+    nl.text.includes("Het werkelijke bedrag ligt hoger."), nl.text.slice(-260));
+  check("stale disclaimer carries the warning treatment", nl.html.includes("tc-disc-warn"));
+  check("official simulator link is promoted", nl.html.includes("tc-sim-lead"));
+  check("input tier is forced down a step (high becomes medium)",
+    all.biv.confidence === "medium", String(all.biv.confidence));
+  check("NL tier word follows the tier down",
+    nl.text.includes("deels geschat"), nl.text.slice(0, 200));
+
+  const fr = render("fr", all, petrol, "flanders");
+  check("FR stale sentence is shown",
+    fr.text.includes("Attention: ces tarifs datent du 1er juillet 2026 et ont été indexés depuis.") &&
+    fr.text.includes("Le montant réel est plus élevé."), fr.text.slice(-260));
+}
+
+// ---- 4. expired: amounts withdrawn, panel and link stay --------------------
+console.log("\n== Expired: amounts withdrawn, the route to the right number stays ==\n");
+{
+  const all = engine.computeAll(petrol, "flanders", EXPIRED);
+  const nl = render("nl", all, petrol, "flanders");
+  check("no euro amount is rendered", all.biv.amount === null && !/€/.test(nl.html), nl.text.slice(0, 200));
+  check("NL expired sentence is shown",
+    nl.text.includes("TaksCheck toont geen bedragen meer") && nl.text.includes("zijn te oud"), nl.text.slice(-240));
+  check("panel still offers the official simulator", nl.html.includes("tc-sim"));
+  check("cells say the figure is no longer shown, not that data is missing",
+    nl.text.includes("Niet meer getoond") && !nl.text.includes("Onvoldoende gegevens"), nl.text.slice(0, 220));
+
+  const fr = render("fr", all, petrol, "flanders");
+  check("FR expired sentence is shown",
+    fr.text.includes("TaksCheck n'affiche plus de montants") && fr.text.includes("sont trop anciens"), fr.text.slice(-240));
+}
+
+// ---- 5. unvalidated region -------------------------------------------------
+console.log("\n== Unvalidated region: named as such, sent to its own simulator ==\n");
+for (const region of ["brussels", "wallonia"]) {
+  const all = engine.computeAll(petrol, region, CURRENT);
+  const nl = render("nl", all, petrol, region);
+  check(region + ": no euro amount", !/€/.test(nl.html));
+  check(region + ": NL says the region is not yet validated",
+    nl.text.includes("Nog niet gevalideerd voor deze regio"), nl.text.slice(0, 240));
+  check(region + ": the note appears once, not once per figure",
+    (nl.text.match(/Nog niet gevalideerd voor deze regio/g) || []).length === 1);
+  check(region + ": links to that region's own simulator",
+    nl.html.includes(tariffs.simulatorUrls[region]));
+  const fr = render("fr", all, petrol, region);
+  check(region + ": FR says the region is not yet validated",
+    fr.text.includes("Pas encore validé pour cette région"), fr.text.slice(0, 240));
+}
+
+// ---- 6. a genuinely incomplete advert still reads as incomplete ------------
+console.log("\n== Missing input still reads as missing input ==\n");
+{
+  const all = engine.computeAll(noCo2, "flanders", CURRENT);
+  const nl = render("nl", all, noCo2, "flanders");
+  check("BIV without CO2 still names the missing field",
+    nl.text.includes("Onvoldoende gegevens") && nl.text.includes("de CO2-waarde"), nl.text.slice(0, 260));
+}
+
+console.log("\nBadge assertions: " + (total - failures) + "/" + total + " passed.");
+if (failures) {
+  console.log("RESULT: FAIL (" + failures + ").");
+  process.exit(1);
+}
+console.log("RESULT: PASS.");

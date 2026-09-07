@@ -42,14 +42,32 @@
       sim: "Officiële simulator",
       nodata: "Onvoldoende gegevens",
       needs: function (tax, token) { return tax + " heeft " + token + " nodig, niet vermeld in deze advertentie."; },
-      disclaimer: "Schatting, geen officiële aanslag.",
+      disclaimer: "Schatting op basis van deze advertentie. Geen officiële aanslag.",
+      vintage: function (d) { return "Tarieven van " + d + "."; },
+      stale: function (d) { return "Let op: deze tarieven zijn van " + d + " en zijn sindsdien geïndexeerd. Het werkelijke bedrag ligt hoger. Controleer de officiële simulator."; },
+      expired: function (d) { return "TaksCheck toont geen bedragen meer: de tarieven van " + d + " zijn te oud. Gebruik de officiële simulator."; },
+      notValidated: "Nog niet gevalideerd voor deze regio. Gebruik de officiële simulator van deze regio.",
+      novalidation: "Niet gevalideerd",
+      noamount: "Niet meer getoond",
       changeRegion: "Regio wijzigen",
       co2na: "CO2 onbekend",
+      months: ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"],
       tokens: { co2: "de CO2-waarde", power: "het vermogen (kW)", cc: "de cilinderinhoud (cc)", data: "meer gegevens" },
+      // Caption per Lex's pre-publication review, 2026-09-06. The meter measures
+      // how complete the ADVERT was, which is all it can measure; "Nauwkeurigheid"
+      // turned that into a claim about how close the figure is to the right
+      // answer, which is the one thing it cannot know. On 2 September the advert
+      // was complete, the meter correctly read complete, and the caption turned
+      // that into "accuracy: high" beside a figure that was 42 per cent wrong.
+      // Wording about the input can never vouch for a number it cannot check.
       conf: {
-        caption: "Nauwkeurigheid",
-        tier: { high: "hoog", medium: "gemiddeld", low: "laag" },
-        aria: { high: "Nauwkeurigheid hoog", medium: "Nauwkeurigheid gemiddeld", low: "Nauwkeurigheid laag" }
+        caption: "Gegevens uit de advertentie",
+        tier: { high: "volledig", medium: "deels geschat", low: "grotendeels geschat" },
+        aria: {
+          high: "Gegevens uit de advertentie: volledig",
+          medium: "Gegevens uit de advertentie: deels geschat",
+          low: "Gegevens uit de advertentie: grotendeels geschat"
+        }
       },
       expander: {
         label: "Waarom dit bedrag?",
@@ -68,14 +86,25 @@
       sim: "Simulateur officiel",
       nodata: "Données insuffisantes",
       needs: function (tax, token) { return tax + " nécessite " + token + ", que cette annonce ne mentionne pas."; },
-      disclaimer: "Estimation, pas un avis d'imposition officiel.",
+      disclaimer: "Estimation basée sur cette annonce. Pas un avis d'imposition officiel.",
+      vintage: function (d) { return "Tarifs du " + d + "."; },
+      stale: function (d) { return "Attention: ces tarifs datent du " + d + " et ont été indexés depuis. Le montant réel est plus élevé. Vérifiez le simulateur officiel."; },
+      expired: function (d) { return "TaksCheck n'affiche plus de montants: les tarifs du " + d + " sont trop anciens. Utilisez le simulateur officiel."; },
+      notValidated: "Pas encore validé pour cette région. Utilisez le simulateur officiel de cette région.",
+      novalidation: "Non validé",
+      noamount: "Plus affiché",
       changeRegion: "Changer de région",
       co2na: "CO2 inconnu",
+      months: ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
       tokens: { co2: "la valeur CO2", power: "la puissance (kW)", cc: "la cylindrée (cc)", data: "plus de données" },
       conf: {
-        caption: "Précision",
-        tier: { high: "élevée", medium: "moyenne", low: "faible" },
-        aria: { high: "Précision élevée", medium: "Précision moyenne", low: "Précision faible" }
+        caption: "Données de l'annonce",
+        tier: { high: "complètes", medium: "partiellement estimées", low: "largement estimées" },
+        aria: {
+          high: "Données de l'annonce: complètes",
+          medium: "Données de l'annonce: partiellement estimées",
+          low: "Données de l'annonce: largement estimées"
+        }
       },
       expander: {
         label: "Pourquoi ce montant?",
@@ -195,6 +224,32 @@
   // Euro glyph, non-breaking space, grouped amount: "€ 495".
   function euro(n) { return "€ " + group(n); }
 
+  // "2026-07-01" -> "1 juli 2026" / "1er juillet 2026". Always derived from the
+  // window the engine selected, never hardcoded: a hardcoded label would keep
+  // reading "1 juli 2026" after the JSON was updated, which is the same class of
+  // defect one layer up.
+  function longDate(iso) {
+    if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "";
+    var y = iso.slice(0, 4), m = +iso.slice(5, 7), d = +iso.slice(8, 10);
+    var name = (L().months || [])[m - 1] || String(m);
+    if (lang() === "fr") return (d === 1 ? "1er" : d) + " " + name + " " + y;
+    return d + " " + name + " " + y;
+  }
+
+  // One vintage for the whole panel. computeAll aggregates it; a caller that
+  // passes a bare result set still gets a sensible answer from the figures.
+  function panelVintage(all) {
+    if (all && all.dataVintage) return all.dataVintage;
+    var rank = { current: 0, stale: 1, expired: 2 };
+    var worst = null;
+    ["biv", "rijtaks"].forEach(function (k) {
+      var v = all && all[k] && all[k].dataVintage;
+      if (!v) return;
+      if (!worst || rank[v.status] > rank[worst.status]) worst = v;
+    });
+    return worst;
+  }
+
   // Auto-detect page language. Order: <html lang>, URL path segment (/fr/, /nl/),
   // then navigator.language. Belgium defaults to NL when nothing says FR.
   function detectLang() {
@@ -307,6 +362,15 @@
 
   // One value cell: euro figure in mono, or the "not enough data" tag.
   function valueCell(res) {
+    // Three different reasons for showing no figure, and they are not the same
+    // thing to a reader: the advert was short of a field, the region has not
+    // been validated, or the rate table is too old to stand behind.
+    if (res && res.unvalidatedRegion) {
+      return '<span class="tc-v tc-nd">' + esc(L().novalidation) + "</span>";
+    }
+    if (res && res.expired) {
+      return '<span class="tc-v tc-nd">' + esc(L().noamount) + "</span>";
+    }
     if (!res || res.needsMoreData || res.amount == null) {
       return '<span class="tc-v tc-nd">' + esc(L().nodata) + "</span>";
     }
@@ -401,6 +465,8 @@
     ".tc-sim{display:inline-flex;align-items:center;gap:5px;margin:10px 12px 10px;font-size:12px;" +
       "font-weight:700;color:var(--blue);text-decoration:none}" +
     ".tc-sim:hover{text-decoration:underline}" +
+    ".tc-sim.tc-sim-lead{background:#EFF3FC;border:1px solid rgba(27,84,199,.24);border-radius:8px;" +
+      "padding:7px 10px;font-size:12.5px}" +
     // footer: region plate + verdict
     ".tc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;" +
       "padding:9px 12px;background:var(--mist2);border-top:1px solid var(--line);margin-top:0}" +
@@ -428,8 +494,8 @@
     // Per-figure confidence meter (Iris): ascending blue signal bars + caption +
     // tier word, blue and neutral only, never the verdict's green/amber/red, so
     // reliability is never read as tax heaviness. Fill #1B54C7 on #FFFFFF = 6.7:1.
-    ".tc-conf{display:flex;align-items:center;gap:5px;margin-top:6px}" +
-    ".tc-cmeter{display:inline-flex;align-items:flex-end;gap:1.5px;height:11px}" +
+    ".tc-conf{display:flex;align-items:flex-start;gap:5px;margin-top:6px}" +
+    ".tc-cmeter{display:inline-flex;align-items:flex-end;gap:1.5px;height:11px;flex:none;margin-top:1px}" +
     ".tc-cmeter i{width:3px;border-radius:1px;background:#ccd3db}" +
     ".tc-cmeter i:nth-child(1){height:5px}" +
     ".tc-cmeter i:nth-child(2){height:8px}" +
@@ -438,9 +504,12 @@
     '.tc-conf[data-tier="medium"] .tc-cmeter i:nth-child(1),' +
     '.tc-conf[data-tier="medium"] .tc-cmeter i:nth-child(2){background:var(--blue)}' +
     '.tc-conf[data-tier="low"] .tc-cmeter i:nth-child(1){background:var(--blue)}' +
-    ".tc-clab{font-size:10px;font-weight:700;color:var(--ink);letter-spacing:.005em;white-space:nowrap;line-height:1.1}" +
+    // The caption wraps. "Gegevens uit de advertentie" does not fit a 159px
+    // column on one line the way "Nauwkeurigheid" did, and the caption is not
+    // negotiable: it is the claim the meter can actually support.
+    ".tc-clab{font-size:10px;font-weight:700;color:var(--ink);letter-spacing:.005em;line-height:1.2;min-width:0}" +
     ".tc-clab small{display:block;font-size:8.5px;font-weight:600;color:var(--slate);" +
-      "letter-spacing:.05em;text-transform:uppercase;line-height:1;margin-bottom:1px}" +
+      "letter-spacing:.05em;text-transform:uppercase;line-height:1.15;margin-bottom:2px}" +
     // Assumptions expander: quiet disclosure row above the footer, closed by
     // default. Sits below the value rows so opening it never moves the figures.
     ".tc-expander-wrap{background:var(--white);border-top:1px solid var(--line)}" +
@@ -468,6 +537,7 @@
     // toggle (was a space-between row where only French wrapped the link).
     ".tc-disc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;" +
       "padding:8px 12px 10px;font-size:11px;line-height:1.4;color:var(--slate)}" +
+    ".tc-disc-warn{background:#FBEBCF;color:#7A4E00;border-top:1px solid #EBD6AE;font-weight:600}" +
     ".tc-opt{color:var(--blue);font-weight:700;text-decoration:none;white-space:nowrap}" +
     ".tc-opt:hover{text-decoration:underline}" +
     // collapsed
@@ -476,6 +546,25 @@
     ".tc-panel.tc-collapsed .tc-expander-wrap," +
     ".tc-panel.tc-collapsed .tc-foot,.tc-panel.tc-collapsed .tc-disc{display:none}";
 
+  // The badge line is the only notice that reaches the point of reliance: the
+  // person acting on the figure is looking at a car advert, not at the README.
+  // Wording is Lex's, verbatim, 2026-09-06. The vintage clause is generated from
+  // the window the engine selected.
+  function buildDisclaimer(all) {
+    var v = panelVintage(all);
+    var t = L();
+    var date = v && v.from ? longDate(v.from) : "";
+    var status = v ? v.status : "current";
+    var cls = "tc-disc";
+    var text;
+    if (status === "expired" && date) { text = t.expired(date); cls += " tc-disc-warn"; }
+    else if (status === "stale" && date) { text = t.stale(date); cls += " tc-disc-warn"; }
+    else { text = date ? t.disclaimer + " " + t.vintage(date) : t.disclaimer; }
+    return '<div class="' + cls + '"><span>' + esc(text) + "</span>" +
+      '<a class="tc-opt" href="' + esc(optionsHref()) + '" target="_blank" rel="noopener">' + esc(t.changeRegion) + "</a>" +
+    "</div>";
+  }
+
   function buildNotes(all) {
     var out = [];
     var anyEstimated = ["biv", "rijtaks"].some(function (k) {
@@ -483,9 +572,14 @@
       return r && !r.needsMoreData && r.amount != null && r.confidence !== "high";
     });
     if (anyEstimated) out.push('<p class="tc-note">' + esc(L().estimated) + "</p>");
+    // Both figures are blocked by the same region, so the note is rendered once.
+    if (["biv", "rijtaks"].some(function (k) { return all[k] && all[k].unvalidatedRegion; })) {
+      out.push('<p class="tc-note">' + esc(L().notValidated) + "</p>");
+    }
     [["biv", L().biv.t], ["rijtaks", L().rij.t]].forEach(function (pair) {
       var r = all[pair[0]];
-      if (r && (r.needsMoreData || r.amount == null)) {
+      if (!r || r.unvalidatedRegion || r.expired) return;
+      if (r.needsMoreData || r.amount == null) {
         out.push('<p class="tc-note">' + esc(L().needs(pair[1], missingToken(r.reason))) + "</p>");
       }
     });
@@ -544,6 +638,12 @@
     var lg = lang();
 
     var simUrl = (all.biv && all.biv.simulatorUrl) || (all.rijtaks && all.rijtaks.simulatorUrl) || "";
+    // Once the rates are out of date, or the region was never validated, the
+    // authoritative source stops being a footnote and becomes the main thing on
+    // offer. It is the one click that gets the user the right number.
+    var pv = panelVintage(all);
+    var promoteSim = !!((pv && pv.status !== "current") ||
+      ["biv", "rijtaks"].some(function (k) { return all[k] && all[k].unvalidatedRegion; }));
     var tier = verdictTier(all);
     var verdictHtml = tier
       ? '<span class="tc-verdict ' + tier + '"><span class="tc-tldot"></span>' + esc(L().verdict[tier]) + "</span>"
@@ -567,12 +667,11 @@
             '<div class="tc-row">' + keyCell(L().rij) + valueCell(all.rijtaks) + confCell(all.rijtaks) + "</div>" +
           "</div>" +
           buildNotes(all) +
-          (simUrl ? '<a class="tc-sim" href="' + esc(simUrl) + '" target="_blank" rel="noopener">' + esc(L().sim) + " " + EXT + "</a>" : "") +
+          (simUrl ? '<a class="tc-sim' + (promoteSim ? " tc-sim-lead" : "") + '" href="' + esc(simUrl) +
+            '" target="_blank" rel="noopener">' + esc(L().sim) + " " + EXT + "</a>" : "") +
           buildExpander(all) +
           '<div class="tc-foot">' + plateTag(region) + verdictHtml + "</div>" +
-          '<div class="tc-disc"><span>' + esc(L().disclaimer) + "</span>" +
-            '<a class="tc-opt" href="' + esc(optionsHref()) + '" target="_blank" rel="noopener">' + esc(L().changeRegion) + "</a>" +
-          "</div>" +
+          buildDisclaimer(all) +
         "</div>" +
       "</div>";
 
