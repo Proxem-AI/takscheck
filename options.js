@@ -1,5 +1,5 @@
 /*
- * Options page logic. Region selection persists to chrome.storage.sync (shared
+ * Options page logic. Region selection persists to chrome.storage.local (shared
  * with the content scripts), and the page is localised NL / FR with the same
  * auto-detect-plus-toggle model as the on-ad badge (the lang preference is the
  * same chrome.storage key the badge writes). Region plate tags reuse the badge's
@@ -51,7 +51,7 @@
 
   var STORE = null;
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) STORE = chrome.storage.sync;
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) STORE = chrome.storage.local;
   } catch (e) { STORE = null; }
 
   var lang = "nl";

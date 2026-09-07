@@ -57,7 +57,7 @@ function makeContext(html, url) {
     history: { pushState() {}, replaceState() {} },
     chrome: {
       runtime: { sendMessage() {}, getURL: (p) => p },
-      storage: { sync: { get: (d, cb) => cb(d) } }
+      storage: { local: { get: (d, cb) => cb(d) } }
     },
     fetch: () => Promise.resolve({ json: () => Promise.resolve(tariffs) })
   };

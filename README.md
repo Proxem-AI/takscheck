@@ -105,7 +105,7 @@ the regional tax office from the certificate of conformity.
   too old to stand behind. Currency uses the euro glyph with a dot thousands separator (e.g. the
   glyph then "1.847"), the Belgian convention.
 - **Options page** (`options.html`): region selection (Flanders default), stored
-  in `chrome.storage.sync`.
+  in `chrome.storage.local`.
 - **Regression harness** (`test/harness.mjs`): runs the Flemish engine against
   the official simulator's recorded ground truth.
 
@@ -247,12 +247,13 @@ fails the build if the set grows again or if the three match-pattern lists in
 
 **`storage`**
 
-> TaksCheck stores two user preferences using `chrome.storage.sync`: the Belgian
+> TaksCheck stores two user preferences using `chrome.storage.local`: the Belgian
 > tax region the user selects, and whether they want the interface in Dutch or
 > French. Both are chosen by the user in the extension popup or options page, and
 > both are read by the content script so the panel on the advert shows figures for
-> the correct region in the correct language. Nothing else is stored. The
-> extension makes no network requests to any server, so nothing is transmitted.
+> the correct region in the correct language. Nothing else is stored. Storage is
+> local to the device and is not synced to any account. The extension makes no
+> network requests to any server, so nothing is transmitted.
 
 **Host permissions** (`autoscout24.be`, `autoscout24.de`, `autoscout24.nl`, `autoscout24.fr`, `autoscout24.lu`, `mobile.de`)
 
@@ -272,6 +273,13 @@ fails the build if the set grows again or if the three match-pattern lists in
 No remote code is loaded. The only `fetch` calls in the extension read the bundled
 `core/tariffs.json` through `chrome.runtime.getURL`.
 
+Storage is `chrome.storage.local`, deliberately, not `chrome.storage.sync`. Sync
+would have replicated the two preference keys through the user's Google account,
+which means data leaving the device, and that would turn "transmits nothing" into
+a sentence needing a footnote. Carrying a region choice between a user's machines
+is not worth qualifying the main claim. `test/host-permissions.mjs` fails the
+build if `chrome.storage.sync` reappears in shipped code.
+
 ## Licence
 
 Apache License 2.0. See `LICENSE`.
@@ -290,5 +298,8 @@ Both are needed and neither substitutes for the other.
 ## Privacy
 
 The extension collects and transmits nothing. It reads the page you are viewing,
-computes locally, and stores only your region choice in `chrome.storage.sync`.
-The only extension resource loaded is the bundled `core/tariffs.json`.
+computes locally, and stores two preferences, your region and your choice of
+Dutch or French, in `chrome.storage.local`. Local means on your device: they are
+not synced to a Google account or anywhere else. The only extension resource
+loaded is the bundled `core/tariffs.json`. There are no network requests, no
+telemetry, no analytics and no remote endpoint.

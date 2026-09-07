@@ -31,7 +31,7 @@
   function getRegion() {
     return new Promise(function (resolve) {
       try {
-        chrome.storage.sync.get({ region: "flanders" }, function (cfg) {
+        chrome.storage.local.get({ region: "flanders" }, function (cfg) {
           resolve((cfg && cfg.region) || "flanders");
         });
       } catch (e) { resolve("flanders"); }

@@ -144,7 +144,7 @@ function runContentScript(scriptRel, html, url) {
     history: { pushState() {}, replaceState() {} },
     chrome: {
       runtime: { sendMessage() {}, getURL: (p) => p },
-      storage: { sync: { get: (d, cb) => cb(d) } }
+      storage: { local: { get: (d, cb) => cb(d) } }
     },
     fetch: () => Promise.resolve({ json: () => Promise.resolve(tariffs) }),
     Promise
@@ -187,6 +187,27 @@ const MOBILE_HTML = '<!doctype html><html lang="de"><head>' +
   check("suchen.mobile.de: badge rendered with a real BIV figure",
     r.count === 1 && typeof biv === "number" && biv > 0,
     "renders=" + r.count + " biv=" + biv);
+}
+
+// ---- 4. the storage surface stays local ------------------------------------
+// chrome.storage.sync replicates through the user's Google account, so data
+// would leave the device and the privacy policy's "transmits nothing" would need
+// hedging. Two preference keys are not worth that. This guards the claim.
+console.log("\n== storage surface ==\n");
+const shipped = ["sw.js", "popup.js", "options.js", "ui/badge.js",
+                 "content/autoscout24.js", "content/mobilede.js"];
+for (const rel of shipped) {
+  const src = readFileSync(join(root, rel), "utf8");
+  const uses = /chrome\.storage\.sync/.test(src);
+  check(rel + ": no chrome.storage.sync", !uses,
+    "storage.sync replicates via the user's Google account; use chrome.storage.local");
+}
+{
+  const worker = readFileSync(join(root, "sw.js"), "utf8");
+  check("sw.js still makes no network call",
+    !/\bfetch\s*\(|XMLHttpRequest|sendBeacon/.test(worker));
+  check("sw.js carries the privacy obligation note for a future tariff refresh",
+    /IF YOU ADD THE SCHEDULED TARIFF REFRESH/.test(worker));
 }
 
 console.log("\nHost permission assertions: " + (total - failures) + "/" + total + " passed.");

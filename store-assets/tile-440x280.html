@@ -1,0 +1,135 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>TaksCheck store tile 440x280</title><style>
+  @font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;src:url("../fonts/IBMPlexMono-SemiBold.woff2") format("woff2");font-display:block}
+  @font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;src:url("../fonts/IBMPlexMono-Bold.woff2") format("woff2");font-display:block}
+  html,body{margin:0;padding:0;background:#fff}
+  /* ===============================================================
+     TAKSCHECK STORE TILE 440x280
+     Colours, type and components are lifted from ui/badge.js and
+     popup.html. Nothing here is invented for marketing.
+     =============================================================== */
+  .tc-tile {
+    position: relative;
+    width: 440px; height: 280px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 92% at 10% 3%, rgba(255,255,255,.18), rgba(255,255,255,0) 56%),
+      linear-gradient(145deg, #2A63D6 0%, #1B54C7 28%, #10367F 68%, #0A2255 100%);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: #fff;
+    isolation: isolate;
+  }
+  .tc-tile * { box-sizing: border-box; margin: 0; padding: 0; max-width: none; }
+  .tc-tile__grid {
+    position: absolute; inset: 0; pointer-events: none; opacity: .075;
+    background-image:
+      linear-gradient(to right, #fff 1px, transparent 1px),
+      linear-gradient(to bottom, #fff 1px, transparent 1px);
+    background-size: 20px 20px;
+    -webkit-mask-image: linear-gradient(118deg, #000 0%, transparent 56%);
+    mask-image: linear-gradient(118deg, #000 0%, transparent 56%);
+  }
+
+  /* --- left column: lockup, headline, scope ---------------------- */
+  .tc-tile__left { position: absolute; left: 24px; top: 48px; width: 164px; }
+  .tc-lock { display: flex; align-items: center; gap: 9px; height: 21px; }
+  .tc-lock svg { width: 30px; height: 21px; flex: none; filter: drop-shadow(0 1px 2px rgba(4,14,40,.5)); }
+  .tc-lock span { font-size: 18px; font-weight: 800; letter-spacing: -.022em; line-height: 1; color: #fff; }
+  .tc-tile__h {
+    margin-top: 18px; font-size: 20px; font-weight: 800;
+    line-height: 1.14; letter-spacing: -.018em; color: #fff;
+  }
+  .tc-tile__sub {
+    margin-top: 12px; font-size: 11px; font-weight: 500;
+    line-height: 1.42; color: rgba(255,255,255,.76);
+  }
+  .tc-tile__scope {
+    display: inline-flex; align-items: center; margin-top: 14px; height: 23px; padding: 0 11px;
+    border: 1px solid rgba(255,255,255,.40); background: rgba(255,255,255,.10);
+    border-radius: 999px; font-size: 10.5px; font-weight: 700; color: #fff; letter-spacing: .004em;
+  }
+
+  /* --- right: the figure card, built from .tc-row + .tc-foot ----- */
+  .tc-tile__card {
+    position: absolute; left: 204px; top: 28px; width: 220px;
+    background: #fff; border: 1px solid #E1E5EA; border-radius: 13px; overflow: hidden;
+    box-shadow: 0 20px 44px -14px rgba(3,12,38,.62), 0 2px 6px rgba(3,12,38,.26);
+  }
+  .tcc__body { padding: 14px; }
+  .tcc__k { display: block; color: #5A6472; font-size: 10.5px; line-height: 1.3; }
+  .tcc__k b { display: block; color: #101720; font-size: 11px; font-weight: 800; letter-spacing: .01em; margin-bottom: 1px; }
+  .tcc__v {
+    display: block; margin-top: 5px; color: #101720;
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 600; font-size: 32px; line-height: 1.02; letter-spacing: -.015em;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .tcc__v--sm { font-size: 27px; }
+  .tcc__v i {
+    font-style: normal; font-size: 13px; font-weight: 600; color: #5A6472;
+    letter-spacing: 0; margin-right: 5px;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .tcc__rule { height: 1px; background: #E1E5EA; margin: 13px 0; }
+  .tcc__foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 9px 14px; background: #F1F4F8; border-top: 1px solid #E1E5EA;
+  }
+  .tcp { display: inline-flex; align-items: stretch; flex: none; height: 21px;
+    border: 1px solid #b9c1cb; border-radius: 5px; overflow: hidden; background: #fff;
+    box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+  .tcp em {
+    font-style: normal; background: #1B54C7; color: #fff; width: 14px;
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .tcp span {
+    padding: 0 8px; color: #101720; font-weight: 700; font-size: 9px; letter-spacing: .05em;
+    display: flex; align-items: center;
+    font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .tcv {
+    display: inline-flex; align-items: center; gap: 6px; flex: none;
+    font-size: 10px; font-weight: 800; letter-spacing: .02em;
+    padding: 3px 9px 3px 8px; border-radius: 6px; white-space: nowrap;
+    background: #FBEBCF; color: #7A4E00;
+  }
+  .tcv b { width: 8px; height: 8px; border-radius: 50%; background: #C77700; flex: none; }
+</style></head><body>
+<div class="tc-tile" id="tile">
+  <div class="tc-tile__grid" aria-hidden="true"></div>
+
+  <div class="tc-tile__left">
+    <div class="tc-lock">
+      <svg viewBox="0 0 34 24" aria-hidden="true">
+        <rect x="1" y="1" width="32" height="22" rx="4.5" fill="#1B54C7"/>
+        <path d="M9.1 2.8 H28.5 A2.7 2.7 0 0 1 31.2 5.5 V18.5 A2.7 2.7 0 0 1 28.5 21.2 H9.1 Z" fill="#fff"/>
+        <path d="M12.4 12 L16.4 16 L25 6" fill="none" stroke="#841922" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>TaksCheck</span>
+    </div>
+
+    <div class="tc-tile__h">Zie de BIV<br>en rijtaks op<br>de advertentie</div>
+    <div class="tc-tile__sub">Uit de gegevens in de advertentie. Op AutoScout24 en mobile.de.</div>
+    <div class="tc-tile__scope">Alleen Vlaamse tarieven</div>
+  </div>
+
+  <div class="tc-tile__card">
+    <div class="tcc__body">
+      <div class="tcc__row">
+        <span class="tcc__k"><b>BIV</b>eenmalig</span>
+        <span class="tcc__v"><i>ca.</i>&euro;&nbsp;726</span>
+      </div>
+      <div class="tcc__rule"></div>
+      <div class="tcc__row">
+        <span class="tcc__k"><b>Rijtaks</b>per jaar</span>
+        <span class="tcc__v tcc__v--sm"><i>ca.</i>&euro;&nbsp;1.321</span>
+      </div>
+    </div>
+    <div class="tcc__foot">
+      <span class="tcp"><em>B</em><span>VLAANDEREN</span></span>
+      <span class="tcv"><b></b>Gemiddeld</span>
+    </div>
+  </div>
+</div>
+</body></html>

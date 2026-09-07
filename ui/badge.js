@@ -12,7 +12,7 @@
  * verdict red is a brighter status red, kept distinct from the brand ruby.
  *
  * Bilingual: auto-detects NL / FR (default NL), with a manual toggle in the
- * header persisted to chrome.storage.sync. The key label sits in a fixed
+ * header persisted to chrome.storage.local. The key label sits in a fixed
  * two-line slot so the longer French wording never reflows the euro columns.
  *
  * Keeps the public contract: root.BivBadge.render(all, vehicle, region).
@@ -23,7 +23,7 @@
   var HOST_ID = "takscheck-host";
   var STORE = null;
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) STORE = chrome.storage.sync;
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) STORE = chrome.storage.local;
   } catch (e) { STORE = null; }
 
   // --- language state (module-scoped, survives re-render) ------------------

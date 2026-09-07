@@ -1,7 +1,7 @@
 /*
  * Toolbar popup logic (Iris branded switcher). The popup chrome is localised
  * NL / FR from one I18N map, auto-detected and toggle-overridable, sharing the
- * same chrome.storage.sync "lang" key as the badge and options page. The region
+ * same chrome.storage.local "lang" key as the badge and options page. The region
  * segments are a role="radiogroup" of real buttons; selecting one persists to
  * the same "region" key the options page and content scripts read, and updates
  * the selected segment plus the simulator link live. The status line reads the
@@ -47,7 +47,7 @@
 
   var STORE = null;
   try {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.sync) STORE = chrome.storage.sync;
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) STORE = chrome.storage.local;
   } catch (e) { STORE = null; }
 
   var lang = "nl";
