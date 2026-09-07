@@ -1,4 +1,14 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>TaksCheck store tile 440x280</title><style>
+<!doctype html>
+<!--
+  TaksCheck Chrome Web Store small promotional tile, 440x280.
+  Iris, Proxem AI, 2026-09-07. Approved artwork source.
+  Render: Chrome headless, --force-device-scale-factor=2 --window-size=440,280,
+  then downsample the 880x560 capture to exactly 440x280.
+  Every colour, type size ratio and component here is lifted from
+  ui/badge.js and popup.html. The figures are the validated control pair
+  (726.22 BIV, 1320.76 road tax) as the badge itself prints them.
+-->
+<html lang="nl"><head><meta charset="utf-8"><title>TaksCheck store tile 440x280</title><style>
   @font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:600;src:url("../fonts/IBMPlexMono-SemiBold.woff2") format("woff2");font-display:block}
   @font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:700;src:url("../fonts/IBMPlexMono-Bold.woff2") format("woff2");font-display:block}
   html,body{margin:0;padding:0;background:#fff}
@@ -41,7 +51,7 @@
   }
   .tc-tile__sub {
     margin-top: 12px; font-size: 11px; font-weight: 500;
-    line-height: 1.42; color: rgba(255,255,255,.76);
+    line-height: 1.42; color: rgba(255,255,255,.80);
   }
   .tc-tile__scope {
     display: inline-flex; align-items: center; margin-top: 14px; height: 23px; padding: 0 11px;
@@ -51,26 +61,26 @@
 
   /* --- right: the figure card, built from .tc-row + .tc-foot ----- */
   .tc-tile__card {
-    position: absolute; left: 204px; top: 28px; width: 220px;
+    position: absolute; left: 204px; top: 38px; width: 220px;
     background: #fff; border: 1px solid #E1E5EA; border-radius: 13px; overflow: hidden;
     box-shadow: 0 20px 44px -14px rgba(3,12,38,.62), 0 2px 6px rgba(3,12,38,.26);
   }
-  .tcc__body { padding: 14px; }
-  .tcc__k { display: block; color: #5A6472; font-size: 10.5px; line-height: 1.3; }
-  .tcc__k b { display: block; color: #101720; font-size: 11px; font-weight: 800; letter-spacing: .01em; margin-bottom: 1px; }
+  .tcc__body { padding: 14px 15px 13px; }
+  .tcc__k { display: block; color: #5A6472; font-size: 12px; line-height: 1.28; }
+  .tcc__k b { display: block; color: #101720; font-size: 13px; font-weight: 800; letter-spacing: .01em; margin-bottom: 1px; }
   .tcc__v {
-    display: block; margin-top: 5px; color: #101720;
+    display: block; margin-top: 3px; color: #101720;
     font-family: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-weight: 600; font-size: 32px; line-height: 1.02; letter-spacing: -.015em;
+    font-weight: 600; font-size: 27px; line-height: 1.04; letter-spacing: -.012em; text-align: right;
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
-  .tcc__v--sm { font-size: 27px; }
+  .tcc__v--sm { font-size: 23px; }
   .tcc__v i {
-    font-style: normal; font-size: 13px; font-weight: 600; color: #5A6472;
+    font-style: normal; font-size: 12.5px; font-weight: 600; color: #5A6472;
     letter-spacing: 0; margin-right: 5px;
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  .tcc__rule { height: 1px; background: #E1E5EA; margin: 13px 0; }
+  .tcc__rule { height: 1px; background: #E1E5EA; margin: 11px 0; }
   .tcc__foot {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: 9px 14px; background: #F1F4F8; border-top: 1px solid #E1E5EA;

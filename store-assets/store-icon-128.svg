@@ -1,0 +1,17 @@
+<!--
+  TaksCheck Chrome Web Store icon, 128x128.
+  Identical artwork to icons/icon.svg, rescaled only.
+  Chrome Web Store requires the mark to sit inside a 96x96 safe area with
+  16px of transparent padding on every side. icons/icon128.png currently
+  renders the plate 116px wide with 6px of side padding, which breaks that.
+  Here the plate is exactly 96 x 66.2, centred: x 16 to 112, y 30.9 to 97.1.
+  Scale factor 3.310345 about the canvas centre (16,16 in the 32 source space).
+  Nothing is redrawn, no stroke is fattened: the mark is only made smaller.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="TaksCheck">
+  <g transform="translate(64,64) scale(3.310345) translate(-16,-16)">
+    <rect x="1.5" y="6" width="29" height="20" rx="4" fill="#1B54C7"/>
+    <path d="M8.7 8 H26.5 A2 2 0 0 1 28.5 10 V22 A2 2 0 0 1 26.5 24 H8.7 Z" fill="#fff"/>
+    <path d="M12 16.4 L16 20.4 L24.5 10.6" fill="none" stroke="#841922" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

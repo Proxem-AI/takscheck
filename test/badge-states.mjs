@@ -191,6 +191,37 @@ for (const region of ["brussels", "wallonia"]) {
     fr.text.includes("Pas encore validé pour cette région"), fr.text.slice(0, 240));
 }
 
+// ---- 5b. no assumption reason renders twice in one panel -------------------
+// Every engine assumption the badge cannot match falls through to the generic
+// "Enkele waarden zijn geschat". Two NEDC branch strings had no rule, one from
+// the BIV and one from the road tax, so a pre-2021 car printed that same line
+// twice in the same list and it read as a bug. Iris caught it while preparing
+// the store screenshots on 2026-09-07. This asserts the panel never repeats a
+// reason, which catches the next missing rule as well as these two.
+console.log("\n== assumption list has no duplicate rows ==\n");
+{
+  // The control vehicle from Iris's screenshot 3: a pre-2021 diesel, which takes
+  // the NEDC branch on both taxes and derives fiscal PK from displacement.
+  const nedc = { title: "BMW 320d", fuel: "diesel", co2: 148, euroNorm: 6,
+                 displacementCc: 1995, firstRegistration: "2019-06-15" };
+  const all = engine.computeAll(nedc, "flanders", CURRENT);
+  for (const lg of ["nl", "fr"]) {
+    const r = render(lg, all, nedc, "flanders");
+    const rows = [...r.html.matchAll(/<span class="tc-rz">([^<]*)<\/span>/g)].map((m) => m[1]);
+    const dupes = rows.filter((v, i) => rows.indexOf(v) !== i);
+    check(lg.toUpperCase() + ": no assumption reason appears twice",
+      dupes.length === 0, "duplicated: " + JSON.stringify([...new Set(dupes)]));
+    check(lg.toUpperCase() + ": no reason fell through to the generic string",
+      !rows.includes(lg === "nl" ? "Enkele waarden zijn geschat" : "Certaines valeurs sont estimées"),
+      JSON.stringify(rows));
+  }
+  const nl = render("nl", all, nedc, "flanders");
+  check("NL names the BIV NEDC branch specifically",
+    nl.text.includes("Van voor 1 januari 2021: NEDC-formule voor de BIV"), nl.text.slice(0, 260));
+  check("NL names the road tax NEDC branch specifically",
+    nl.text.includes("Van voor 1 januari 2021: NEDC-CO2 gebruikt"), nl.text.slice(0, 260));
+}
+
 // ---- 6. a genuinely incomplete advert still reads as incomplete ------------
 console.log("\n== Missing input still reads as missing input ==\n");
 {
