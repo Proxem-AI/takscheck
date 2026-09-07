@@ -235,6 +235,41 @@ test/window-expiry-check.mjs  fails the build once a tariff window lapses
 LICENSE                  Apache License 2.0
 ```
 
+## Permissions
+
+TaksCheck requests the minimum that lets it do its one job. The set was cut from
+16 host permissions to 6 on 7 September 2026, before the Chrome Web Store
+submission, because ten of them could not be justified. `test/host-permissions.mjs`
+fails the build if the set grows again or if the three match-pattern lists in
+`manifest.json` fall out of step.
+
+**`storage`**
+
+> TaksCheck stores two user preferences using `chrome.storage.sync`: the Belgian
+> tax region the user selects, and whether they want the interface in Dutch or
+> French. Both are chosen by the user in the extension popup or options page, and
+> both are read by the content script so the panel on the advert shows figures for
+> the correct region in the correct language. Nothing else is stored. The
+> extension makes no network requests to any server, so nothing is transmitted.
+
+**Host permissions** (`autoscout24.be`, `autoscout24.de`, `autoscout24.nl`, `autoscout24.fr`, `autoscout24.lu`, `mobile.de`)
+
+> TaksCheck reads the vehicle specification already shown on a car advert the user
+> has opened (fuel type, CO2 figure, engine power, cylinder capacity, date of first
+> registration and Euro emission standard) and displays the estimated Belgian
+> registration tax and annual road tax in a panel on that page. Access is needed to
+> the six domains where those adverts appear: `autoscout24.be` for the Belgian
+> market, and `autoscout24.de`, `autoscout24.nl`, `autoscout24.fr`,
+> `autoscout24.lu` and `mobile.de`, which are the markets Belgian buyers import
+> from and where the Belgian tax figure is the question the user actually has. All
+> reading happens in the user's own browser, on a page they opened themselves. No
+> page content is copied, stored or sent anywhere. Ten further AutoScout24 country
+> domains were removed on 7 September 2026 because a Belgian tax calculator has no
+> legitimate need for them.
+
+No remote code is loaded. The only `fetch` calls in the extension read the bundled
+`core/tariffs.json` through `chrome.runtime.getURL`.
+
 ## Licence
 
 Apache License 2.0. See `LICENSE`.

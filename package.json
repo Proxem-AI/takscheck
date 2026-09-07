@@ -4,12 +4,13 @@
   "private": true,
   "description": "TaksCheck: MV3 Chrome extension showing Belgian BIV / TMC and Rijtaks / TC on car ads (NL / FR), plus a regression harness against the official Flemish simulator.",
   "scripts": {
-    "test": "node test/window-expiry-check.mjs && node test/harness.mjs && node test/roadtax-harness.mjs && node test/simulator-comparison-harness.mjs --strict && node test/badge-states.mjs",
+    "test": "node test/window-expiry-check.mjs && node test/harness.mjs && node test/roadtax-harness.mjs && node test/simulator-comparison-harness.mjs --strict && node test/badge-states.mjs && node test/host-permissions.mjs",
     "test:biv": "node test/harness.mjs",
     "test:roadtax": "node test/roadtax-harness.mjs",
     "test:simulator": "node test/simulator-comparison-harness.mjs --strict",
     "test:expiry": "node test/window-expiry-check.mjs",
-    "test:badge": "node test/badge-states.mjs"
+    "test:badge": "node test/badge-states.mjs",
+    "test:hosts": "node test/host-permissions.mjs"
   },
   "devDependencies": {
     "linkedom": "^0.18.13"

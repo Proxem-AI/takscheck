@@ -3,7 +3,9 @@
   "name": "TaksCheck",
   "version": "0.1.0",
   "description": "Estimate the Belgian car tax on any car ad: BIV / TMC and Rijtaks / TC, Flanders, in NL or FR. Not an official assessment.",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -26,19 +28,11 @@
     "*://*.autoscout24.nl/*",
     "*://*.autoscout24.fr/*",
     "*://*.autoscout24.lu/*",
-    "*://*.autoscout24.com/*",
-    "*://*.autoscout24.it/*",
-    "*://*.autoscout24.es/*",
-    "*://*.autoscout24.at/*",
-    "*://*.autoscout24.bg/*",
-    "*://*.autoscout24.hr/*",
-    "*://*.autoscout24.pl/*",
-    "*://*.autoscout24.ro/*",
-    "*://*.autoscout24.se/*",
-    "*://*.autoscout24.tr/*",
     "*://*.mobile.de/*"
   ],
-  "background": { "service_worker": "sw.js" },
+  "background": {
+    "service_worker": "sw.js"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -46,17 +40,7 @@
         "*://*.autoscout24.de/*",
         "*://*.autoscout24.nl/*",
         "*://*.autoscout24.fr/*",
-        "*://*.autoscout24.lu/*",
-        "*://*.autoscout24.com/*",
-        "*://*.autoscout24.it/*",
-        "*://*.autoscout24.es/*",
-        "*://*.autoscout24.at/*",
-        "*://*.autoscout24.bg/*",
-        "*://*.autoscout24.hr/*",
-        "*://*.autoscout24.pl/*",
-        "*://*.autoscout24.ro/*",
-        "*://*.autoscout24.se/*",
-        "*://*.autoscout24.tr/*"
+        "*://*.autoscout24.lu/*"
       ],
       "js": [
         "core/tax.js",
@@ -67,7 +51,9 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://*.mobile.de/*"],
+      "matches": [
+        "*://*.mobile.de/*"
+      ],
       "js": [
         "core/tax.js",
         "core/normalise.js",
@@ -90,16 +76,6 @@
         "*://*.autoscout24.nl/*",
         "*://*.autoscout24.fr/*",
         "*://*.autoscout24.lu/*",
-        "*://*.autoscout24.com/*",
-        "*://*.autoscout24.it/*",
-        "*://*.autoscout24.es/*",
-        "*://*.autoscout24.at/*",
-        "*://*.autoscout24.bg/*",
-        "*://*.autoscout24.hr/*",
-        "*://*.autoscout24.pl/*",
-        "*://*.autoscout24.ro/*",
-        "*://*.autoscout24.se/*",
-        "*://*.autoscout24.tr/*",
         "*://*.mobile.de/*"
       ]
     }
