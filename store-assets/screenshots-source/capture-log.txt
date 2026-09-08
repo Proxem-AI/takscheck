@@ -1,0 +1,115 @@
+TaksCheck Chrome Web Store screenshots, capture log
+Vera, Proxem AI, 2026-09-08
+
+Spec: 1280 x 800, JPG, quality 90, square corners, full bleed. Confirmed
+against developer.chrome.com/docs/webstore/images on 2026-09-08 (Google
+states "1280x800 or 640x400 pixels", 1280x800 preferred for HiDPI, square
+corners, no padding / full bleed). 1280x800 used, matching Iris's brief in
+inbox/2026-09-07-TAKSCHECK-IRIS-store-assets.html section 04.
+
+Frame: built exactly to Iris's section 04 spec (gradient field, grid
+texture, caption/subline geometry, 1120x600 stage, footer line). Source
+HTML for each frame is the .source.html file alongside this log; the raw
+component captures each frame composites are the accompanying .png files
+(2x, unwashed/unframed, kept per her section 08 instruction so a re-cut
+does not require re-running the browser).
+
+Footer text on all four screenshots, verbatim from the spec:
+"TaksCheck is een onafhankelijk hulpmiddel van Proxem AI. Geen officiële aanslag."
+
+--------------------------------------------------------------------------
+screenshot-1-badge-on-advert.jpg  (carousel position 1)
+--------------------------------------------------------------------------
+Real AutoScout24.be advert, extension loaded unpacked, badge rendered
+live, page washed per section 04 (blur+grayscale+brightness+contrast on
+document.body only; the badge host is a sibling of body so it stays sharp).
+Advert URL:
+  https://www.autoscout24.be/nl/aanbod/bmw-730-m-sport-diesel-cat_ma13mo1659-ffdb7b42-2019-4cc2-885f-619f8894ab32
+Vehicle as parsed: BMW 730, Diesel, 195 kW, 160 g CO2, 06/2019
+Figures exactly as the badge printed them: BIV ca. € 938, Rijtaks ca. € 1.359
+(medium/low confidence tiers, "ca." shown, not the control pair; this is an
+ordinary real advert, not the one built to hit 726/1.321).
+
+--------------------------------------------------------------------------
+screenshot-2 -- NOT DELIVERED
+--------------------------------------------------------------------------
+See Vera's report to RED for the full diagnosis. Summary: TaksCheck's
+mobile.de content script did not activate on a real, unblocked mobile.de
+detail page in clean testing (fresh profile, first navigation, real page
+with JSON-LD present, chrome.storage/runtime confirmed working, extension
+service worker confirmed attached) before mobile.de's own edge began
+returning HTTP 403 to this network for all requests, including plain curl
+with no browser or cookies involved. Both conditions independently block
+an honest capture right now. No screenshot was fabricated. Re-attempt once
+the network block clears and once Felix has looked at content/mobilede.js
+isDetailPage() / extraction on a real page.
+
+--------------------------------------------------------------------------
+screenshot-3-why-this-amount.jpg  (carousel position 3)
+--------------------------------------------------------------------------
+Not a live advert. Built via a local harness page (badge.js and tax.js
+loaded unmodified from the repo, chrome.runtime.getURL shimmed only to
+resolve the real bundled font files, exactly as Iris's "preferred" method
+in section 03 describes) calling BivBadge.render() directly with the
+control vehicle from her section 03 table:
+  fuel diesel, first registration 01/2019, CO2 148 g/km (NEDC),
+  euro norm 6, cylinder capacity 2993 cc (derives fiscal pk 15), Flanders.
+Engine result, computed live by core/tax.js, not typed in:
+  BIV 726.22 -> ca. € 726   Rijtaks 1320.76 -> ca. € 1.321
+Matches Iris's control case to the cent. Expander open, four assumption
+rows read from the live DOM: "Van voor 1 januari 2021: NEDC-formule voor
+de BIV" / "Fiscale pk afgeleid uit de cilinderinhoud" / "Van voor 1 januari
+2021: NEDC-CO2 gebruikt" / a fourth row below the panel's own 104px
+internal scroll cap. The two copy fixes Iris flagged as optional in
+section 05 were already present in ui/badge.js as shipped; nothing was
+changed for this capture.
+
+DEVIATION FROM THE BRIEF, FLAGGED FOR IRIS/RED:
+Iris specified the badge scaled uniformly to 1.6x (320 -> 512 CSS px).
+Measured directly: the real panel with the expander open is 588 CSS px
+tall (header through the disclaimer), all of it required content under
+her own section 03 rule ("Never remove the ca., the data meter, the note
+or the disclaimer to make the panel look tidier"). At 1.6x that is 941 CSS
+px tall against a fixed 600 px stage -- no crop alignment (top, centre or
+bottom) shows the whole panel, and every alignment tested loses either the
+euro figures, the wordmark, or the plate tag and disclaimer she explicitly
+protects. Rather than hide real DOM to force the 1.6x crop to fit, this
+capture uses the largest scale that shows the complete, unedited panel
+within the 600 px stage: 600/588 = ~1.02x (512 becomes ~328 CSS px wide).
+Nothing is hidden or cropped. This is a deliberate deviation from the
+literal 1.6x figure, made because that figure was specified before the
+panel had actually been measured; happy to redo at a different scale if
+Iris wants the crop instead.
+
+--------------------------------------------------------------------------
+screenshot-4-scope.jpg  (carousel position 4)
+--------------------------------------------------------------------------
+Real render of popup.html as chrome-extension://<id>/popup.html, region
+clicked to Brussel, language Dutch. The amber unvalidated segment and the
+"Voor deze regio toont TaksCheck geen bedragen..." note both come from the
+live product (tariffs.json scope + popup.js), not typed captions. The
+three rows on the right reuse the product's own .tcp plate-tag markup
+(lifted from store-assets/tile-440x280.html) at 1.4x, sized with real
+pixel values rather than a CSS transform so the layout reserves the right
+width and the status text does not sit under the enlarged plate.
+
+Same height deviation as screenshot 3, same reasoning: natural popup
+height for the Brussel/NL state is 594 CSS px; Iris's stated 2x would be
+1188 CSS px against the 600 px stage. Captured at the fitted scale
+600/594 = ~1.01x instead, full popup intact, nothing cropped or hidden.
+
+--------------------------------------------------------------------------
+screenshot-5-language.jpg  (carousel position 5)
+--------------------------------------------------------------------------
+Two real renders of popup.html, left Dutch / Vlaanderen, right French /
+Vlaanderen, both NL/FR toggle and region state set by clicking the real
+controls. French popup text is the product's own French (popup.js I18N),
+not a translation written for the screenshot.
+
+Same height deviation as screenshots 3 and 4. Natural heights: NL 541 CSS
+px, FR 557 CSS px (French wraps one line longer). Iris's stated 1.7x
+(510 CSS px wide each) was kept for the width target since 510 is well
+inside the stage; both popups were captured at a shared scale of
+600/557 = ~1.08x (both wide enough to look like a matched pair, and the
+taller of the two, French, fills the full 600 px stage height with
+nothing cropped).
