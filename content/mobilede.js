@@ -289,7 +289,28 @@
     // details(.html). The numeric ad id in the query string is what keeps this from
     // matching a search or listing page, so it stays mandatory.
     if (/^\/(?:[a-z]{2}\/)?[^/]+\/details(?:\.html)?\/?$/i.test(path) && /[?&]id=\d{6,}/i.test(qs)) return true;
-    // fallback: a Car JSON-LD with a first-registration date is a strong detail signal
+    // Fallback: a Car JSON-LD carrying a first-registration date is a strong detail
+    // signal. Read this before assuming the gate has two layers of defence.
+    //
+    // AS OF 2026-09-08 THIS FALLBACK IS INERT. Twelve distinct live mobile.de
+    // detail pages were inspected that day, across four UI languages and both
+    // confirmed detail paths, and not one carried a schema.org Car, Vehicle or
+    // Product node. Every page carried exactly one Organization node and nothing
+    // else, so readJsonLd returns null and this line always returns false. The
+    // evidence is in test/site-payload-mobilede-2026-09.json under findings.
+    //
+    // The practical consequence is that the URL patterns above are currently
+    // carrying the gate on their own. That is the opposite of how this function
+    // reads, and it is why a Belgian user on the /nl/ path got no badge at all
+    // until the patterns were made locale agnostic: there was no second layer to
+    // catch it.
+    //
+    // Keep this branch. It is neither dead code nor load-bearing: it costs nothing
+    // and returns false today, and it starts doing real work again the moment
+    // mobile.de re-adds vehicle structured data, which sites do routinely for SEO.
+    // Deleting it because it looks unused would remove the only non-URL evidence
+    // the gate has. If you widen the sample and find a Car node, say so in the
+    // fixture rather than here.
     return !!(jsonld && (jsonld.dateVehicleFirstRegistered || jsonld.vehicleEngine));
   }
 
