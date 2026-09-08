@@ -85,9 +85,19 @@
   //   FR  Date immatriculation | Carburant | Puissance | Cylindree | Emissions de CO2 (peigne)2 | Norme antipollution
   var LABEL_STEMS = [
     { key: "erstzulassung", re: /^(erstzulassung|first registration|first reg|eerste (registratie|inschrijving)|date\s*(de\s*)?(premiere\s*)?immatriculation|mise en circulation)/ },
-    // "brandstof" and "carburant" must not swallow "Brandstofverbruik" or
-    // "Prix du carburant", which are consumption and fuel price, not fuel type.
-    { key: "kraftstoffart", re: /^(kraftstoff|fuel|brandstof(?![a-z])|carburant(?![a-z]))/ },
+    // Fuel TYPE, not fuel consumption and not fuel price. Every language mobile.de
+    // serves puts a consumption row next to the fuel row and names it with the same
+    // opening word, so an anchored stem alone matches both:
+    //   DE  Kraftstoffart      vs  Kraftstoffverbrauch2   (both start "kraftstoff")
+    //   EN  Fuel               vs  Fuel consumption2      (both start "fuel")
+    //   NL  Brandstof          vs  Brandstofverbruik2, Brandstofprijs
+    //   FR  Carburant          vs  Prix du carburant
+    // readTechData keeps the FIRST hit per key, so on every advert captured on
+    // 2026-09-08 the right row happened to come first and the wrong one was never
+    // reached. That is row order on their side, not a guarantee, and one reordering
+    // would have made the fuel type read as "8,5 l/100km". The consumption, price
+    // and tank wording is therefore rejected outright rather than out-raced.
+    { key: "kraftstoffart", re: /^(?!.*(verbrauch|verbruik|consumption|consommation|consumo|tank|prijs|prix|price|preis|kosten|cout))(kraftstoff|fuel|brandstof|carburant)/ },
     { key: "leistung", re: /^(leistung|power|vermogen|puissance)/ },
     { key: "hubraum", re: /^(hubraum|cubic capacity|displacement|engine size|inhoud|cilinderinhoud|cylindree)/ },
     // The CO2 emission figure. Three things this has to survive, all observed live:

@@ -331,6 +331,48 @@ const HTML_PLAIN_2 = `<!doctype html><html><body><dl>
 ok(extract(HTML_PLAIN_2, NL_URL).vehicle.co2 === 142,
    "(NL) plain 2 in the CO2 label reads the same as the subscript");
 
+// ---- fuel type vs fuel consumption ----------------------------------------
+// Every language names the consumption row with the same opening word as the fuel
+// row, so an anchored stem matches both and readTechData keeps whichever comes
+// FIRST. On all 8 adverts captured on 2026-09-08 the fuel row happened to come
+// first, so the trap never fired. These fixtures put the consumption row first on
+// purpose, which is the ordering the site could serve tomorrow. Labels and values
+// are the literal captured strings from
+// test/site-payload-mobilede-2026-09.json, only the order is changed.
+const FUEL_TRAP = [
+  ["DE Kraftstoffverbrauch before Kraftstoffart", "petrol", `
+    <dt>Kraftstoffverbrauch2</dt><dd>8,5 l/100km (kombiniert)</dd>
+    <dt>Energieverbrauch (komb.)2</dt><dd>8,5 l/100km</dd>
+    <dt>Kraftstoffart</dt><dd>Benzin, E10-geeignet</dd>`],
+  ["EN Fuel consumption before Fuel", "petrol", `
+    <dt>Fuel consumption2</dt><dd>8.5 l/100km (combined)</dd>
+    <dt>Energy consumption (comb.)2</dt><dd>8.5 l/100km</dd>
+    <dt>Fuel</dt><dd>Petrol, E10-enabled</dd>`],
+  ["NL Brandstofverbruik and Brandstofprijs before Brandstof", "diesel", `
+    <dt>Brandstofverbruik2</dt><dd>5,4 l/100km (gecombineerd)</dd>
+    <dt>Brandstofprijs</dt><dd>&euro; 1,61/l (jaargemiddelde 2025)</dd>
+    <dt>Brandstof</dt><dd>Diesel</dd>`],
+  ["FR Consommation and Prix du carburant before Carburant", "petrol", `
+    <dt>Consommation2</dt><dd>8,5 l/100km (combin&eacute;e)</dd>
+    <dt>Prix du carburant</dt><dd>1,61 &euro;/l (moyenne annuelle 2025)</dd>
+    <dt>Carburant</dt><dd>Essence, Compatible E-10</dd>`],
+  ["NL Tankinhoud must not be read as fuel either", "diesel", `
+    <dt>Tankinhoud</dt><dd>42 l</dd>
+    <dt>Brandstof</dt><dd>Diesel</dd>`]
+];
+for (const [label, expected, rows] of FUEL_TRAP) {
+  const html = `<!doctype html><html><body><dl>${rows}</dl></body></html>`;
+  const v = extract(html, NL_URL).vehicle;
+  ok(v.fuel === expected,
+     "(fuel trap) " + label + "  expected " + expected + ", got " + JSON.stringify(v.fuel));
+}
+// And the consumption figure must not have been stored as the fuel type either.
+const TRAP_RAW = extract(`<!doctype html><html><body><dl>
+  <dt>Kraftstoffverbrauch2</dt><dd>8,5 l/100km (kombiniert)</dd>
+  <dt>Kraftstoffart</dt><dd>Benzin, E10-geeignet</dd></dl></body></html>`, NL_URL).vehicle;
+ok(!/l\/100km/.test(String(TRAP_RAW.fuelRaw)),
+   "(fuel trap) the consumption figure is not stored as fuelRaw (got " + JSON.stringify(TRAP_RAW.fuelRaw) + ")");
+
 // An EV page carries kWh rows. The unit fallback must never read battery capacity
 // or electricity consumption as engine power.
 const HTML_EV_KWH = `<!doctype html><html><body><dl>
