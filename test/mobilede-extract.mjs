@@ -4,6 +4,8 @@
  * realistic mock detail pages with linkedom (the DOM lib the project already
  * uses) and asserts:
  *   - the current /fahrzeuge/details.html?id=<digits> URL passes isDetailPage,
+ *   - the per-locale detail paths pass it too, /nl/voertuigen/details.html above
+ *     all, and the search, home and listing pages of those locales still do not,
  *   - the extractor produces a non-null vehicle from a Car JSON-LD,
  *   - the extractor produces a non-null vehicle from several Technische Daten
  *     DOM shapes (dt/dd, table rows, sibling divs, inline "label: value",
@@ -209,6 +211,47 @@ assertVehicle("(c) table EN", extract(HTML_TABLE, NEW_URL), ["firstRegistration"
 assertVehicle("(d) div pairs", extract(HTML_DIVPAIR, NEW_URL), ["firstRegistration", "powerKw", "fuel"]);
 assertVehicle("(e) inline",   extract(HTML_INLINE, NEW_URL), ["firstRegistration", "powerKw", "fuel", "co2"]);
 assertVehicle("(f) OLD url",  extract(HTML_OLD, OLD_URL), ["firstRegistration", "powerKw"]);
+
+// ---- locale path shapes ---------------------------------------------------
+// mobile.de translates the detail-page path noun, not just the page copy. The
+// German suchen.mobile.de/fahrzeuge/details.html and the Dutch
+// www.mobile.de/nl/voertuigen/details.html were both confirmed live on
+// 2026-09-08, serving the same advert id. Until then the gate named the German
+// noun, so a Belgian user browsing in Dutch, the user this extension exists for,
+// got no badge on any advert. These fixtures carry a spec table and no JSON-LD,
+// so the URL is the only thing the gate can decide on. Nouns for the locales not
+// confirmed live are plausible spellings on purpose: the gate must not care what
+// the word is, which is the whole point of the fix.
+const LOCALE_DETAIL_URLS = [
+  ["DE  /fahrzeuge/details.html",     "https://suchen.mobile.de/fahrzeuge/details.html?id=447034521"],
+  ["NL  /nl/voertuigen/details.html", "https://www.mobile.de/nl/voertuigen/details.html?id=447034521"],
+  ["NL  with the srp query tail",     "https://www.mobile.de/nl/voertuigen/details.html?id=460779544&vc=Car&dam=false&ref=srp&sb=rel"],
+  ["FR  /fr/vehicules/details.html",  "https://www.mobile.de/fr/vehicules/details.html?id=447034521"],
+  ["EN  /en/vehicle/details.html",    "https://www.mobile.de/en/vehicle/details.html?id=447034521"],
+  ["IT  /it/veicoli/details.html",    "https://www.mobile.de/it/veicoli/details.html?id=447034521"]
+];
+for (const [label, url] of LOCALE_DETAIL_URLS) {
+  ok(extract(HTML_DTDD, url).gate === true, "(locale) gate accepts " + label);
+}
+
+// The locale prefix must not become a way in for pages that are not adverts.
+// The mandatory numeric ad id is what holds that line, so it is tested here.
+const BARE = `<!doctype html><html><body><h1>overzicht</h1></body></html>`;
+const LOCALE_NON_DETAIL_URLS = [
+  ["DE search page",         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true"],
+  ["NL search page",         "https://www.mobile.de/nl/voertuigen/zoek.html?vc=Car&s=Car"],
+  ["NL home",                "https://www.mobile.de/nl"],
+  ["NL make listing page",   "https://www.mobile.de/nl/car/bmw"],
+  ["NL details without id",  "https://www.mobile.de/nl/voertuigen/details.html?vc=Car"],
+  ["NL details, id too short", "https://www.mobile.de/nl/voertuigen/details.html?id=123"]
+];
+for (const [label, url] of LOCALE_NON_DETAIL_URLS) {
+  ok(extract(BARE, url).gate === false, "(locale neg) gate refuses " + label);
+}
+
+// End to end on the Dutch path: gate, extraction and normalisation together.
+assertVehicle("(g) NL locale path", extract(HTML_DTDD, LOCALE_DETAIL_URLS[1][1]),
+  ["firstRegistration", "co2", "powerKw", "fuel", "price"]);
 
 // Negative: a non-detail page must NOT pass the gate.
 const NEG = extract(`<!doctype html><html><body><h1>Search</h1></body></html>`,

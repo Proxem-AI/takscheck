@@ -207,10 +207,19 @@
     // mobile.de ad detail URLs, old format, e.g. /auto-inserat/<slug>/<id>.html
     if (/\/(auto-inserat|fahrzeuge\/details|inserat)\//i.test(path)) return true;
     if (/\/\d{6,}\.html/i.test(path)) return true;
-    // Current format: /fahrzeuge/details.html?id=<digits> (the ad id lives in the
-    // query string, not the path). Accept the details path ending in .html or a
-    // slash together with a numeric id query param.
-    if (/\/fahrzeuge\/details(\.html)?\/?$/i.test(path) && /[?&]id=\d{6,}/i.test(qs)) return true;
+    // Current format: the ad id lives in the query string, not the path. mobile.de
+    // serves the SAME detail page under a per-locale path, and it translates the
+    // path noun as well as the copy. Two shapes confirmed against the live site on
+    // 2026-09-08, both for the same advert id:
+    //   German  suchen.mobile.de/fahrzeuge/details.html?id=<digits>
+    //   Dutch   www.mobile.de/nl/voertuigen/details.html?id=<digits>
+    // A Belgian user browsing in Dutch is served the /nl/ form for every advert, so
+    // matching the German noun by name meant no badge at all for the user this
+    // extension is built for. The noun is therefore deliberately NOT named here:
+    // an optional two-letter locale prefix, one path segment in any language, then
+    // details(.html). The numeric ad id in the query string is what keeps this from
+    // matching a search or listing page, so it stays mandatory.
+    if (/^\/(?:[a-z]{2}\/)?[^/]+\/details(?:\.html)?\/?$/i.test(path) && /[?&]id=\d{6,}/i.test(qs)) return true;
     // fallback: a Car JSON-LD with a first-registration date is a strong detail signal
     return !!(jsonld && (jsonld.dateVehicleFirstRegistered || jsonld.vehicleEngine));
   }

@@ -94,7 +94,11 @@ console.log("\n== match pattern behaviour ==\n");
 for (const url of [
   "https://www.autoscout24.be/aanbod/x", "https://www.autoscout24.de/angebote/x",
   "https://www.autoscout24.nl/aanbod/x", "https://www.autoscout24.fr/offre/x",
-  "https://www.autoscout24.lu/offre/x", "https://suchen.mobile.de/fahrzeuge/details.html?id=123"
+  "https://www.autoscout24.lu/offre/x", "https://suchen.mobile.de/fahrzeuge/details.html?id=123",
+  // A Dutch-language user is served the advert from www.mobile.de/nl/..., not from
+  // suchen.mobile.de, so the localised host has to be covered too. Confirmed live
+  // on 2026-09-08: the same advert id resolves under both hosts.
+  "https://www.mobile.de/nl/voertuigen/details.html?id=447034521"
 ]) {
   check("matches: " + url, matchesAny(url, hp));
 }
