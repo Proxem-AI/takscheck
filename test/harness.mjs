@@ -73,34 +73,56 @@ const officialCases = [
 // own fix. The duplicate is now deleted. Nothing in this file recomputes engine
 // logic any more.
 //
-// The two rows that depended on it have no captured official figure for their
-// exact vehicle, so they now FAIL ON PURPOSE rather than assert against a number
-// this file invented. They are not a regression and they are not a broken engine.
-// Two honest ways to close them, and it is a judgement call, not a patch:
-//   1. Run those two vehicles through the official Vlaamse Belastingdienst
-//      simulator and record them in test/simulator-comparison-2026-09.json with
-//      the same provenance the other 29 cases carry. The wizard at
-//      belastingen.fenb.be/ui/public/vkb/simulatie is reachable and drivable.
-//   2. Delete them, because the behaviour they were reaching for is already
-//      covered by captured ground truth: the age-correction ladder AGE-NEW
-//      through AGE-16Y, and the NEDC branch rows NEDC-095 / NEDC-130 / NEDC-200 /
-//      NEDC-PET, all asserted --strict on every build by
-//      test/simulator-comparison-harness.mjs.
-// What must NOT happen is a third computed expectation. That closes the task on
-// paper and changes nothing.
+// The two rows that depended on it are gone. RED decided on 2026-09-09 to remove
+// them rather than let them sit red, after Pax reached the same conclusion from
+// the capture side. The full reasoning, and the captured rows that carry their
+// behaviour instead, sit where the rows used to be, a few lines below.
+//
+// The rule that outlives all of it: an expectation in this file must come from a
+// captured official figure or from a statutory constant. Never from arithmetic
+// performed here. Arithmetic here is what task 118 was, twice.
 const extraCases = [
-  {
-    label: "petrol Euro6 130g, 3 years old -> LC 70%",
-    vehicle: { fuel: "petrol", co2: 130, euroNorm: 6, firstRegistration: "2023-01" },
-    unsourced: "No official capture exists for petrol 130g Euro6 at 3 years old. Nearest captured rows: FUEL-PET (same car but NEW) and the AGE ladder (diesel 148g)."
-  },
-  {
-    // First registered 2014, so this one sits on the NEDC branch and exercises
-    // both the 10 percent age correction floor and the NEDC numerator.
-    label: "petrol Euro6 130g, 12 years old -> LC floor 10%, NEDC branch",
-    vehicle: { fuel: "petrol", co2: 130, euroNorm: 6, firstRegistration: "2014-01" },
-    unsourced: "No official capture exists for petrol 130g Euro6 at 12 years old. Nearest captured rows: NEDC-PET (same car at 01/2019) and AGE-16Y (diesel 148g)."
-  },
+  // TWO ROWS WERE REMOVED HERE ON 2026-09-09. Read this before adding one back.
+  //
+  // They were:
+  //   "petrol Euro6 130g, 3 years old -> LC 70%"                (WLTP branch, LC 70%)
+  //   "petrol Euro6 130g, 12 years old -> LC floor 10%, NEDC"   (NEDC branch, LC 10%)
+  //
+  // Both took their expected value from bivRaw(), a local duplicate of the
+  // engine's own BIV formula that used to live in this file. That is not a test:
+  // it asserts the engine agrees with a copy of itself, so it passes when both are
+  // wrong and fails when the engine is CORRECTED. It had already done the first.
+  // The duplicate was deleted on 2026-09-08 and these two rows had nothing left to
+  // assert against, because no official simulator capture exists for either car.
+  //
+  // A fresh capture was considered and is not straightforward. This harness holds
+  // its reference date at REF = 2026-01-15, which sits in the tariff window BEFORE
+  // the 1 July 2026 indexation. A capture run today returns figures at the current
+  // window's rates, which are not comparable with what the engine computes at REF.
+  // A comparable figure would need the official wizard dialled back to an
+  // assessment date in January 2026, and nobody has established that the wizard
+  // permits that. So the choice was not between a captured figure and a computed
+  // one. It was between deleting the rows and inventing a third number.
+  //
+  // Nothing was lost. The behaviour these rows reached for is carried by captured
+  // official ground truth in test/simulator-comparison-2026-09.json, asserted
+  // --strict on every build:
+  //   WLTP branch at LC 70%   ->  AGE-3Y   (first registered 01/01/2023)
+  //   NEDC branch at LC 10%   ->  AGE-16Y  (first registered 01/01/2010, at the floor)
+  //   petrol on the WLTP branch  ->  FUEL-PET
+  //   petrol on the NEDC branch  ->  NEDC-PET
+  // That was verified by running the engine over every captured case and reading
+  // the branch and LC percentage back out of result.basis, not by assuming it. The
+  // covering rows are diesel and the deleted rows were petrol, which does not
+  // matter: the age correction is a pure multiplier,
+  //     lc = Math.max(ac.floorPct, ac.startPct - ac.stepPerYear * years)
+  // which reads only `years` and carries no fuel term. The aged-to-new BIV ratio
+  // is identical for petrol and diesel to four decimal places on both branches, so
+  // the age band is not a per-fuel code path and there is no petrol-shaped hole.
+  //
+  // If the age-correction coverage ever looks thin here, the fix is a captured
+  // official figure, not a number computed in this file. Computing one is how this
+  // defect arrived, and how it came back after its first fix.
   {
     // Combustion minimum BIV floor is 55.88 (simulator-confirmed via the 330e
     // PHEV case below); the EV flat 61.50 is a separate statutory amount.
@@ -130,7 +152,6 @@ function pass(a, b) { return Math.abs(a - b) <= TOL; }
 
 let failures = 0;
 let total = 0;
-let unsourcedRows = 0;
 
 console.log("BIV regression harness  (tariffs v" + tariffs.version + ", tolerance +/-" + TOL + " EUR)\n");
 console.log("== Group 1: official Vlaamse Belastingdienst simulator ground truth ==");
@@ -165,16 +186,6 @@ for (const tc of officialCases) {
 console.log("\n== Group 2: engine consistency / boundary cases ==\n");
 for (const tc of extraCases) {
   total++;
-  if (tc.unsourced) {
-    // Deliberately failing. See the TASK 118 note above. Do not make this green by
-    // computing a number here; that is the fault this row exists to expose.
-    failures++;
-    unsourcedRows++;
-    console.log("  FAIL " + tc.label.padEnd(48) + " UNSOURCED, asserts nothing");
-    console.log("         " + tc.unsourced);
-    console.log("         Capture the official figure, or delete the row. Do not compute one here.");
-    continue;
-  }
   const r = engine.computeBIV(tc.vehicle, "flanders", REF);
   const got = r.amount;
   const ok = pass(got, tc.expected);
@@ -281,12 +292,6 @@ async function liveProbe() {
 // ---------------------------------------------------------------------------
 console.log("\n---------------------------------------------------------------");
 console.log("Ground-truth + consistency assertions: " + (total - failures) + "/" + total + " passed. Max delta vs official BIV: " + maxDelta.toFixed(3) + " EUR.");
-if (unsourcedRows > 0) {
-  console.log(unsourcedRows + " of those are UNSOURCED rows, not engine mismatches. They fail because their");
-  console.log("expectation used to be computed by a duplicate of the engine formula that lived in");
-  console.log("this file (task 118). The duplicate is gone. Capture the official figure or delete");
-  console.log("the rows; see the TASK 118 note in this file. Engine mismatches: " + (failures - unsourcedRows) + ".");
-}
 if (failures > 0) {
   console.log("RESULT: FAIL (" + failures + " mismatch" + (failures === 1 ? "" : "es") + ").");
   process.exit(1);
