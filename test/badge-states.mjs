@@ -139,16 +139,32 @@ console.log("\n== Stale: the figure stays, the claim comes down ==\n");
     nl.text.includes("deels geschat"), nl.text.slice(0, 200));
   check("NL aria-label follows the tier down with it",
     nl.html.includes('aria-label="Gegevens uit de advertentie: deels geschat"'));
-  // The road tax keeps a full meter here and that is correct, not a bug. Its own
-  // index window runs to 2027-06-30 and is still live; only q has lapsed, and q
-  // touches the BIV alone. More to the point, the meter measures how complete
-  // the ADVERT was, and the advert is still complete whatever the rate tables
-  // are doing. That separation is the entire reason the caption changed, so it
-  // is worth asserting rather than assuming.
-  check("a figure whose own window is still live keeps its full meter",
-    all.rijtaks.confidence === "high" &&
-    nl.html.includes('aria-label="Gegevens uit de advertentie: volledig"'),
-    "rijtaks " + all.rijtaks.confidence);
+  // A figure whose own index window is still live must not be dragged down by the
+  // BIV going stale. Its window runs to 2027-06-30; only q has lapsed, and q
+  // touches the BIV alone. That separation is the entire reason the caption
+  // changed, so it is worth asserting rather than assuming.
+  //
+  // This used to assert an ABSOLUTE tier: road tax confidence "high" with the
+  // caption "volledig". It only ever passed because the fixture handed the engine
+  // a fiscalHp that no advert carries. A real advert derives its fiscal pk from
+  // cylinder capacity, which caps the road tax one step below "high", so
+  // "volledig" is a state no user can reach on this figure. See test/fiscal-hp.mjs.
+  //
+  // The intent is unchanged and is now expressed RELATIVELY: q lapsed, so the BIV
+  // tier moves and the road tax does not. Written this way it tests the
+  // separation without hard-coding a ceiling, which also means it stays correct
+  // after Iris settles what the tiers themselves should be. That tiering decision
+  // is deliberately not made here.
+  const live = engine.computeAll(petrol, "flanders", CURRENT);
+  check("q lapsing moves the BIV tier down",
+    live.biv.confidence !== all.biv.confidence,
+    "current " + live.biv.confidence + ", stale " + all.biv.confidence);
+  check("q lapsing does not drag the road tax tier down with it",
+    all.rijtaks.confidence === live.rijtaks.confidence,
+    "current " + live.rijtaks.confidence + ", stale " + all.rijtaks.confidence);
+  check("q lapsing does not move the road tax amount either",
+    all.rijtaks.amount === live.rijtaks.amount,
+    "current " + live.rijtaks.amount + ", stale " + all.rijtaks.amount);
   check("the stale sentence is in the accessible text, not conveyed by colour alone",
     /Let op:/.test(nl.text));
 
