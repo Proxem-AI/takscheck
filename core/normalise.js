@@ -65,6 +65,19 @@
   function co2FromText(v) {
     if (v == null) return null;
     if (typeof v === "number") return isFinite(v) && v >= 0 ? Math.round(v) : null;
+    // AutoScout24 ships this field as an OBJECT, not the string the old fixture
+    // assumed:  { raw: 128, formatted: "128 g/km (mixte)", isFallback: false }
+    // Confirmed live on 2026-09-08 on autoscout24.be in both languages, and on
+    // .de, .nl and .lu. Passing that object through String() yields
+    // "[object Object]", so the authoritative CO2 source was never read at all and
+    // a figure only ever arrived by luck, through the DOM spec-row fallback. Read
+    // the raw number first, then the formatted string, then give up.
+    if (typeof v === "object") {
+      if (v.raw != null) return co2FromText(v.raw);
+      if (v.value != null) return co2FromText(v.value);
+      if (v.formatted != null) return co2FromText(v.formatted);
+      return null;
+    }
     var s = String(v).replace(/\([^)]*\)/g, " ");
     var m = s.match(/(\d+(?:[.,]\d+)?)\s*g\s*\/?\s*km/i);
     if (m) return Math.round(parseFloat(m[1].replace(",", ".")));

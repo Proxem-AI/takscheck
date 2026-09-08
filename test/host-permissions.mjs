@@ -117,7 +117,10 @@ const LISTING = {
     firstRegistrationDate: "2023-05-15",
     fuelCategory: { formatted: "Benzine" },
     rawPowerInKw: 115, rawDisplacementInCCM: 1998,
-    co2emissionInGramPerKmWithFallback: "130 g/km",
+    // The live site sends an OBJECT here, not a string. This fixture used to send
+    // a string, which is precisely why the object-shape defect survived the suite
+    // until 2026-09-08. Kept in the real shape so it stays a real regression guard.
+    co2emissionInGramPerKmWithFallback: { raw: 130, formatted: "130 g/km (gem.)", isFallback: false },
     emissionClass: { formatted: "Euro 6" },
     bodyType: { formatted: "Sedan" }
   },

@@ -59,19 +59,38 @@
   // "CO2-Emission") when __NEXT_DATA__ carried no usable g/km figure. Only used
   // for combustion / hybrid cars; a value is filled in only when it is missing.
   function readCo2FromSpecs() {
-    var labelRe = /co(?:2|₂)[\s.\-]*(emissie|uitstoot|emission|ausstoss|combined)/i;
+    // The old pattern demanded the CO2 token FIRST, which is the German and Dutch
+    // word order ("CO2-Emission", "CO2-uitstoot") but not the French one. The live
+    // French label on autoscout24.be/fr is "Emissions de CO2", with the value in
+    // the sibling element (confirmed 2026-09-08), so every French advert fell
+    // through this net silently. Require a CO2 token and an emission word in
+    // EITHER order instead, and fold accents first so "Emissions" is reachable.
+    // A CO2 efficiency class row can also satisfy both tests, which is harmless:
+    // its value is a letter grade, co2FromText returns null for it, and the loop
+    // simply moves on to the next candidate.
+    var CO2_TOKEN = /co\s*[2₂]/i;
+    var EMISSION_WORD = /(emissi|uitstoot|ausstoss|rejet|combined)/i;
+    function fold(t) { return (t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
     var els = document.querySelectorAll("dt, th, td, span, div, li, p");
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       var txt = (el.textContent || "").replace(/\s+/g, " ").trim();
       if (!txt || txt.length > 60) continue;
-      if (!labelRe.test(txt)) continue;
+      var folded = fold(txt);
+      if (!CO2_TOKEN.test(folded) || !EMISSION_WORD.test(folded)) continue;
+      // A wrapper element concatenates the label and the value with no separator.
+      // In Dutch that is harmless ("CO2-uitstoot128 g/km" still parses as 128) but
+      // in French the CO2 token sits right against the figure ("CO2" + "128 g/km"
+      // reads as 2128), because the French label ends in the digit 2. So an
+      // implausible figure is treated as a miss and the sibling is tried instead.
+      // No car emits more than 1000 g/km, and the final return is bounded the same
+      // way so a concatenation can never reach the tax engine.
       var c = Normalise.co2FromText(txt);
-      if (c == null) {
+      if (c == null || c <= 0 || c > 1000) {
         var sib = el.nextElementSibling;
         if (sib) c = Normalise.co2FromText((sib.textContent || "").trim());
       }
-      if (c != null && c > 0) return c;
+      if (c != null && c > 0 && c <= 1000) return c;
     }
     return null;
   }
