@@ -253,6 +253,117 @@ for (const [label, url] of LOCALE_NON_DETAIL_URLS) {
 assertVehicle("(g) NL locale path", extract(HTML_DTDD, LOCALE_DETAIL_URLS[1][1]),
   ["firstRegistration", "co2", "powerKw", "fuel", "price"]);
 
+// ---- locale spec labels ---------------------------------------------------
+// mobile.de prints the spec labels in the user's UI language. Until 2026-09-08 the
+// stems covered German and English only, so on a live Dutch advert ZERO labels
+// resolved and the badge read "Onvoldoende gegevens". Every label below is a
+// literal string harvested from the live site that day, same advert (447034521),
+// one locale at a time. They are not translations, because a plausible translation
+// that is not the literal string fails silently, which is how this defect happened.
+const NL_URL = "https://www.mobile.de/nl/voertuigen/details.html?id=447034521";
+const FR_URL = "https://www.mobile.de/fr/vehicules/details.html?id=447034521";
+
+function fieldsEq(label, res, expect) {
+  ok(!!res.vehicle, label + ": vehicle non-null");
+  const v = res.vehicle || {};
+  for (const k of Object.keys(expect)) {
+    ok(v[k] === expect[k],
+       label + ": " + k + " = " + JSON.stringify(expect[k]) + " (got " + JSON.stringify(v[k]) + ")");
+  }
+}
+
+// Dutch, in the real DOM order, including the rows that are traps: the CO2 class
+// row and the CO2 cost row both carry a CO2 token, and "Brandstofverbruik" and
+// "Brandstofprijs" both begin with "Brandstof".
+const HTML_NL = `<!doctype html><html lang="nl"><body><dl>
+  <dt>Kilometrage</dt><dd>59.071 km</dd>
+  <dt>Inhoud</dt><dd>2.993 ccm</dd>
+  <dt>Vermogen</dt><dd>210 kW (286 PK)</dd>
+  <dt>Type aandrijving</dt><dd>Interne verbrandingsmotor</dd>
+  <dt>Brandstof</dt><dd>Diesel</dd>
+  <dt>Energieverbruik (kam.)2</dt><dd>5,4 l/100km</dd>
+  <dt>CO₂-emissies (kam.)2</dt><dd>142 g/km</dd>
+  <dt>CO₂-klasse</dt><dd>Op basis van CO₂-emissies (gecombineerd)</dd>
+  <dt>Brandstofverbruik2</dt><dd>5,4 l/100km (gecombineerd)</dd>
+  <dt>Brandstofprijs</dt><dd>&euro; 1,61/l (jaargemiddelde 2025)</dd>
+  <dt>Motorrijtuigenbelasting</dt><dd>&euro; 386/jaar</dd>
+  <dt>Emissieklasse</dt><dd>Euro6d</dd>
+  <dt>Emissiesticker</dt><dd>4 (Groen)</dd>
+  <dt>Eerste registratie</dt><dd>01/2023</dd>
+</dl></body></html>`;
+
+// French. Note the CO2 token comes LAST in the label, and the thousands separator
+// is a non-breaking space, both exactly as the live site printed them.
+const HTML_FR = `<!doctype html><html lang="fr"><body><dl>
+  <dt>Kilom&eacute;trage</dt><dd>59 071 km</dd>
+  <dt>Cylindr&eacute;e</dt><dd>2 993 ccm</dd>
+  <dt>Puissance</dt><dd>210 kW (286 Ch DIN)</dd>
+  <dt>Carburant</dt><dd>Diesel</dd>
+  <dt>&Eacute;missions de CO₂ (peigne)2</dt><dd>142 g/km</dd>
+  <dt>Classe CO₂</dt><dd>Sur la base des &eacute;missions de CO₂ (combin&eacute;es)</dd>
+  <dt>Prix du carburant</dt><dd>1,61 &euro;/l</dd>
+  <dt>Norme antipollution</dt><dd>Euro6d</dd>
+  <dt>Date immatriculation</dt><dd>01/2023</dd>
+</dl></body></html>`;
+
+fieldsEq("(NL) live Dutch labels", extract(HTML_NL, NL_URL), {
+  firstRegistration: "01/2023", fuel: "diesel", powerKw: 210,
+  displacementCc: 2993, co2: 142, euroNorm: 6
+});
+fieldsEq("(FR) live French labels", extract(HTML_FR, FR_URL), {
+  firstRegistration: "01/2023", fuel: "diesel", powerKw: 210,
+  displacementCc: 2993, co2: 142, euroNorm: 6
+});
+
+// Worst-case ordering: readTechData keeps the FIRST hit per key, so put the CO2
+// class row BEFORE the emission row. The figure must still be 142, not the prose.
+const HTML_CO2_CLASS_FIRST = `<!doctype html><html><body><dl>
+  <dt>CO₂-klasse</dt><dd>Op basis van CO₂-emissies (gecombineerd)</dd>
+  <dt>CO₂-emissies (kam.)2</dt><dd>142 g/km</dd>
+</dl></body></html>`;
+ok(extract(HTML_CO2_CLASS_FIRST, NL_URL).vehicle.co2 === 142,
+   "(NL) CO2 class row before the figure does not poison the CO2 value");
+
+// The subscript two is what the site renders; a plain 2 is what other markup
+// carries. Neither form is bet on, so both must read 142.
+const HTML_PLAIN_2 = `<!doctype html><html><body><dl>
+  <dt>CO2-emissies (kam.)2</dt><dd>142 g/km</dd></dl></body></html>`;
+ok(extract(HTML_PLAIN_2, NL_URL).vehicle.co2 === 142,
+   "(NL) plain 2 in the CO2 label reads the same as the subscript");
+
+// An EV page carries kWh rows. The unit fallback must never read battery capacity
+// or electricity consumption as engine power.
+const HTML_EV_KWH = `<!doctype html><html><body><dl>
+  <dt>Accucapaciteit (in kWh)</dt><dd>81 kWh</dd>
+  <dt>Stroomverbruik2</dt><dd>16,6 kWh/100km</dd>
+  <dt>Elektrische actieradius2</dt><dd>559 km</dd>
+  <dt>Eerste registratie</dt><dd>01/2023</dd>
+</dl></body></html>`;
+const EV = extract(HTML_EV_KWH, NL_URL);
+ok(EV.vehicle.powerKw !== 81, "(EV) 81 kWh battery is not read as 81 kW of power");
+ok(EV.vehicle.powerKw == null, "(EV) no power label and no kW value leaves powerKw null");
+
+// A locale we have never harvested. The labels are unreadable, but mobile.de does
+// not translate its units, so the value pass still recovers the unit-bearing
+// fields. This is the difference between a partial badge and a blank one.
+const HTML_UNKNOWN_LOCALE = `<!doctype html><html lang="it"><body><dl>
+  <dt>Cilindrata</dt><dd>2.993 ccm</dd>
+  <dt>Potenza</dt><dd>210 kW (286 CV)</dd>
+  <dt>Emissioni di CO₂ (comb.)2</dt><dd>142 g/km</dd>
+  <dt>Classe di emissioni</dt><dd>Euro6d</dd>
+  <dt>Immatricolazione</dt><dd>01/2023</dd>
+  <dt>Carburante</dt><dd>Diesel</dd>
+</dl></body></html>`;
+const IT = extract(HTML_UNKNOWN_LOCALE, NL_URL);
+ok(IT.vehicle.displacementCc === 2993, "(unseen locale) cc recovered from the ccm unit");
+ok(IT.vehicle.powerKw === 210, "(unseen locale) power recovered from the kW unit");
+ok(IT.vehicle.co2 === 142, "(unseen locale) CO2 recovered from the g/km unit");
+ok(IT.vehicle.euroNorm === 6, "(unseen locale) euro norm recovered from the Euro6d value");
+// The documented limit: a date and a free-text word carry no unit, so these two
+// still need a label stem per locale. Asserted so the limit is visible, not implied.
+ok(IT.vehicle.firstRegistration == null,
+   "(unseen locale) first registration is NOT recoverable without a label stem");
+
 // Negative: a non-detail page must NOT pass the gate.
 const NEG = extract(`<!doctype html><html><body><h1>Search</h1></body></html>`,
   "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true");

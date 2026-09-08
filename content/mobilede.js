@@ -76,20 +76,45 @@
   // spec labels arrive in German OR English (or another locale). Each stem matches
   // both spellings and stores the hit under the same canonical key, so the
   // normaliser downstream stays language agnostic.
+  // Every alternative below was harvested from the LIVE site on 2026-09-08, one
+  // locale at a time, on the same advert (id 447034521), so each is a literal
+  // string mobile.de actually printed rather than a plausible translation. A
+  // translated guess that is not the literal string fails silently, which is the
+  // whole reason this defect existed.
+  //   NL  Eerste registratie | Brandstof | Vermogen | Inhoud | CO2-emissies (kam.)2 | Emissieklasse
+  //   FR  Date immatriculation | Carburant | Puissance | Cylindree | Emissions de CO2 (peigne)2 | Norme antipollution
   var LABEL_STEMS = [
-    { key: "erstzulassung", re: /^(erstzulassung|first registration|first reg)/ },
-    { key: "kraftstoffart", re: /^(kraftstoff|fuel)/ },
-    { key: "leistung", re: /^(leistung|power)/ },
-    { key: "hubraum", re: /^(hubraum|cubic capacity|displacement|engine size)/ },
-    { key: "co2-emissionen", re: /^co[\s.₂2-]*emission/ },
+    { key: "erstzulassung", re: /^(erstzulassung|first registration|first reg|eerste (registratie|inschrijving)|date\s*(de\s*)?(premiere\s*)?immatriculation|mise en circulation)/ },
+    // "brandstof" and "carburant" must not swallow "Brandstofverbruik" or
+    // "Prix du carburant", which are consumption and fuel price, not fuel type.
+    { key: "kraftstoffart", re: /^(kraftstoff|fuel|brandstof(?![a-z])|carburant(?![a-z]))/ },
+    { key: "leistung", re: /^(leistung|power|vermogen|puissance)/ },
+    { key: "hubraum", re: /^(hubraum|cubic capacity|displacement|engine size|inhoud|cilinderinhoud|cylindree)/ },
+    // The CO2 emission figure. Three things this has to survive, all observed live:
+    //   1. the "2" is a subscript U+2082 in the rendered label but a plain 2 in
+    //      other markup, so [₂2] accepts either and neither form is bet on;
+    //   2. French puts the CO2 token LAST ("Emissions de CO2"), so this cannot be
+    //      anchored on "co" the way the German-only stem was;
+    //   3. the adjacent "CO2-klasse" / "Classe CO2" and CO2 cost rows carry a CO2
+    //      token too, and readTechData keeps the FIRST hit per key, so a class row
+    //      matching here would poison the figure with prose. Hence the reject.
+    { key: "co2-emissionen", re: /^(?!.*(klass|classe|kosten|cout|cost|prijs|prix|price|steuer|belasting|taxe))(?=.*co[\s.]*[₂2])(?=.*(emissi|uitstoot|ausstoss))/ },
     { key: "schadstoffklasse", re: /^schadstoffklasse/ },
-    { key: "emissionsklasse", re: /^(emissionsklasse|emission class|emission standard)/ },
+    { key: "emissionsklasse", re: /^(emissionsklasse|emission class|emission standard|emissieklasse|norme antipollution)/ },
     { key: "zul. gesamtgewicht", re: /^(zul.*gesamtgewicht|gross.*weight|permissible.*weight)/ },
     { key: "gesamtgewicht", re: /^gesamtgewicht/ },
     { key: "leergewicht", re: /^(leergewicht|kerb.*weight|curb.*weight|unladen)/ },
     { key: "preis", re: /^(preis|price)/ }
   ];
-  function norm(s) { return (s || "").replace(/\s+/g, " ").trim().toLowerCase().replace(/:$/, ""); }
+  // Fold accents before matching, so the French "Emissions" and "Cylindree" reach
+  // the stems in the spelling written above. NFD splits a letter from its combining
+  // accent; stripping the combining range leaves the bare letter. The subscript two
+  // is NOT a combining mark and survives this untouched, which is why the stems
+  // still have to accept it explicitly.
+  function norm(s) {
+    return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ").trim().toLowerCase().replace(/:$/, "");
+  }
   function canonLabel(raw) {
     var k = norm(raw).replace(/[*†‡\s]+$/, "").trim();
     if (!k || k.length > 48) return null;
@@ -97,6 +122,29 @@
     return null;
   }
   function cleanVal(s) { return (s || "").replace(/\s+/g, " ").trim(); }
+
+  // Identify a field from the shape of its VALUE rather than its label.
+  // mobile.de translates its labels but NOT its units: "ccm", "g/km", "kW" and
+  // "Euro6d" printed identically in German, Dutch, French and English on the live
+  // site (2026-09-08, same advert). So this is the locale-proof half of the
+  // extraction, and it is what stops an unseen locale (Italian, Spanish, Polish)
+  // degrading to a completely blank badge instead of a partial one.
+  // It is deliberately a FALLBACK, filling only keys the label pass left empty, so
+  // it can add data but never overwrite a correctly labelled value.
+  // Deliberately NOT covered: first registration and fuel. A date and a free-text
+  // word are not self-identifying, so those two still need a label stem per
+  // locale. That is the known limit, see the note in the readTechData comment.
+  function unitFallback(text) {
+    var s = cleanVal(text);
+    if (!s || s.length > 40) return null;
+    // kW, never kWh: battery capacity ("81 kWh") and electricity consumption
+    // ("16,6 kWh/100km") are kWh rows and must not be read as engine power.
+    if (/^\d[\d.,\s]*\s*kw(?!h)\b/i.test(s)) return "leistung";
+    if (/^\d[\d.,\s]*\s*(ccm|cm3|cm\u00b3)\b/i.test(s)) return "hubraum";
+    if (/^\d[\d.,\s]*\s*g\s*\/\s*km\b/i.test(s)) return "co2-emissionen";
+    if (/^euro\s*[0-6][a-z+\s-]*$/i.test(s)) return "emissionsklasse";
+    return null;
+  }
 
   // Case-insensitive copies of the label stems, matched against the ORIGINAL text
   // (not lowercased), so we can strip the leading label off an inline "label value"
@@ -197,6 +245,17 @@
           if (cvtext && cvtext.length <= 64) put(canonOwn, cvtext);
         }
       }
+    }
+    // (6) unit pass: whatever the label said, a value of "2.993 ccm" is a cylinder
+    // capacity and "142 g/km" is a CO2 figure in every language mobile.de serves.
+    // Runs last and fills only what is still missing, so a locale we have never
+    // seen yields a partial badge instead of nothing. First registration and fuel
+    // are not recoverable this way and remain label-bound per locale.
+    var vals = document.querySelectorAll("dd, td, span, div, li, p");
+    for (var u = 0; u < vals.length; u++) {
+      if (vals[u].children.length) continue;
+      var canonU = unitFallback(vals[u].textContent);
+      if (canonU && map[canonU] == null) put(canonU, vals[u].textContent);
     }
     return map;
   }
