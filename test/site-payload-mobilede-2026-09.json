@@ -1,0 +1,1198 @@
+{
+  "name": "mobile.de detail page payload capture",
+  "capturedBy": "Felix, Proxem AI",
+  "capturedOn": "2026-09-08",
+  "method": "Captured with Google Chrome for Testing 150 launched manually with --remote-debugging-port and a fresh profile, then driven over CDP. NOT launched by puppeteer.launch: mobile.de serves an Access denied interstitial to a Puppeteer-launched browser, and that difference is the reason an earlier session concluded the content script was not injecting at all. Navigations were paced 9 to 11 seconds apart, the same courtesy Pax used on the tax simulator. UI locale was set by visiting the locale home page first on mobile.de, and by the domain plus path prefix on AutoScout24.",
+  "privacy": "Trimmed on capture to the fields the extractor actually reads. Seller identity, contact details, dealer addresses, advert free text and photographs were deliberately never stored. Advert ids and slugs are retained only so a case can be re-checked.",
+  "doNotEdit": "Do not edit the captured block. It is measured ground truth. If the site changes shape, capture again and replace the file, do not hand-edit a value to make a test pass. Editing a captured payload to match the parser is the exact fault this file exists to prevent.",
+  "whyThisExists": "test/mobilede-extract.mjs describes itself honestly as a realistic mock, because mobile.de is DataDome-walled and nobody had captured a real page. That mock asserts a schema.org Car JSON-LD node which does not appear on any live page sampled, so the whole readJsonLd branch, including the last fallback inside isDetailPage, was only ever exercised against invented data.",
+  "coverage": {
+    "uiLanguages": [
+      "de",
+      "en",
+      "fr",
+      "nl"
+    ],
+    "detailPaths": [
+      "/fahrzeuge/details.html",
+      "/nl/voertuigen/details.html"
+    ],
+    "adverts": 8
+  },
+  "notCovered": [
+    "The French and English detail path nouns are NOT confirmed. /fr/vehicules/details.html and /en/vehicle/details.html both resolved and returned lang=fr and lang=en, but rendered no spec table, so they may not be the real detail paths. The French and English LABEL sets below were captured on the German path with the session locale switched, which is a real rendering the site serves.",
+    "Only /fahrzeuge/details.html and /nl/voertuigen/details.html are confirmed detail paths.",
+    "All cases are BMW used cars from one search. No new cars beyond the sample, no motorcycles.",
+    "8 adverts is a shape sample. It is evidence that a Car JSON-LD node is absent, not proof that it can never appear."
+  ],
+  "findings": [
+    "Not one of the 8 adverts carries a schema.org Car, Vehicle or Product JSON-LD node. Every page carries exactly one Organization node and nothing else.",
+    "Combined with 4 further adverts inspected on 2026-09-08 before this capture was formalised, 12 distinct live detail pages have now been checked and none carried a Car node.",
+    "The spec labels are served in the user's UI language, including on the German path, so the path a user is on does not predict the language of the labels.",
+    "The detail path noun is translated per locale: fahrzeuge in German, voertuigen in Dutch."
+  ],
+  "captured": [
+    {
+      "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=444797056",
+      "host": "suchen.mobile.de",
+      "pathname": "/fahrzeuge/details.html",
+      "uiLang": "de",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Fahrzeugzustand",
+          "Gebrauchtfahrzeug"
+        ],
+        [
+          "Kategorie",
+          "SUV/Geländewagen/Pickup"
+        ],
+        [
+          "Baureihe",
+          "X6"
+        ],
+        [
+          "Ausstattungslinie",
+          "M Sport Standheizung Massage LED"
+        ],
+        [
+          "Fahrzeugnummer",
+          "BG189267"
+        ],
+        [
+          "Verfügbarkeit",
+          "Sofort"
+        ],
+        [
+          "Kilometerstand",
+          "28.235 km"
+        ],
+        [
+          "Hubraum",
+          "4.395 cm³"
+        ],
+        [
+          "Leistung",
+          "390 kW (530 PS)"
+        ],
+        [
+          "Antriebsart",
+          "Verbrennungsmotor"
+        ],
+        [
+          "Kraftstoffart",
+          "Benzin, E10-geeignet"
+        ],
+        [
+          "Anzahl Sitzplätze",
+          "5"
+        ],
+        [
+          "Anzahl der Türen",
+          "4/5"
+        ],
+        [
+          "Getriebe",
+          "Automatik"
+        ],
+        [
+          "Schadstoffklasse",
+          "Euro6"
+        ],
+        [
+          "Umweltplakette",
+          "4 (Grün)"
+        ],
+        [
+          "Erstzulassung",
+          "11/2023"
+        ],
+        [
+          "Baujahr",
+          "2023"
+        ],
+        [
+          "Anzahl der Fahrzeughalter",
+          "1"
+        ],
+        [
+          "HU",
+          "02/2028"
+        ],
+        [
+          "Klimatisierung",
+          "4-Zonen-Klimaautomatik"
+        ],
+        [
+          "Einparkhilfe",
+          "Vorne, Selbstlenkende Systeme, Hinten"
+        ],
+        [
+          "Airbags",
+          "Front-Airbags"
+        ],
+        [
+          "Farbe (Hersteller)",
+          "frozen black metallic"
+        ],
+        [
+          "Farbe",
+          "Schwarz"
+        ],
+        [
+          "Innenausstattung",
+          "Vollleder, Braun"
+        ],
+        [
+          "Zylinder",
+          "8"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:27:53.396Z",
+      "expectedExtraction": {
+        "displacementCc": 4395,
+        "powerKw": 390,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "11/2023",
+        "co2": null,
+        "co2Comment": "This advert carries no CO2 row at all. Null is the correct answer, not a miss."
+      }
+    },
+    {
+      "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=456993282",
+      "host": "suchen.mobile.de",
+      "pathname": "/fahrzeuge/details.html",
+      "uiLang": "de",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Fahrzeugzustand",
+          "Gebrauchtfahrzeug"
+        ],
+        [
+          "Kategorie",
+          "SUV/Geländewagen/Pickup"
+        ],
+        [
+          "Baureihe",
+          "F15"
+        ],
+        [
+          "Ausstattungslinie",
+          "xDrive 35 i"
+        ],
+        [
+          "Kilometerstand",
+          "88.600 km"
+        ],
+        [
+          "Hubraum",
+          "2.979 cm³"
+        ],
+        [
+          "Leistung",
+          "225 kW (306 PS)"
+        ],
+        [
+          "Antriebsart",
+          "Verbrennungsmotor"
+        ],
+        [
+          "Kraftstoffart",
+          "Benzin, E10-geeignet"
+        ],
+        [
+          "Energieverbrauch (komb.)2",
+          "8,5 l/100km"
+        ],
+        [
+          "CO₂-Emissionen (komb.)2",
+          "197 g/km"
+        ],
+        [
+          "Kraftstoffverbrauch2",
+          "8,5 l/100km (kombiniert)"
+        ],
+        [
+          "Anzahl Sitzplätze",
+          "5"
+        ],
+        [
+          "Anzahl der Türen",
+          "4/5"
+        ],
+        [
+          "Getriebe",
+          "Automatik"
+        ],
+        [
+          "Schadstoffklasse",
+          "Euro6"
+        ],
+        [
+          "Umweltplakette",
+          "4 (Grün)"
+        ],
+        [
+          "Erstzulassung",
+          "12/2017"
+        ],
+        [
+          "Anzahl der Fahrzeughalter",
+          "1"
+        ],
+        [
+          "HU",
+          "Neu"
+        ],
+        [
+          "Klimatisierung",
+          "2-Zonen-Klimaautomatik"
+        ],
+        [
+          "Einparkhilfe",
+          "Kamera, Hinten, Vorne"
+        ],
+        [
+          "Airbags",
+          "Front-, Seiten- und weitere Airbags"
+        ],
+        [
+          "Farbe (Hersteller)",
+          "CARBONSCHWARZ"
+        ],
+        [
+          "Farbe",
+          "Schwarz Metallic"
+        ],
+        [
+          "Innenausstattung",
+          "Vollleder, Schwarz"
+        ],
+        [
+          "Anhängelast gebremst",
+          "3.500 kg"
+        ],
+        [
+          "Anhängelast ungebremst",
+          "750 kg"
+        ],
+        [
+          "Gewicht",
+          "2.105 kg"
+        ],
+        [
+          "Zylinder",
+          "6"
+        ],
+        [
+          "Tankgröße",
+          "85 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:28:02.824Z",
+      "expectedExtraction": {
+        "displacementCc": 2979,
+        "powerKw": 225,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "12/2017",
+        "co2": 197
+      }
+    },
+    {
+      "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=38737228465184",
+      "host": "suchen.mobile.de",
+      "pathname": "/fahrzeuge/details.html",
+      "uiLang": "de",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Fahrzeugzustand",
+          "Gebrauchtfahrzeug, Unfallfrei"
+        ],
+        [
+          "Kategorie",
+          "Kombi"
+        ],
+        [
+          "Fahrzeugnummer",
+          "PI-5334"
+        ],
+        [
+          "Herkunft",
+          "Deutsche Ausführung"
+        ],
+        [
+          "Kilometerstand",
+          "97.222 km"
+        ],
+        [
+          "Hubraum",
+          "2.998 cm³"
+        ],
+        [
+          "Leistung",
+          "250 kW (340 PS)"
+        ],
+        [
+          "Antriebsart",
+          "Verbrennungsmotor"
+        ],
+        [
+          "Kraftstoffart",
+          "Benzin, E10-geeignet"
+        ],
+        [
+          "Energieverbrauch (komb.)2",
+          "7,7 l/100km"
+        ],
+        [
+          "CO₂-Emissionen (komb.)2",
+          "177 g/km"
+        ],
+        [
+          "CO₂-Klasse",
+          "Auf Grundlage der CO₂-Emissionen (kombiniert)"
+        ],
+        [
+          "Kraftstoffverbrauch2",
+          "7,7 l/100km (kombiniert)"
+        ],
+        [
+          "Anzahl Sitzplätze",
+          "5"
+        ],
+        [
+          "Anzahl der Türen",
+          "4/5"
+        ],
+        [
+          "Getriebe",
+          "Automatik"
+        ],
+        [
+          "Schadstoffklasse",
+          "Euro6"
+        ],
+        [
+          "Umweltplakette",
+          "4 (Grün)"
+        ],
+        [
+          "Erstzulassung",
+          "03/2018"
+        ],
+        [
+          "HU",
+          "Neu"
+        ],
+        [
+          "Klimatisierung",
+          "3-Zonen-Klimaautomatik"
+        ],
+        [
+          "Einparkhilfe",
+          "Vorne, Kamera, Hinten"
+        ],
+        [
+          "Airbags",
+          "Front-, Seiten- und weitere Airbags"
+        ],
+        [
+          "Farbe (Hersteller)",
+          "SCHWARZ II"
+        ],
+        [
+          "Farbe",
+          "Schwarz Metallic"
+        ],
+        [
+          "Innenausstattung",
+          "Vollleder, Schwarz"
+        ],
+        [
+          "Anhängelast gebremst",
+          "2.100 kg"
+        ],
+        [
+          "Anhängelast ungebremst",
+          "750 kg"
+        ],
+        [
+          "Gewicht",
+          "1.910 kg"
+        ],
+        [
+          "Zylinder",
+          "6"
+        ],
+        [
+          "Tankgröße",
+          "68 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:28:12.299Z",
+      "expectedExtraction": {
+        "displacementCc": 2998,
+        "powerKw": 250,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "03/2018",
+        "co2": 177
+      }
+    },
+    {
+      "url": "https://www.mobile.de/nl/voertuigen/details.html?id=44143372491040",
+      "host": "www.mobile.de",
+      "pathname": "/nl/voertuigen/details.html",
+      "uiLang": "nl",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Conditie van het voertuig",
+          "Gebruikt voertuig"
+        ],
+        [
+          "Categorie",
+          "Salon"
+        ],
+        [
+          "Modelreeks",
+          "F44"
+        ],
+        [
+          "Trimdraad",
+          "M Sport Paket"
+        ],
+        [
+          "Kilometrage",
+          "232.800 km"
+        ],
+        [
+          "Inhoud",
+          "1.499 ccm"
+        ],
+        [
+          "Vermogen",
+          "103 kW (140 PK)"
+        ],
+        [
+          "Type aandrijving",
+          "Interne verbrandingsmotor"
+        ],
+        [
+          "Brandstof",
+          "Benzine"
+        ],
+        [
+          "Energieverbruik (kam.)2",
+          "5,4 l/100km"
+        ],
+        [
+          "CO₂-emissies (kam.)2",
+          "123 g/km"
+        ],
+        [
+          "Brandstofverbruik2",
+          "5,4 l/100km (gecombineerd)"
+        ],
+        [
+          "Aantal zitplaatsen",
+          "5"
+        ],
+        [
+          "Aantal deuren",
+          "4/5"
+        ],
+        [
+          "Versnellingsbak",
+          "Automatische transmissie"
+        ],
+        [
+          "Emissieklasse",
+          "Euro6"
+        ],
+        [
+          "Emissiesticker",
+          "4 (Groen)"
+        ],
+        [
+          "Eerste registratie",
+          "09/2020"
+        ],
+        [
+          "Aantal voertuigeigenaren",
+          "1"
+        ],
+        [
+          "HU",
+          "Nieuw"
+        ],
+        [
+          "Klimatisering",
+          "Automatische airco, 2 zones"
+        ],
+        [
+          "Parkeersensoren",
+          "Camera, Zelfsturende systemen, Voorzijde, Achter"
+        ],
+        [
+          "Airbags",
+          "Front-airbags, zij-airbags en overige airbags"
+        ],
+        [
+          "Kleurnaam fabrikant",
+          "ALPINWEISS III"
+        ],
+        [
+          "Kleur",
+          "Wit"
+        ],
+        [
+          "Interieurontwerp",
+          "Gedeeltelijk leer, Grijs"
+        ],
+        [
+          "Aanhanglast geremd",
+          "1.300 kg"
+        ],
+        [
+          "Aanhanglast ongeremd",
+          "710 kg"
+        ],
+        [
+          "Gewicht",
+          "1.375 kg"
+        ],
+        [
+          "Cylinder",
+          "3"
+        ],
+        [
+          "Tankinhoud",
+          "42 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:28:40.959Z",
+      "expectedExtraction": {
+        "displacementCc": 1499,
+        "powerKw": 103,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "09/2020",
+        "co2": 123
+      }
+    },
+    {
+      "url": "https://www.mobile.de/nl/voertuigen/details.html?id=456993282",
+      "host": "www.mobile.de",
+      "pathname": "/nl/voertuigen/details.html",
+      "uiLang": "nl",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Conditie van het voertuig",
+          "Gebruikt voertuig"
+        ],
+        [
+          "Categorie",
+          "SUV/terreinwagen/pickup"
+        ],
+        [
+          "Modelreeks",
+          "F15"
+        ],
+        [
+          "Trimdraad",
+          "xDrive 35 i"
+        ],
+        [
+          "Kilometrage",
+          "88.600 km"
+        ],
+        [
+          "Inhoud",
+          "2.979 ccm"
+        ],
+        [
+          "Vermogen",
+          "225 kW (306 PK)"
+        ],
+        [
+          "Type aandrijving",
+          "Interne verbrandingsmotor"
+        ],
+        [
+          "Brandstof",
+          "Benzine, E10-geactiveerd"
+        ],
+        [
+          "Energieverbruik (kam.)2",
+          "8,5 l/100km"
+        ],
+        [
+          "CO₂-emissies (kam.)2",
+          "197 g/km"
+        ],
+        [
+          "Brandstofverbruik2",
+          "8,5 l/100km (gecombineerd)"
+        ],
+        [
+          "Aantal zitplaatsen",
+          "5"
+        ],
+        [
+          "Aantal deuren",
+          "4/5"
+        ],
+        [
+          "Versnellingsbak",
+          "Automatische transmissie"
+        ],
+        [
+          "Emissieklasse",
+          "Euro6"
+        ],
+        [
+          "Emissiesticker",
+          "4 (Groen)"
+        ],
+        [
+          "Eerste registratie",
+          "12/2017"
+        ],
+        [
+          "Aantal voertuigeigenaren",
+          "1"
+        ],
+        [
+          "HU",
+          "Nieuw"
+        ],
+        [
+          "Klimatisering",
+          "Automatische airco, 2 zones"
+        ],
+        [
+          "Parkeersensoren",
+          "Voorzijde, Camera, Achter"
+        ],
+        [
+          "Airbags",
+          "Front-airbags, zij-airbags en overige airbags"
+        ],
+        [
+          "Kleurnaam fabrikant",
+          "CARBONSCHWARZ"
+        ],
+        [
+          "Kleur",
+          "Zwart Metallic"
+        ],
+        [
+          "Interieurontwerp",
+          "Volledig leer, Zwart"
+        ],
+        [
+          "Aanhanglast geremd",
+          "3.500 kg"
+        ],
+        [
+          "Aanhanglast ongeremd",
+          "750 kg"
+        ],
+        [
+          "Gewicht",
+          "2.105 kg"
+        ],
+        [
+          "Cylinder",
+          "6"
+        ],
+        [
+          "Tankinhoud",
+          "85 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:28:50.568Z",
+      "expectedExtraction": {
+        "displacementCc": 2979,
+        "powerKw": 225,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "12/2017",
+        "co2": 197
+      }
+    },
+    {
+      "url": "https://www.mobile.de/nl/voertuigen/details.html?id=38737228465184",
+      "host": "www.mobile.de",
+      "pathname": "/nl/voertuigen/details.html",
+      "uiLang": "nl",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Conditie van het voertuig",
+          "Gebruikt voertuig, Schadevrij"
+        ],
+        [
+          "Categorie",
+          "Stationwagen"
+        ],
+        [
+          "Voertuignummer",
+          "PI-5334"
+        ],
+        [
+          "Oorsprong",
+          "Editie voor Duitsland"
+        ],
+        [
+          "Kilometrage",
+          "97.222 km"
+        ],
+        [
+          "Inhoud",
+          "2.998 ccm"
+        ],
+        [
+          "Vermogen",
+          "250 kW (340 PK)"
+        ],
+        [
+          "Type aandrijving",
+          "Interne verbrandingsmotor"
+        ],
+        [
+          "Brandstof",
+          "Benzine, E10-geactiveerd"
+        ],
+        [
+          "Energieverbruik (kam.)2",
+          "7,7 l/100km"
+        ],
+        [
+          "CO₂-emissies (kam.)2",
+          "177 g/km"
+        ],
+        [
+          "CO₂-klasse",
+          "Op basis van CO₂-emissies (gecombineerd)"
+        ],
+        [
+          "Brandstofverbruik2",
+          "7,7 l/100km (gecombineerd)"
+        ],
+        [
+          "Aantal zitplaatsen",
+          "5"
+        ],
+        [
+          "Aantal deuren",
+          "4/5"
+        ],
+        [
+          "Versnellingsbak",
+          "Automatische transmissie"
+        ],
+        [
+          "Emissieklasse",
+          "Euro6"
+        ],
+        [
+          "Emissiesticker",
+          "4 (Groen)"
+        ],
+        [
+          "Eerste registratie",
+          "03/2018"
+        ],
+        [
+          "HU",
+          "Nieuw"
+        ],
+        [
+          "Klimatisering",
+          "Automatische airco, 3 zones"
+        ],
+        [
+          "Parkeersensoren",
+          "Voorzijde, Achter, Camera"
+        ],
+        [
+          "Airbags",
+          "Front-airbags, zij-airbags en overige airbags"
+        ],
+        [
+          "Kleurnaam fabrikant",
+          "SCHWARZ II"
+        ],
+        [
+          "Kleur",
+          "Zwart Metallic"
+        ],
+        [
+          "Interieurontwerp",
+          "Volledig leer, Zwart"
+        ],
+        [
+          "Aanhanglast geremd",
+          "2.100 kg"
+        ],
+        [
+          "Aanhanglast ongeremd",
+          "750 kg"
+        ],
+        [
+          "Gewicht",
+          "1.910 kg"
+        ],
+        [
+          "Cylinder",
+          "6"
+        ],
+        [
+          "Tankinhoud",
+          "68 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:28:59.991Z",
+      "expectedExtraction": {
+        "displacementCc": 2998,
+        "powerKw": 250,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "03/2018",
+        "co2": 177
+      }
+    },
+    {
+      "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=456993282",
+      "host": "suchen.mobile.de",
+      "pathname": "/fahrzeuge/details.html",
+      "uiLang": "fr",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "État du véhicule",
+          "occasion"
+        ],
+        [
+          "Catégorie",
+          "SUV/Off-road Vehicle/Pick-up"
+        ],
+        [
+          "Série",
+          "F15"
+        ],
+        [
+          "Ligne de coupe",
+          "xDrive 35 i"
+        ],
+        [
+          "Kilométrage",
+          "88 600 km"
+        ],
+        [
+          "Cylindrée",
+          "2 979 ccm"
+        ],
+        [
+          "Puissance",
+          "225 kW (306 Ch DIN)"
+        ],
+        [
+          "Motorisation",
+          "Moteur à combustion interne"
+        ],
+        [
+          "Carburant",
+          "Essence, Compatible E-10"
+        ],
+        [
+          "Consommation d'énergie (peigne)2",
+          "8,5 l/100km"
+        ],
+        [
+          "Émissions de CO₂ (peigne)2",
+          "197 g/km"
+        ],
+        [
+          "Consommation2",
+          "8,5 l/100km (combinée)"
+        ],
+        [
+          "Nombre de places",
+          "5"
+        ],
+        [
+          "Nombre de portes",
+          "4/5"
+        ],
+        [
+          "Transmission",
+          "Boîte automatique"
+        ],
+        [
+          "Norme antipollution",
+          "Euro6"
+        ],
+        [
+          "Pastille verte",
+          "4 (Vert)"
+        ],
+        [
+          "Date immatriculation",
+          "12/2017"
+        ],
+        [
+          "Nombre de propriétaires du véhicule",
+          "1"
+        ],
+        [
+          "HU",
+          "Nouveau"
+        ],
+        [
+          "Climatisation",
+          "Climatisation automatique bizone"
+        ],
+        [
+          "Radar de recul",
+          "Arrière, Appareil photo, Avant"
+        ],
+        [
+          "Airbags",
+          "Airbags frontaux et latéraux et autres"
+        ],
+        [
+          "Nom de couleur constructeur",
+          "CARBONSCHWARZ"
+        ],
+        [
+          "Couleur",
+          "Noir Métallique"
+        ],
+        [
+          "Équipements intérieurs",
+          "Tout cuir, Noir"
+        ],
+        [
+          "Charge remorquée freinée",
+          "3 500 kg"
+        ],
+        [
+          "Poids tractable remorque non freinée",
+          "750 kg"
+        ],
+        [
+          "Poids",
+          "2 105 kg"
+        ],
+        [
+          "Cylinder",
+          "6"
+        ],
+        [
+          "Capacité du réservoir",
+          "85 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:30:34.223Z",
+      "expectedExtraction": {
+        "displacementCc": 2979,
+        "powerKw": 225,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "12/2017",
+        "co2": 197
+      }
+    },
+    {
+      "url": "https://suchen.mobile.de/fahrzeuge/details.html?id=456993282",
+      "host": "suchen.mobile.de",
+      "pathname": "/fahrzeuge/details.html",
+      "uiLang": "en",
+      "jsonLdTypes": [
+        "Organization"
+      ],
+      "jsonLdGraphTypes": [],
+      "hasCarNode": false,
+      "carNodeKeys": null,
+      "specPairs": [
+        [
+          "Vehicle condition",
+          "Used vehicle"
+        ],
+        [
+          "Category",
+          "SUV/Off-road Vehicle/Pickup Truck"
+        ],
+        [
+          "Model range",
+          "F15"
+        ],
+        [
+          "Trim line",
+          "xDrive 35 i"
+        ],
+        [
+          "Mileage",
+          "88,600 km"
+        ],
+        [
+          "Cubic Capacity",
+          "2,979 ccm"
+        ],
+        [
+          "Power",
+          "225 kW (306 hp)"
+        ],
+        [
+          "Drive type",
+          "Internal combustion engine"
+        ],
+        [
+          "Fuel",
+          "Petrol, E10-enabled"
+        ],
+        [
+          "Energy consumption (comb.)2",
+          "8.5 l/100km"
+        ],
+        [
+          "CO₂ emissions (comb.)2",
+          "197 g/km"
+        ],
+        [
+          "Fuel consumption2",
+          "8.5 l/100km (combined)"
+        ],
+        [
+          "Number of Seats",
+          "5"
+        ],
+        [
+          "Door Count",
+          "4/5"
+        ],
+        [
+          "Transmission",
+          "Automatic"
+        ],
+        [
+          "Emission Class",
+          "Euro6"
+        ],
+        [
+          "Emissions Sticker",
+          "4 (Green)"
+        ],
+        [
+          "First Registration",
+          "12/2017"
+        ],
+        [
+          "Number of Vehicle Owners",
+          "1"
+        ],
+        [
+          "HU",
+          "New"
+        ],
+        [
+          "Climatisation",
+          "Automatic climatisation, 2 zones"
+        ],
+        [
+          "Parking sensors",
+          "Camera, Rear, Front"
+        ],
+        [
+          "Airbags",
+          "Front and Side and More Airbags"
+        ],
+        [
+          "Colour (Manufacturer)",
+          "CARBONSCHWARZ"
+        ],
+        [
+          "Colour",
+          "Black Metallic"
+        ],
+        [
+          "Interior Design",
+          "Full leather, Black"
+        ],
+        [
+          "Trailer load braked",
+          "3,500 kg"
+        ],
+        [
+          "Trailer load unbraked",
+          "750 kg"
+        ],
+        [
+          "Weight",
+          "2,105 kg"
+        ],
+        [
+          "Cylinders",
+          "6"
+        ],
+        [
+          "Tank capacity",
+          "85 l"
+        ]
+      ],
+      "capturedAt": "2026-09-08T21:31:02.846Z",
+      "expectedExtraction": {
+        "displacementCc": 2979,
+        "powerKw": 225,
+        "fuel": "petrol",
+        "euroNorm": 6,
+        "firstRegistration": "12/2017",
+        "co2": 197
+      }
+    }
+  ],
+  "expectedExtractionNote": "Hand-read off the captured payload above by a person, not produced by running core/normalise.js. That is the point: an expectation computed by the code under test proves only that the code agrees with itself."
+}

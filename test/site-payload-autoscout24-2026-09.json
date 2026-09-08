@@ -1,0 +1,508 @@
+{
+  "name": "AutoScout24 detail page payload capture",
+  "capturedBy": "Felix, Proxem AI",
+  "capturedOn": "2026-09-08",
+  "method": "Captured with Google Chrome for Testing 150 launched manually with --remote-debugging-port and a fresh profile, then driven over CDP. NOT launched by puppeteer.launch: mobile.de serves an Access denied interstitial to a Puppeteer-launched browser, and that difference is the reason an earlier session concluded the content script was not injecting at all. Navigations were paced 9 to 11 seconds apart, the same courtesy Pax used on the tax simulator. UI locale was set by visiting the locale home page first on mobile.de, and by the domain plus path prefix on AutoScout24.",
+  "privacy": "Trimmed on capture to the fields the extractor actually reads. Seller identity, contact details, dealer addresses, advert free text and photographs were deliberately never stored. Advert ids and slugs are retained only so a case can be re-checked.",
+  "doNotEdit": "Do not edit the captured block. It is measured ground truth. If the site changes shape, capture again and replace the file, do not hand-edit a value to make a test pass. Editing a captured payload to match the parser is the exact fault this file exists to prevent.",
+  "whyThisExists": "Until 2026-09-08 no fixture in this repo was captured from either car site. The AutoScout24 fixture in test/host-permissions.mjs passed a STRING for co2emissionInGramPerKmWithFallback while the site sends an object, so the suite asserted that a parser which never read the field was working. Two further mismatches in the same fixture are recorded in the findings below.",
+  "coverage": {
+    "hosts": [
+      "autoscout24.be",
+      "autoscout24.de",
+      "autoscout24.fr",
+      "autoscout24.lu",
+      "autoscout24.nl"
+    ],
+    "uiLanguages": [
+      "de-DE",
+      "fr-BE",
+      "fr-FR",
+      "fr-LU",
+      "nl-BE",
+      "nl-NL"
+    ],
+    "adverts": 8
+  },
+  "notCovered": [
+    "One to two adverts per host. This is a shape sample, not a statistical sample.",
+    "All cases are BMW passenger cars first registered 2020 or later, taken from one search each.",
+    "No electric-only, no LPG, no CNG, no motorcycle, no advert older than 2020.",
+    "autoscout24.fr and autoscout24.lu carry one advert each, so a per-host quirk would not show."
+  ],
+  "findings": [
+    "co2emissionInGramPerKmWithFallback is an OBJECT on every one of the 8 adverts captured, shape { raw, formatted, isFallback }. Never a string.",
+    "vehicle.emissionClass is undefined on every one of the 8 adverts, on every host and every language. The euro norm therefore never comes from the advert in production and is always inferred from the first registration date by inferEuroNorm.",
+    "firstRegistrationDate is a MM/YYYY string on every advert, never the ISO YYYY-MM-DD form the old fixture used.",
+    "The same physical advert served in Dutch and in French differs only in the localised strings, confirming that a language-dependent extraction failure is a bug and not per-advert data completeness."
+  ],
+  "captured": [
+    {
+      "url": "https://www.autoscout24.be/nl/aanbod/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-benzine-grijs-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "host": "www.autoscout24.be",
+      "pathname": "/nl/aanbod/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-benzine-grijs-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "uiLang": "nl-BE",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "10/2020",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "B",
+            "formatted": "Benzine"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 100,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1499,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": 128,
+            "formatted": "128 g/km (gem.)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Berline",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [
+        [
+          "CO2-emissie",
+          "128 g/km (gem.)"
+        ]
+      ],
+      "domain": "autoscout24.be",
+      "requestedLocale": "nl",
+      "capturedAt": "2026-09-08T21:42:44.339Z",
+      "expectedExtraction": {
+        "firstRegistration": "10/2020",
+        "powerKw": 100,
+        "displacementCc": 1499,
+        "fuel": "petrol",
+        "co2": 128,
+        "euroNorm": null,
+        "euroNormComment": "vehicle.emissionClass is undefined on every captured advert, so the euro norm is never available from the payload and the engine infers it from the registration date."
+      }
+    },
+    {
+      "url": "https://www.autoscout24.be/nl/aanbod/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-benzine-grijs-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "host": "www.autoscout24.be",
+      "pathname": "/nl/aanbod/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-benzine-grijs-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "uiLang": "nl-BE",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "10/2020",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "B",
+            "formatted": "Benzine"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 100,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1499,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": 128,
+            "formatted": "128 g/km (gem.)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Berline",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [
+        [
+          "CO2-emissie",
+          "128 g/km (gem.)"
+        ]
+      ],
+      "domain": "autoscout24.be",
+      "requestedLocale": "nl",
+      "capturedAt": "2026-09-08T21:42:55.666Z",
+      "expectedExtraction": {
+        "firstRegistration": "10/2020",
+        "powerKw": 100,
+        "displacementCc": 1499,
+        "fuel": "petrol",
+        "co2": 128,
+        "euroNorm": null
+      }
+    },
+    {
+      "url": "https://www.autoscout24.be/fr/offres/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-essence-gris-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "host": "www.autoscout24.be",
+      "pathname": "/fr/offres/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-essence-gris-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "uiLang": "fr-BE",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "10/2020",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "B",
+            "formatted": "Essence"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 100,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1499,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": 128,
+            "formatted": "128 g/km (mixte)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Berline",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [
+        [
+          "Émissions de CO2",
+          "128 g/km (mixte)"
+        ]
+      ],
+      "domain": "autoscout24.be",
+      "requestedLocale": "fr",
+      "capturedAt": "2026-09-08T21:43:25.243Z",
+      "expectedExtraction": {
+        "firstRegistration": "10/2020",
+        "powerKw": 100,
+        "displacementCc": 1499,
+        "fuel": "petrol",
+        "co2": 128,
+        "euroNorm": null
+      }
+    },
+    {
+      "url": "https://www.autoscout24.be/fr/offres/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-essence-gris-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "host": "www.autoscout24.be",
+      "pathname": "/fr/offres/bmw-218-218i-aut-m-sport-carplay-hud-gran-coupe-essence-gris-cat_ma13mo20327-40fdd8fc-ea83-4f9c-aa50-18c5f21ada72",
+      "uiLang": "fr-BE",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "10/2020",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "B",
+            "formatted": "Essence"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 100,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1499,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": 128,
+            "formatted": "128 g/km (mixte)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Berline",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [
+        [
+          "Émissions de CO2",
+          "128 g/km (mixte)"
+        ]
+      ],
+      "domain": "autoscout24.be",
+      "requestedLocale": "fr",
+      "capturedAt": "2026-09-08T21:43:36.612Z",
+      "expectedExtraction": {
+        "firstRegistration": "10/2020",
+        "powerKw": 100,
+        "displacementCc": 1499,
+        "fuel": "petrol",
+        "co2": 128,
+        "euroNorm": null
+      }
+    },
+    {
+      "url": "https://www.autoscout24.de/angebote/bmw-2er-216d-gran-coupe-aut-advantage-navi-gd-ahk-diesel-schwarz-cat_ma13gr100098ge351va315mt711tr290-0f2101e8-f878-4c53-94f1-d9e721026a71",
+      "host": "www.autoscout24.de",
+      "pathname": "/angebote/bmw-2er-216d-gran-coupe-aut-advantage-navi-gd-ahk-diesel-schwarz-cat_ma13gr100098ge351va315mt711tr290-0f2101e8-f878-4c53-94f1-d9e721026a71",
+      "uiLang": "de-DE",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "09/2022",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "D",
+            "formatted": "Diesel"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 85,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1496,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": null,
+            "formatted": "- (g/km)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Limousine",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [],
+      "domain": "autoscout24.de",
+      "requestedLocale": "de",
+      "capturedAt": "2026-09-08T21:44:27.714Z",
+      "expectedExtraction": {
+        "firstRegistration": "09/2022",
+        "powerKw": 85,
+        "displacementCc": 1496,
+        "fuel": "diesel",
+        "co2": null,
+        "euroNorm": null,
+        "co2Comment": "No CO2 in the blob and no CO2 spec row. Null is correct."
+      }
+    },
+    {
+      "url": "https://www.autoscout24.nl/aanbod/bmw-118-118i-sport-line-led-harman-kardon-panoramada-benzine-zwart-cat_ma13mo18481-28104c91-7027-4401-bdd6-3bd9da868e24",
+      "host": "www.autoscout24.nl",
+      "pathname": "/aanbod/bmw-118-118i-sport-line-led-harman-kardon-panoramada-benzine-zwart-cat_ma13mo18481-28104c91-7027-4401-bdd6-3bd9da868e24",
+      "uiLang": "nl-NL",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "10/2020",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "B",
+            "formatted": "Benzine"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 103,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1499,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": null,
+            "formatted": "- (g/km)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Hatchback",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [
+        [
+          "CO2-emissie",
+          "122 g/km (gem.)"
+        ]
+      ],
+      "domain": "autoscout24.nl",
+      "requestedLocale": "nl",
+      "capturedAt": "2026-09-08T21:44:59.938Z",
+      "expectedExtraction": {
+        "firstRegistration": "10/2020",
+        "powerKw": 103,
+        "displacementCc": 1499,
+        "fuel": "petrol",
+        "co2": 122,
+        "euroNorm": null,
+        "co2Comment": "The data blob carries raw null. 122 exists ONLY in the rendered spec row, so this case passes only if the DOM fallback works."
+      }
+    },
+    {
+      "url": "https://www.autoscout24.lu/offres/bmw-x2-x2-1-5-d-sdrive16-revisee-et-garantie-12-mois-diesel-gris-cat_ma13mo74769-b0b31ebf-208a-479e-803f-7dec5d78d313",
+      "host": "www.autoscout24.lu",
+      "pathname": "/offres/bmw-x2-x2-1-5-d-sdrive16-revisee-et-garantie-12-mois-diesel-gris-cat_ma13mo74769-b0b31ebf-208a-479e-803f-7dec5d78d313",
+      "uiLang": "fr-LU",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "04/2022",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "D",
+            "formatted": "Diesel"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 85,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1496,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": null,
+            "formatted": "- (g/km)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "SUV/4x4/Pick-Up",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [],
+      "domain": "autoscout24.lu",
+      "requestedLocale": "fr",
+      "capturedAt": "2026-09-08T21:45:30.639Z",
+      "expectedExtraction": {
+        "firstRegistration": "04/2022",
+        "powerKw": 85,
+        "displacementCc": 1496,
+        "fuel": "diesel",
+        "co2": null,
+        "euroNorm": null,
+        "co2Comment": "No CO2 in the blob and no CO2 spec row. Null is correct."
+      }
+    },
+    {
+      "url": "https://www.autoscout24.fr/offres/bmw-135-m135i-xdrive-306-ch-bva8-essence-noir-cat_ma13mo19079-0a489c2c-914a-4ed2-93fd-f1550aa0298e",
+      "host": "www.autoscout24.fr",
+      "pathname": "/offres/bmw-135-m135i-xdrive-306-ch-bva8-essence-noir-cat_ma13mo19079-0a489c2c-914a-4ed2-93fd-f1550aa0298e",
+      "uiLang": "fr-FR",
+      "fields": {
+        "firstRegistrationDate": {
+          "value": "09/2020",
+          "type": "string"
+        },
+        "fuelCategory": {
+          "value": {
+            "raw": "B",
+            "formatted": "Essence"
+          },
+          "type": "object"
+        },
+        "rawPowerInKw": {
+          "value": 225,
+          "type": "number"
+        },
+        "rawDisplacementInCCM": {
+          "value": 1998,
+          "type": "number"
+        },
+        "co2emissionInGramPerKmWithFallback": {
+          "value": {
+            "raw": 155,
+            "formatted": "155 g/km (mixte)",
+            "isFallback": false
+          },
+          "type": "object"
+        },
+        "emissionClass": {
+          "type": "undefined"
+        },
+        "bodyType": {
+          "value": "Berline",
+          "type": "string"
+        }
+      },
+      "co2SpecRows": [
+        [
+          "Émissions de CO2",
+          "155 g/km (mixte)"
+        ]
+      ],
+      "domain": "autoscout24.fr",
+      "requestedLocale": "fr",
+      "capturedAt": "2026-09-08T21:46:10.438Z",
+      "expectedExtraction": {
+        "firstRegistration": "09/2020",
+        "powerKw": 225,
+        "displacementCc": 1998,
+        "fuel": "petrol",
+        "co2": 155,
+        "euroNorm": null
+      }
+    }
+  ],
+  "expectedExtractionNote": "Hand-read off the captured payload above by a person, not produced by running core/normalise.js. That is the point: an expectation computed by the code under test proves only that the code agrees with itself."
+}
