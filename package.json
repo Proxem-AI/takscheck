@@ -4,7 +4,7 @@
   "private": true,
   "description": "TaksCheck: MV3 Chrome extension showing Belgian BIV / TMC and Rijtaks / TC on car ads (NL / FR), plus a regression harness against the official Flemish simulator.",
   "scripts": {
-    "test": "node test/window-expiry-check.mjs && node test/harness.mjs && node test/roadtax-harness.mjs && node test/simulator-comparison-harness.mjs --strict && node test/badge-states.mjs && node test/mobilede-extract.mjs && node test/autoscout24-extract.mjs && node test/captured-payloads.mjs && node test/host-permissions.mjs",
+    "test": "node test/window-expiry-check.mjs && node test/harness.mjs && node test/roadtax-harness.mjs && node test/simulator-comparison-harness.mjs --strict && node test/badge-states.mjs && node test/fiscal-hp.mjs && node test/mobilede-extract.mjs && node test/autoscout24-extract.mjs && node test/captured-payloads.mjs && node test/host-permissions.mjs",
     "test:biv": "node test/harness.mjs",
     "test:roadtax": "node test/roadtax-harness.mjs",
     "test:simulator": "node test/simulator-comparison-harness.mjs --strict",
@@ -13,7 +13,8 @@
     "test:hosts": "node test/host-permissions.mjs",
     "test:extract": "node test/mobilede-extract.mjs",
     "test:as24": "node test/autoscout24-extract.mjs",
-    "test:captured": "node test/captured-payloads.mjs"
+    "test:captured": "node test/captured-payloads.mjs",
+    "test:fiscalhp": "node test/fiscal-hp.mjs"
   },
   "devDependencies": {
     "linkedom": "^0.18.13"

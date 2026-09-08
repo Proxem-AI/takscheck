@@ -63,8 +63,14 @@ function render(lang, all, vehicle, region) {
   return { html, text };
 }
 
-const petrol = { title: "Test", fuel: "petrol", co2: 130, euroNorm: 6, fiscalHp: 9, firstRegistration: "2023-05-15" };
-const noCo2 = { title: "Test", fuel: "petrol", euroNorm: 6, fiscalHp: 9, firstRegistration: "2023-05-15" };
+// Shaped like what BivNormalise actually emits from a real advert. It emits
+// displacementCc and it does NOT emit fiscalHp, so a fixture supplying fiscalHp
+// exercises a branch of deriveFiscalHp that no real user can reach. 1600 cc sits
+// in the 1551 to 1750 band of the official belastbare-kracht table in
+// core/tariffs.json, which is fiscal pk 9, the value this fixture used to hand in
+// directly. See test/fiscal-hp.mjs.
+const petrol = { title: "Test", fuel: "petrol", co2: 130, euroNorm: 6, displacementCc: 1600, firstRegistration: "2023-05-15" };
+const noCo2 = { title: "Test", fuel: "petrol", euroNorm: 6, displacementCc: 1600, firstRegistration: "2023-05-15" };
 
 // The dates are taken from the tariff file, not from the engine, so these stay
 // meaningful when a new window is added.
