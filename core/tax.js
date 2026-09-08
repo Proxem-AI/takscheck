@@ -252,10 +252,28 @@
     return list[list.length - 1][valueKey];
   }
 
-  // Official Belgian belastbare-kracht table: cylinder capacity to fiscal PK.
-  // Stepped, not a division (the old cc / 200 shortcut understated by a full
-  // bracket for most modern engines). Above the table it rises about +1 PK per
-  // fiscalPkAbove4050PerCc cc, per the simulator sweep (research section 12.2).
+  // Cylinder capacity to fiscal PK. Stepped, not a division (the old cc / 200
+  // shortcut understated by a full bracket for most modern engines). Above the
+  // table it rises about +1 PK per fiscalPkAbove4050PerCc cc, per the simulator
+  // sweep (research section 12.2).
+  //
+  // THIS TABLE IS NOT A TRANSCRIPTION OF A STATUTE. It used to be described here
+  // as the "Official Belgian belastbare-kracht table" and that claim did not
+  // survive being checked. Pax searched the VCF, its Besluit van 20 december
+  // 2013, the Belgisch Staatsblad publication, Fisconetplus and the federal
+  // WIGB / KB 1970 lineage on 2026-09-09 and found no cc-to-pk lookup table
+  // anywhere in Flemish or Belgian tax law. The statutory definition for a
+  // combustion engine is VCF art. 2.2.3.0.1 and 2.2.3.0.2:
+  //     pk = k x d^2 x c x n
+  // with d the cylinder bore in metres, c the piston stroke in metres, n the
+  // cylinder count, and k looked up by bore diameter. Cylinder capacity re-enters
+  // the law only as a CEILING on that result, never as an alternative basis.
+  // What this table is, therefore, is a practical approximation of that formula
+  // for typical production engines. It is a good one and the simulator sweep
+  // backs it, but it is an approximation and the next person to read this should
+  // know that rather than assume the law is behind every band. See the
+  // inference.fiscalPkByCc provenance entry in core/tariffs.json, and note that
+  // the pk16 band is flagged there as suspect pending a primary source.
   function ccToFiscalPk(cc, inf) {
     var table = inf.fiscalPkByCc;
     for (var i = 0; i < table.length; i++) {
@@ -276,12 +294,41 @@
     }
     if (vehicle.displacementCc != null && vehicle.displacementCc > 0) {
       var v = Math.max(inf.fiscalHpMin, ccToFiscalPk(vehicle.displacementCc, inf));
-      return { value: v, confidence: "medium", assumption: "fiscal HP derived from cc via the official belastbare-kracht table" };
+      return { value: v, confidence: "medium", assumption: "fiscal HP derived from cc via the belastbare-kracht approximation table" };
     }
     if (vehicle.powerKw != null) {
-      // last-resort rough estimate when displacement is unavailable (list cards)
-      var vv = Math.max(inf.fiscalHpMin, Math.round(vehicle.powerKw / 5.5));
-      return { value: vv, confidence: "low", assumption: "fiscal HP roughly estimated from kW (cc not listed)" };
+      // NO FIGURE IS RETURNED HERE ON PURPOSE. Do not put a divisor back.
+      //
+      // This branch used to answer Math.round(powerKw / 5.5) when an advert listed
+      // power but no cylinder capacity. It was labelled a rough estimate. It was
+      // not an estimate, it was wrong: measured against the cc table on 16 real
+      // captured adverts it disagreed on every single one, by 7 to 49 fiscal pk
+      // steps, which is a road tax overstated by 241 to 563 per cent. It also
+      // contradicted this file's own EV table, which puts 100 kW at 10 CV where
+      // the divisor gave 18.
+      //
+      // The reason no corrected divisor replaced it is that there is nothing to
+      // correct it to. Pax read the law on 2026-09-09: Belgian fiscal PK for a
+      // combustion engine is defined by VCF art. 2.2.3.0.1 and 2.2.3.0.2 on
+      // cylinder bore, stroke and cylinder count. Power output is not an input
+      // anywhere, and cylinder capacity appears only as a ceiling on the result.
+      // The single power-based formula in the VCF, art. 2.2.3.0.4, is scoped to
+      // electric motors and takes element count, voltage and current, not kW. So
+      // any divisor here would be a number with no statutory basis, dressed up as
+      // a derivation. Observed ratios on real cars ran from 10.6 to 20.6 kW per
+      // fiscal pk and rose with engine size, so no single divisor fits anyway.
+      //
+      // Returning null rather than deleting the branch keeps the reason
+      // expressible: both callers already guard on a null value and return their
+      // own needsMoreData descriptor, so the user is told the road tax needs a
+      // cylinder capacity that this advert did not list. That wording already
+      // exists and already ships. Exposure is nil either way: of the 16 adverts
+      // captured on 2026-09-08, every one listed a cylinder capacity.
+      //
+      // The assumption text keeps the "no displacement or fiscal HP" prefix so
+      // ui/badge.js localises it with the existing, accurate NL and FR copy.
+      return { value: null, confidence: "none",
+        assumption: "no displacement or fiscal HP available; engine power alone is not a lawful basis for a combustion engine" };
     }
     return { value: null, confidence: "none", assumption: "no displacement or fiscal HP available" };
   }

@@ -57,10 +57,26 @@ const fromCc = D({ displacementCc: 1600 });
 eq(fromCc.confidence, "medium", "from cc: confidence medium, not high");
 ok(/derived from cc/.test(fromCc.assumption), "from cc: assumption says derived, never 'from the ad'");
 
-// Branch 4, taken when the advert lists power but no cylinder capacity.
+// Branch 4, reached when the advert lists power but no cylinder capacity. It
+// returns NO FIGURE, because Belgian fiscal PK for a combustion engine has no
+// lawful power-based basis: VCF art. 2.2.3.0.1 and 2.2.3.0.2 define it on bore,
+// stroke and cylinder count, and the only power-based article, 2.2.3.0.4, is
+// scoped to electric motors on inputs a car advert never carries. Established by
+// Pax on 2026-09-09. Before that this branch answered powerKw / 5.5, which
+// overstated the road tax by 241 to 563 per cent on real captured adverts.
 const fromKw = D({ powerKw: 110 });
-eq(fromKw.confidence, "low", "from kW only: confidence low");
-ok(/roughly estimated from kW/.test(fromKw.assumption), "from kW only: assumption says roughly estimated");
+eq(fromKw.value, null, "power without cc: no fiscal pk is invented");
+eq(fromKw.confidence, "none", "power without cc: confidence none, not low");
+ok(/^no displacement or fiscal HP/.test(fromKw.assumption),
+   "power without cc: assumption keeps the prefix ui/badge.js localises");
+ok(/not a lawful basis/.test(fromKw.assumption),
+   "power without cc: the internal assumption records why, for the next reader");
+
+// The guard that stops a divisor coming back. If someone reinstates one, every
+// row here starts returning a number and this fails loudly.
+for (const kw of [30, 85, 100, 110, 225, 390]) {
+  eq(D({ powerKw: kw }).value, null, "no divisor: " + kw + " kW alone still yields no fiscal pk");
+}
 
 // Branch 2, electric.
 const fromEv = D({ fuel: "electric", powerKw: 150 });
@@ -121,6 +137,23 @@ ok(!/taken from the ad/.test(D(as24).assumption),
    "a real advert is never told its fiscal pk came from the ad");
 ok(!/taken from the ad/.test(D(mob).assumption),
    "a real mobile.de advert is never told its fiscal pk came from the ad");
+
+console.log("\n== end to end: what a combustion advert without cc actually gets ==\n");
+// Both callers guard on a null value, so the road tax returns its own
+// needsMoreData descriptor and the badge tells the user which input is missing.
+// This is the path that replaced the 563 per cent overstatement.
+const engine = Tax.createTaxEngine(tariffs);
+const REF = tariffs.flanders.biv.qWindows[0].until;
+const noCc = { fuel: "petrol", co2: 130, euroNorm: 6, powerKw: 100, firstRegistration: "2022-03" };
+const rt = engine.computeRijtaks(noCc, "flanders", REF);
+eq(rt.amount, null, "road tax returns no amount rather than a made-up one");
+eq(rt.needsMoreData, true, "road tax reports that it needs more data");
+ok(/cc not listed|fiscal HP/i.test(String(rt.reason)),
+   "road tax names the missing input (" + JSON.stringify(rt.reason) + ")");
+// The BIV does not use fiscal pk, so it must still produce its figure.
+const bv = engine.computeBIV(noCc, "flanders", REF);
+ok(bv.amount != null && bv.amount > 0,
+   "the BIV is unaffected and still computes (" + bv.amount + " EUR)");
 
 console.log("\n" + passed + " passed, " + failed + " failed");
 process.exit(failed ? 1 : 0);
