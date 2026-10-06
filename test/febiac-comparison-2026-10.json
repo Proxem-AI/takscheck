@@ -1,0 +1,1282 @@
+{
+  "name": "FEBIAC Taxo comparison set, three regions, October 2026",
+  "capturedBy": "Pax, Proxem AI",
+  "capturedOn": "2026-10-01 to 2026-10-06",
+  "source": "FEBIAC Taxo Lite, https://dataservices.febiac.be/en/taxo/online",
+  "tariffVersionAtCapture": "2026.09.2",
+  "method": "The Taxo wizard was driven through its own web form, one submission at a time, five a day against its undisclosed free-tier limit of five calculations. One submission returns all three regions at once: there is no region selector, so every submission below yields three directly comparable figures off the same result screen. The per-region response data was read separately to confirm that identical Brussels and Wallonia road tax figures are real and not one results cell read twice. Raw captures: febiac-taxo-results.json (batch 1) and febiac-taxo-day1/2/3.json.",
+  "fixedInputs": "Price 35000 EUR excluding VAT and discount 0 throughout: both are required fields in the wizard and neither feeds BIV or road tax in Belgian law. Taxo has no CO2 cycle selector and no particulate filter input, so the Euro 4 soot filter branch (task 117) cannot be tested against it at all. Fiscal HP is a separate field from cylinder capacity and the wizard derives neither from the other, so every case below records fiscalHp explicitly, even where it equals the cc-derived value.",
+  "tolerance": 0.05,
+  "notes": [
+    "The official block is measured ground truth. Do not edit it.",
+    "engineAtCapture is a snapshot of core/tax.js at tariff version 2026.09.2 BEFORE the four approved fixes, kept as the baseline the fixes are measured against. It is not a target.",
+    "status expect: the comparison gates the build under --strict. status known-mismatch: reported on every run, never gating, each one carrying the reason and the task it belongs to. Freezing a known defect as expected would hide it; excluding it would lose it.",
+    "W-OLDTIMER (submission 12: petrol, 250 g, Euro 0, 110 kW, registered 1994-01-01) returned HTTP 500 from FEBIAC and is absent from this file. A 500 is an unhandled server error rather than an out-of-domain rejection, and submissions 6 and 11 show that age alone up to 18 years is accepted, so the likely trigger is the Euro 0 category. There is nothing to freeze for it.",
+    "Wallonia BIV, Brussels road tax and Wallonia road tax expectations are FEBIAC's own reported figures, which the four approved fixes bring the engine to. The pre-fix engine value is in engineAtCapture: that is the thing this fixture exists to catch, not the thing it should expect."
+  ],
+  "submissions": [
+    {
+      "id": "BATCH1-DIESEL",
+      "batch": "batch1 (1 October 2026)",
+      "capturedOn": "2026-10-01",
+      "planCaseIds": [
+        "F-DIE-WLTP",
+        "B-DIE",
+        "W-DIE"
+      ],
+      "label": "diesel 148g Euro 6, 110 kW, fiscal HP 9, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "engine_type": "Diesel",
+        "co2_g_km": 148,
+        "co2_cycle": "not selectable",
+        "euronorm": "6",
+        "fiscal_hp": 9,
+        "kw": 110,
+        "first_registration_date": "2026-09-01",
+        "cc": 1300,
+        "max_permissible_weight_kg": 1500,
+        "price_excl_vat": 35000,
+        "discount": 0
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 9,
+        "powerKw": 110,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 148,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 1423.56,
+            "engineAtCapture": 1423.56,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 427.87,
+            "engineAtCapture": 427.85,
+            "deltaAtCapture": -0.02,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 1112.01,
+            "engineAtCapture": 1112.01,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 373.16,
+            "engineAtCapture": 359,
+            "deltaAtCapture": -14.16,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 801.41,
+            "engineAtCapture": 769.99,
+            "deltaAtCapture": -31.42,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 373.16,
+            "engineAtCapture": 484.65,
+            "deltaAtCapture": 111.49,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "BATCH1-PETROL",
+      "batch": "batch1 (1 October 2026)",
+      "capturedOn": "2026-10-01",
+      "planCaseIds": [
+        "F-PET-WLTP",
+        "B-PET",
+        "W-PET"
+      ],
+      "label": "petrol 130g Euro 6, 96 kW, fiscal HP 9, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "engine_type": "Petrol",
+        "co2_g_km": 130,
+        "co2_cycle": "not selectable",
+        "euronorm": "6",
+        "fiscal_hp": 9,
+        "kw": 96,
+        "first_registration_date": "2026-09-01",
+        "cc": 1300,
+        "max_permissible_weight_kg": 1500,
+        "price_excl_vat": 35000,
+        "discount": 0
+      },
+      "vehicle": {
+        "fuel": "petrol",
+        "fiscalHp": 9,
+        "powerKw": 96,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 130,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 393.53,
+            "engineAtCapture": 393.53,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 295.81,
+            "engineAtCapture": 295.81,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 634.89,
+            "engineAtCapture": 634.89,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 373.16,
+            "engineAtCapture": 359,
+            "deltaAtCapture": -14.16,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 401.91,
+            "engineAtCapture": 386.15,
+            "deltaAtCapture": -15.76,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 373.16,
+            "engineAtCapture": 359,
+            "deltaAtCapture": -14.16,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "BATCH1-ELECTRIC",
+      "batch": "batch1 (1 October 2026)",
+      "capturedOn": "2026-10-01",
+      "planCaseIds": [
+        "F-EV",
+        "B-EV",
+        "W-EV"
+      ],
+      "label": "electric 0g, 150 kW, fiscal HP 9, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "engine_type": "Electric (BEV)",
+        "co2_g_km": 0,
+        "euronorm": "6 (wizard default; matrix gives none)",
+        "fiscal_hp": "9 (carried over; matrix gives none for EV)",
+        "kw": 150,
+        "first_registration_date": "2026-09-01",
+        "cc": "0 (set to 0 for a BEV; matrix gives none)",
+        "max_permissible_weight_kg": 1500,
+        "price_excl_vat": 35000,
+        "discount": 0
+      },
+      "vehicle": {
+        "fuel": "electric",
+        "fiscalHp": 9,
+        "powerKw": 150,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 0
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 61.5,
+            "engineAtCapture": 61.5,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 107.18,
+            "engineAtCapture": 107.16,
+            "deltaAtCapture": -0.02,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 78.99,
+            "engineAtCapture": 78.88,
+            "deltaAtCapture": -0.11,
+            "status": "known-mismatch",
+            "note": "Brussels TMC lowest bracket. FEBIAC returns 78.99 where brussels.tmc carries 78.88, in both the evFlat and the first petrol/diesel bracket. Pax classified this as a rounding match (within 11 cents) and it is not one of the four approved fixes, but 11 cents is the shape of an unindexed 2026 figure rather than rounding, so it is surfaced here rather than hidden under a looser tolerance. Own task."
+          },
+          "roadTax": {
+            "official": 107.18,
+            "engineAtCapture": 0,
+            "deltaAtCapture": -107.18,
+            "status": "known-mismatch",
+            "note": "Brussels EV road tax. TaksCheck exempts EVs in Brussels (brussels.roadTax.evExempt); FEBIAC returns 107.18, which is the Flemish EV flat rate. Single observation, never re-run on days 1 to 3. Own task."
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 210.48,
+            "engineAtCapture": 202.23,
+            "deltaAtCapture": -8.25,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 107.18,
+            "engineAtCapture": 102.96,
+            "deltaAtCapture": -4.22,
+            "status": "known-mismatch",
+            "note": "Wallonia EV road tax. wallonia.roadTax.evFlat is 102.96 and is marked SUSPECT in provenance (the Flemish figure copied across). FEBIAC returns 107.18. Out of scope of the four approved fixes. Own task."
+          }
+        }
+      }
+    },
+    {
+      "id": "BATCH1-LPG",
+      "batch": "batch1 (1 October 2026)",
+      "capturedOn": "2026-10-01",
+      "planCaseIds": [
+        "F-LPG",
+        "B-LPG",
+        "W-LPG"
+      ],
+      "label": "lpg 130g Euro 6, 96 kW, fiscal HP 9, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "engine_type": "LPG",
+        "co2_g_km": 130,
+        "co2_cycle": "not selectable",
+        "euronorm": "6",
+        "fiscal_hp": 9,
+        "kw": 96,
+        "first_registration_date": "2026-09-01",
+        "cc": 1300,
+        "max_permissible_weight_kg": 1500,
+        "price_excl_vat": 35000,
+        "discount": 0
+      },
+      "vehicle": {
+        "fuel": "lpg",
+        "fiscalHp": 9,
+        "powerKw": 96,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 130,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 198.04,
+            "engineAtCapture": 198.04,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 292.16,
+            "engineAtCapture": 292.16,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 252.68,
+            "engineAtCapture": 252.67,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 521.84,
+            "engineAtCapture": 508,
+            "deltaAtCapture": -13.84,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 103.91,
+            "engineAtCapture": 386.15,
+            "deltaAtCapture": 282.24,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 521.84,
+            "engineAtCapture": 359,
+            "deltaAtCapture": -162.84,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB1",
+      "batch": "day1 (task 211)",
+      "capturedOn": "2026-10-04",
+      "planCaseIds": [
+        "F-2NDHAND",
+        "B-2NDHAND",
+        "W-2NDHAND"
+      ],
+      "label": "diesel 140g Euro 5, 110 kW, fiscal HP 9, first registered 2017-03-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Diesel",
+        "co2_g_km": 140,
+        "euronorm": "5",
+        "fiscal_hp": 9,
+        "kw": 110,
+        "cc": 1998,
+        "first_registration_date": "2017-03-01"
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 9,
+        "powerKw": 110,
+        "mma": 1500,
+        "firstRegistration": "2017-03-01",
+        "co2": 140,
+        "euroNorm": 5,
+        "displacementCc": 1998
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 720,
+            "engineAtCapture": 205.71,
+            "deltaAtCapture": -514.29,
+            "status": "known-mismatch",
+            "note": "Flanders aged-diesel NEDC family. TaksCheck reproduces the Vlaamse Belastingdienst simulator to the cent on this exact vehicle (726.22 for SUB3); FEBIAC diverges and grows with age. Open question on FEBIAC's side, own task."
+          },
+          "roadTax": {
+            "official": 458.45,
+            "engineAtCapture": 458.46,
+            "deltaAtCapture": 0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 389.2,
+            "engineAtCapture": 389.2,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 373.16,
+            "engineAtCapture": 359,
+            "deltaAtCapture": -14.16,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 313.78,
+            "engineAtCapture": 301.48,
+            "deltaAtCapture": -12.3,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 373.16,
+            "engineAtCapture": 484.65,
+            "deltaAtCapture": 111.49,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB2",
+      "batch": "day1 (task 211)",
+      "capturedOn": "2026-10-04",
+      "planCaseIds": [
+        "F-HYBRID",
+        "B-HYBRID",
+        "W-HYBRID"
+      ],
+      "label": "hybrid 95g Euro 6, 85 kW, fiscal HP 7, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Hybrid Petrol",
+        "co2_g_km": 95,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 85,
+        "cc": 1300,
+        "first_registration_date": "2026-09-01"
+      },
+      "vehicle": {
+        "fuel": "hybrid",
+        "fiscalHp": 7,
+        "powerKw": 85,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 95,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 84.13,
+            "engineAtCapture": 84.13,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 174.28,
+            "engineAtCapture": 174.27,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 157.76,
+            "engineAtCapture": 157.76,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 58.38,
+            "engineAtCapture": 56.1,
+            "deltaAtCapture": -2.28,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB3",
+      "batch": "day1 (task 211)",
+      "capturedOn": "2026-10-04",
+      "planCaseIds": [
+        "F-NEDC"
+      ],
+      "label": "diesel 148g Euro 6, 110 kW, fiscal HP 7, first registered 2019-01-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Diesel",
+        "co2_g_km": 148,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 110,
+        "cc": 1300,
+        "first_registration_date": "2019-01-01"
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 7,
+        "powerKw": 110,
+        "mma": 1500,
+        "firstRegistration": "2019-01-01",
+        "co2": 148,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 1089.32,
+            "engineAtCapture": 726.22,
+            "deltaAtCapture": -363.1,
+            "status": "known-mismatch",
+            "note": "Flanders aged-diesel NEDC family. Same vehicle Pax captured from the official VLABEL simulator on 2026-09-01, which returned 726.22, the figure TaksCheck returns. Own task."
+          },
+          "roadTax": {
+            "official": 311.06,
+            "engineAtCapture": 311.05,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 500.4,
+            "engineAtCapture": 500.4,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 426.49,
+            "engineAtCapture": 409.77,
+            "deltaAtCapture": -16.72,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 328.05,
+            "deltaAtCapture": 74.74,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB4",
+      "batch": "day1 (task 211)",
+      "capturedOn": "2026-10-04",
+      "planCaseIds": [
+        "F-BOUND-NEDC",
+        "W-NEDC-BOUND"
+      ],
+      "label": "diesel 148g Euro 6, 110 kW, fiscal HP 7, first registered 2020-12-31",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Diesel",
+        "co2_g_km": 148,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 110,
+        "cc": 1300,
+        "first_registration_date": "2020-12-31"
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 7,
+        "powerKw": 110,
+        "mma": 1500,
+        "firstRegistration": "2020-12-31",
+        "co2": 148,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 1331.4,
+            "engineAtCapture": 1210.36,
+            "deltaAtCapture": -121.04,
+            "status": "known-mismatch",
+            "note": "Flanders aged-diesel NEDC family, NEDC side of the cycle boundary. Own task."
+          },
+          "roadTax": {
+            "official": 311.06,
+            "engineAtCapture": 311.05,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 611.61,
+            "engineAtCapture": 611.61,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 521.26,
+            "engineAtCapture": 500.83,
+            "deltaAtCapture": -20.43,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 328.05,
+            "deltaAtCapture": 74.74,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB5",
+      "batch": "day1 (task 211)",
+      "capturedOn": "2026-10-04",
+      "planCaseIds": [
+        "F-BOUND-WLTP"
+      ],
+      "label": "diesel 148g Euro 6, 110 kW, fiscal HP 7, first registered 2021-01-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Diesel",
+        "co2_g_km": 148,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 110,
+        "cc": 1300,
+        "first_registration_date": "2021-01-01"
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 7,
+        "powerKw": 110,
+        "mma": 1500,
+        "firstRegistration": "2021-01-01",
+        "co2": 148,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 782.96,
+            "engineAtCapture": 711.78,
+            "deltaAtCapture": -71.18,
+            "status": "known-mismatch",
+            "note": "Flanders aged-diesel NEDC family, WLTP side of the cycle boundary. Own task."
+          },
+          "roadTax": {
+            "official": 290.55,
+            "engineAtCapture": 290.54,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 611.61,
+            "engineAtCapture": 611.61,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 440.77,
+            "engineAtCapture": 423.5,
+            "deltaAtCapture": -17.27,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 328.05,
+            "deltaAtCapture": 74.74,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB6",
+      "batch": "day2 (task 212)",
+      "capturedOn": "2026-10-05",
+      "planCaseIds": [
+        "F-E4"
+      ],
+      "label": "diesel 130g Euro 4, 96 kW, fiscal HP 7, first registered 2008-06-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Diesel",
+        "co2_g_km": 130,
+        "euronorm": "4",
+        "fiscal_hp": 7,
+        "kw": 96,
+        "cc": 1300,
+        "first_registration_date": "2008-06-01"
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 7,
+        "powerKw": 96,
+        "mma": 1500,
+        "firstRegistration": "2008-06-01",
+        "co2": 130,
+        "euroNorm": 4,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 169.63,
+            "engineAtCapture": 169.63,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 322.72,
+            "engineAtCapture": 322.72,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 63.49,
+            "engineAtCapture": 78.88,
+            "deltaAtCapture": 15.39,
+            "status": "known-mismatch",
+            "note": "Brussels age-reduction floor. FEBIAC returns 63.49 where brussels.tmc.min is 78.88. No primary Brussels source for 63.49 yet. Own task."
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 50,
+            "engineAtCapture": 56.74,
+            "deltaAtCapture": 6.74,
+            "status": "known-mismatch",
+            "note": "Wallonia age-reduction floor. FEBIAC returns a flat 50.00 where wallonia.tmc.mbFloor 61.50 run through the CO2/mass formula gives 56.74. Deliberately NOT changed by the 2026 indexation fix: mbFloor was left unindexed so this open question is measured against the same constant Pax measured. Own task."
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 328.05,
+            "deltaAtCapture": 74.74,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB7",
+      "batch": "day2 (task 212)",
+      "capturedOn": "2026-10-05",
+      "planCaseIds": [
+        "B-KW-70",
+        "W-KW-70 (bonus)"
+      ],
+      "label": "petrol 120g Euro 6, 70 kW, fiscal HP 7, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Petrol",
+        "co2_g_km": 120,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 70,
+        "cc": 1300,
+        "first_registration_date": "2026-09-01"
+      },
+      "vehicle": {
+        "fuel": "petrol",
+        "fiscalHp": 7,
+        "powerKw": 70,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 120,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 254.33,
+            "engineAtCapture": 254.33,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 193.28,
+            "engineAtCapture": 193.27,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 78.99,
+            "engineAtCapture": 78.88,
+            "deltaAtCapture": -0.11,
+            "status": "known-mismatch",
+            "note": "Brussels TMC lowest bracket, same 78.99 against 78.88 as the batch 1 electric case, reached through the kW/CV bracket path rather than evFlat, which shows it is the one constant and not two. Own task."
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 50,
+            "engineAtCapture": 50,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB8",
+      "batch": "day2 (task 212)",
+      "capturedOn": "2026-10-05",
+      "planCaseIds": [
+        "B-KW-71",
+        "W-KW-71 (bonus)"
+      ],
+      "label": "petrol 120g Euro 6, 71 kW, fiscal HP 7, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Petrol",
+        "co2_g_km": 120,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 71,
+        "cc": 1300,
+        "first_registration_date": "2026-09-01"
+      },
+      "vehicle": {
+        "fuel": "petrol",
+        "fiscalHp": 7,
+        "powerKw": 71,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 120,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 254.33,
+            "engineAtCapture": 254.33,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 193.28,
+            "engineAtCapture": 193.27,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 157.76,
+            "engineAtCapture": 157.76,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 92.19,
+            "engineAtCapture": 88.57,
+            "deltaAtCapture": -3.62,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB9",
+      "batch": "day2 (task 212)",
+      "capturedOn": "2026-10-05",
+      "planCaseIds": [
+        "W-KW-100",
+        "B-KW-100 (bonus)"
+      ],
+      "label": "petrol 130g Euro 6, 100 kW, fiscal HP 7, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Petrol",
+        "co2_g_km": 130,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 100,
+        "cc": 1300,
+        "first_registration_date": "2026-09-01"
+      },
+      "vehicle": {
+        "fuel": "petrol",
+        "fiscalHp": 7,
+        "powerKw": 100,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 130,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 393.53,
+            "engineAtCapture": 393.53,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 200.87,
+            "engineAtCapture": 200.87,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 634.89,
+            "engineAtCapture": 634.89,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 401.91,
+            "engineAtCapture": 386.15,
+            "deltaAtCapture": -15.76,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB10",
+      "batch": "day2 (task 212)",
+      "capturedOn": "2026-10-05",
+      "planCaseIds": [
+        "W-KW-101",
+        "B-KW-101 (bonus)"
+      ],
+      "label": "petrol 130g Euro 6, 101 kW, fiscal HP 7, first registered 2026-09-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Petrol",
+        "co2_g_km": 130,
+        "euronorm": "6",
+        "fiscal_hp": 7,
+        "kw": 101,
+        "cc": 1300,
+        "first_registration_date": "2026-09-01"
+      },
+      "vehicle": {
+        "fuel": "petrol",
+        "fiscalHp": 7,
+        "powerKw": 101,
+        "mma": 1500,
+        "firstRegistration": "2026-09-01",
+        "co2": 130,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 393.53,
+            "engineAtCapture": 393.53,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 200.87,
+            "engineAtCapture": 200.87,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 1112.01,
+            "engineAtCapture": 1112.01,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 703.94,
+            "engineAtCapture": 676.35,
+            "deltaAtCapture": -27.59,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB11",
+      "batch": "day3 (task 213)",
+      "capturedOn": "2026-10-06",
+      "planCaseIds": [
+        "B-OLD15",
+        "F-OLD15 (bonus)",
+        "W-OLD15 (bonus)"
+      ],
+      "label": "petrol 130g Euro 4, 96 kW, fiscal HP 7, first registered 2011-06-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Petrol",
+        "co2_g_km": 130,
+        "euronorm": "4",
+        "fiscal_hp": 7,
+        "kw": 96,
+        "cc": 1300,
+        "first_registration_date": "2011-06-01"
+      },
+      "vehicle": {
+        "fuel": "petrol",
+        "fiscalHp": 7,
+        "powerKw": 96,
+        "mma": 1500,
+        "firstRegistration": "2011-06-01",
+        "co2": 130,
+        "euroNorm": 4,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 108.12,
+            "engineAtCapture": 108.12,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 227.73,
+            "engineAtCapture": 227.72,
+            "deltaAtCapture": -0.01,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 63.49,
+            "engineAtCapture": 78.88,
+            "deltaAtCapture": 15.39,
+            "status": "known-mismatch",
+            "note": "Brussels age-reduction floor, second independent confirmation of SUB6 at a different age and fuel. Own task."
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 50,
+            "engineAtCapture": 56.74,
+            "deltaAtCapture": 6.74,
+            "status": "known-mismatch",
+            "note": "Wallonia age-reduction floor, second independent confirmation of SUB6. Own task."
+          },
+          "roadTax": {
+            "official": 253.31,
+            "engineAtCapture": 243,
+            "deltaAtCapture": -10.31,
+            "status": "expect"
+          }
+        }
+      }
+    },
+    {
+      "id": "SUB13",
+      "batch": "day3 (task 213)",
+      "capturedOn": "2026-10-06",
+      "planCaseIds": [
+        "F-NEDC (15 fiscal HP re-run)",
+        "B-NEDC (bonus)",
+        "W-NEDC (bonus)"
+      ],
+      "label": "diesel 148g Euro 6, 110 kW, fiscal HP 15, first registered 2019-01-01",
+      "inputsAsEntered": {
+        "vehicle_type": "Car",
+        "price_excl_vat": 35000,
+        "discount": 0,
+        "max_permissible_weight_kg": 1500,
+        "co2_cycle": "not selectable",
+        "engine_type": "Diesel",
+        "co2_g_km": 148,
+        "euronorm": "6",
+        "fiscal_hp": 15,
+        "kw": 110,
+        "cc": 1300,
+        "first_registration_date": "2019-01-01"
+      },
+      "vehicle": {
+        "fuel": "diesel",
+        "fiscalHp": 15,
+        "powerKw": 110,
+        "mma": 1500,
+        "firstRegistration": "2019-01-01",
+        "co2": 148,
+        "euroNorm": 6,
+        "displacementCc": 1300
+      },
+      "regions": {
+        "flanders": {
+          "biv": {
+            "official": 1089.32,
+            "engineAtCapture": 726.22,
+            "deltaAtCapture": -363.1,
+            "status": "known-mismatch",
+            "note": "Flanders aged-diesel NEDC family, repeats SUB3 at fiscal HP 15, which rules fiscal HP out as the cause. Own task."
+          },
+          "roadTax": {
+            "official": 1320.76,
+            "engineAtCapture": 1320.76,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          }
+        },
+        "brussels": {
+          "biv": {
+            "official": 715.11,
+            "engineAtCapture": 715.11,
+            "deltaAtCapture": 0,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 1075.54,
+            "engineAtCapture": 1033,
+            "deltaAtCapture": -42.54,
+            "status": "expect"
+          }
+        },
+        "wallonia": {
+          "biv": {
+            "official": 426.49,
+            "engineAtCapture": 409.77,
+            "deltaAtCapture": -16.72,
+            "status": "expect"
+          },
+          "roadTax": {
+            "official": 1075.54,
+            "engineAtCapture": 1394.55,
+            "deltaAtCapture": 319.01,
+            "status": "expect"
+          }
+        }
+      }
+    }
+  ]
+}
