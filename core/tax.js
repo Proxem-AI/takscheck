@@ -796,14 +796,24 @@
   }
 
   function roadTax(region, vehicle, t, inf, refDate) {
-    var scale = t.annualScale;
+    // The shared fiscal-HP scale is re-indexed every 1 July too. Until
+    // 2026-10-06 it was read as a single flat table with no window series at
+    // all, which left Brussels and Wallonia 2.8 to 4.1 per cent low from 1 July
+    // 2026, measured across 14 FEBIAC observations at three fiscal HP values.
+    var scalePicked = pickWindow(t.annualScale, refDate, "indexWindows");
+    var scale = scalePicked.values;
     var assumptions = [];
     var confidence = "low"; // annual road tax is estimate-tier across the board (see tariffs note)
     var simUrl = t.simulatorUrls[region];
 
     var picked = pickWindow(t[region].roadTax, refDate, "indexWindows");
     var regCfg = picked.values;
-    var vintage = picked.vintage;
+    // Flanders has its own validated model and never reads the shared scale, so
+    // its vintage must not inherit the scale's. Brussels and Wallonia are billed
+    // off the scale, so theirs is only as current as the scale is: a dated
+    // window whose expiry the engine never asks about is the defect the
+    // pickWindow comment block above exists to prevent.
+    var vintage = region === "flanders" ? picked.vintage : worseVintage(picked.vintage, scalePicked.vintage);
     var fr = parseFirstReg(vehicle.firstRegistration);
 
     // Region-specific EV handling. isZeroEmission guards against a plug-in hybrid
