@@ -848,7 +848,7 @@
     assumptions.push(fhp.assumption);
 
     // Flanders: the simulator-validated eco-modulated model (research section 12).
-    // Brussels and Wallonia keep the representative fiscal-HP scale below.
+    // Brussels and Wallonia are billed off the shared fiscal-HP scale below.
     if (region === "flanders") {
       var fl = roadTaxFlandersModel(vehicle, regCfg, inf, fhp, assumptions);
       if (fl.needsMoreData) {
@@ -861,18 +861,36 @@
 
     var amount = annualScaleAmount(fhp.value, scale);
 
-    // Region modifiers.
-    if (region === "wallonia" && vehicle.fuel === "diesel" && regCfg.dieselSurchargePct) {
-      amount = amount * (1 + regCfg.dieselSurchargePct);
-      assumptions.push("Walloon diesel surcharge +" + Math.round(regCfg.dieselSurchargePct * 100) + "%");
-    }
-    if (region === "brussels" && vehicle.fuel === "lpg" && regCfg.lpgSupplement) {
-      for (var i = 0; i < regCfg.lpgSupplement.length; i++) {
-        var band = regCfg.lpgSupplement[i];
-        if (band.cvMax == null || fhp.value <= band.cvMax) { amount += band.amount; assumptions.push("Brussels LPG supplement +" + band.amount); break; }
+    // THERE IS NO WALLOON DIESEL SURCHARGE. Do not put one back.
+    //
+    // This branch used to multiply the Walloon figure by 1.35 whenever the fuel
+    // was diesel, off wallonia.roadTax.dieselSurchargePct. No such surcharge
+    // exists. SPW Finances' own taxe de circulation sheet is a single table by
+    // fiscal horsepower with no fuel column at all, and FEBIAC Taxo contradicts
+    // the surcharge in 7 independent diesel observations spanning fiscal HP 7,
+    // 9 and 15 and first registrations from 2008 to 2026: every one returns the
+    // plain scale amount, identical to Brussels. The one non-diesel control
+    // (hybrid petrol) already matched before this change, which is what placed
+    // the fault on the diesel branch and not on Wallonia road tax generally.
+    // The constant was never sourced: its provenance entry read "Flagged low
+    // confidence since 2026-07. Not in scope of the 2026-09-01 audit."
+    //
+    // The accijnscompenserende belasting on LPG, by contrast, is real, is the
+    // same table in both regions, is banded on fiscal horsepower, and is
+    // published as neither indexed nor subject to the decime. It therefore
+    // lives on the shared scale rather than per region, and applies wherever
+    // the shared scale does.
+    if (vehicle.fuel === "lpg" && scale.lpgSupplement) {
+      for (var i = 0; i < scale.lpgSupplement.length; i++) {
+        var band = scale.lpgSupplement[i];
+        if (band.cvMax == null || fhp.value <= band.cvMax) {
+          amount += band.amount;
+          assumptions.push("LPG supplement +" + band.amount.toFixed(2) + " (accijnscompenserende belasting, not indexed)");
+          break;
+        }
       }
     }
-    assumptions.push("representative fiscal-HP scale, all-in with decimes (estimate; per-region cents not yet pinned)");
+    assumptions.push("shared fiscal-HP scale, all-in with decimes");
     return mk(amount, confidence, assumptions);
 
     function mk(a, conf, notes) {

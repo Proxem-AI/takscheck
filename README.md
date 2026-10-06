@@ -55,7 +55,12 @@ the regional tax office from the certificate of conformity.
     15-year federal age schedule, EV flat 78.88 EUR.
   - **Wallonia** TMC: the reformed 2025 formula `MB x (CO2/X) x (MMA/1838) x C`
     with the kW base table, energy coefficient, mass ratio, 50 / 9000 bounds.
-  - Annual road tax per region on the representative fiscal-HP scale. The
+  - Annual road tax per region on a shared fiscal-HP scale, which from 1 July
+    2026 is the SPW Finances published table rather than a representative
+    approximation. There is no Walloon diesel surcharge: the 35 per cent one
+    this engine used to apply was removed on 6 October 2026 against SPW's own
+    sheet, which has no fuel column, and seven FEBIAC observations. LPG pays the
+    same non-indexed supplement in both regions. The
     Flemish EV flat is 107.16 EUR and the minimum 60.94 EUR in the window from
     1 July 2026; the preceding window carries 107.18 and 58.55. 102.96 EUR is
     the WALLOON EV forfait, which this README previously attributed to Flanders
@@ -133,7 +138,7 @@ If a badge shows "not enough data", the ad did not expose a required field
 npm test
 ```
 
-`npm test` runs seven stages, in this order. Each is its own `node` process, chained with `&&`, so no stage can leak state into another and the first failure stops the run:
+`npm test` runs eleven stages, in this order. Each is its own `node` process, chained with `&&`, so no stage can leak state into another and the first failure stops the run:
 
 | Stage | What it proves |
 | --- | --- |
@@ -141,6 +146,7 @@ npm test
 | `test/harness.mjs` | 27 assertions: the official Vlaamse Belastingdienst BIV ground truth, engine boundary cases, and the v1 scope gate. |
 | `test/roadtax-harness.mjs` | 19 rows of the official road-tax table, to the cent. |
 | `test/simulator-comparison-harness.mjs --strict` | The 29 case official simulator capture, 58 comparisons across BIV and road tax. |
+| `test/febiac-comparison-harness.mjs --strict` | The FEBIAC Taxo capture of 1 to 6 October 2026: 16 submissions, 48 region cases, 96 comparisons across all three regions. 83 gate the build; 13 are flagged known mismatches that report on every run and never gate. |
 | `test/badge-states.mjs` | 45 assertions: the badge renders correctly in the current, stale, expired and unvalidated-region states, in NL and FR, and carries the wording and the aria strings the legal review fixed. |
 | `test/mobilede-extract.mjs` | 41 assertions: the mobile.de detail-page gate and extractor against six DOM shapes plus the JSON-LD path, including the old URL format, on mock pages built with linkedom. |
 | `test/host-permissions.mjs` | 26 assertions: the three match-pattern lists in `manifest.json` agree, the six retained domains match and the ten removed ones do not, and the real content scripts render a badge on each retained domain. |
@@ -196,9 +202,14 @@ simulator wizard in a browser (or via browser automation, as Pax did) and read
   amount in the same typography as a Flemish amount checked against 29 official
   runs claims more than the evidence supports. They return by being validated
   the way Flanders was and added to that list.
-- **Annual road-tax precision.** The per-CV cents come from a representative
-  shared scale and drift by indexation window. Only the Flemish EV flat and
-  minimum are simulator-pinned. Re-scrape the three official baremes to pin them.
+- **Annual road-tax precision.** From 1 July 2026 the shared per-CV scale is the
+  SPW Finances published table, read off `baremes_taxe_de_circulation.pdf` on
+  6 October 2026, and the LPG supplement is the exact published 89.16 / 148.68 /
+  208.20 rather than whole euros. Two things are still open: that sheet is the
+  WALLOON one and is used for Brussels on the strength of FEBIAC returning
+  identical figures at three fiscal HP steps, so Brussels' own barème still needs
+  locating; and the base block covering anything assessed before 1 July 2026 is
+  untouched and still the rounded representative set.
 - **Remote tariff refresh.** `sw.js` is where a scheduled fetch of an updated
   `tariffs.json` from a Proxem-controlled endpoint would live (data only, never
   remote code, per MV3).

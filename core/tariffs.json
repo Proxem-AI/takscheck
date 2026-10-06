@@ -1,7 +1,7 @@
 {
-  "version": "2026.09.2",
-  "updated": "2026-09-01",
-  "source": "Vlaamse Belastingdienst simulator (belastingen.fenb.be) calibration, WIGB art. 97ter-sexies, Bruxelles Fiscalite tariff PDF, SPW Finances bareme 1 Jul 2025. See README.",
+  "version": "2026.10",
+  "updated": "2026-10-06",
+  "source": "Vlaamse Belastingdienst simulator (belastingen.fenb.be) calibration, WIGB art. 97ter-sexies, Bruxelles Fiscalite tariff PDF, SPW Finances baremes: taxe de mise en circulation (reformed, 1 Jul 2025 page read 2026-10-06), taxe de circulation (sheet validity 01/07/2026 - 30/06/2027, read 2026-10-06) and the LPG taxe de mise en circulation bareme. Cross-checked against FEBIAC Taxo, 16 submissions over three regions, 1 to 6 October 2026. See README.",
   "currency": "EUR",
   "provenance": {
     "note": "Per-constant source and validity. Flemish road tax and BIV amounts reindex every 1 July. Since 2026-09-01 the amounts are no longer a single stale set: flanders.biv.indexWindows and flanders.roadTax.indexWindows carry one override set per indexation window, newest first, and the engine selects by the date the tax is assessed. Since 2026-09-07 the selection honours the until bound as well as the from bound, so an expired table is never served silently: past its until date the engine keeps computing but labels the figure stale and forces the input tier down, and after twelve months it withdraws the amounts. q is not part of the 1 July indexation, it moves on 1 January, so it has its own series in flanders.biv.qWindows. Every dated window in this file is asserted by test/window-expiry-check.mjs, which fails the build once today is past the earliest until. The block outside indexWindows is the 1 July 2025 window and is still live for anything assessed before 1 July 2026, which is why the two older harnesses keep asserting those amounts. Confidence low means the value was not confirmed against a primary source and may be wrong.",
@@ -44,6 +44,8 @@
       "brussels.tmc": { "source": "Bruxelles Fiscalite tariff PDF", "verified": "not re-verified", "confidence": "low", "status": "Not in scope of the 2026-09-01 audit. Treat as unverified." },
       "brussels.roadTax": { "source": "annualScale", "verified": "not re-verified", "confidence": "low", "status": "Not in scope of the 2026-09-01 audit. Treat as unverified." },
       "wallonia.tmc": { "source": "SPW Finances bareme 1 Jul 2025, re-read in full on 2026-10-06 at finances.wallonie.be/home/fiscalite/fiscalite-des-vehicules/tableaux-des-baremes/taxe-de-mise-en-circulation-1.html", "verified": "2026-10-06", "confidence": "high for the formula, the base barème, the age degressivity, the CO2 divisors, the mass divisor, the energy coefficients and the 50 / 9000 clamp, all read off the SPW page itself; derived for the 1 July 2026 indexation of the base barème, see wallonia.tmc.indexWindows", "status": "FORMULA AND 1 JULY 2025 VALUES CONFIRMED PRIMARY. The SPW page states TMC = MB x CO2/X x MMA/Y x C, the MB barème by kW (61,50 / 123 / 495 / 867 / 1239 / 2478 / 4957), the degressivity schedule this file carries row for row, X = 136 WLTP and 115 NEDC with CO2/X = 1 for an EV, Y = 1838, C = 1 for petrol, diesel, LPG, CNG and bioethanol, C = 0,8 for a hybrid, and C = 0,01 / 0,10 / 0,18 / 0,26 for electric or hydrogen by kW band. Every one of those matches this file exactly. The 2026-2027 MB figures were NOT published on that page on 2026-10-06, so the 1 July 2026 window is derived from the 1 July 2025 values by the factor 1,0408515 and cross-checked against FEBIAC, not read from SPW. Two things on the page are deliberately NOT encoded: the 250 EUR large-family and single-parent reductions, which need household data no advert carries, and the eco-malus, which applies only to registrations before 1 July 2025." },
+      "wallonia.roadTax.dieselSurchargePct": { "value": "REMOVED 2026-10-06, was 0.35", "source": "none, and there never was one", "ref": "SPW Finances' taxe de circulation sheet (baremes_taxe_de_circulation.pdf, validity 01/07/2026 - 30/06/2027) is a single table by fiscal horsepower with no fuel column at all. FEBIAC Taxo contradicts the surcharge in 7 independent diesel observations spanning fiscal HP 7, 9 and 15 and first registrations from 2008 to 2026: every one returns the plain scale amount, identical to Brussels. The one non-diesel control (hybrid petrol) matched before the change, which placed the fault on the diesel branch and not on Wallonia road tax generally.", "verified": "2026-10-06", "confidence": "high", "status": "REMOVED. Kept as a provenance entry rather than deleted so the constant cannot be reintroduced as a plausible-looking guess. Its own entry previously read 'Flagged low confidence since 2026-07. Not in scope of the 2026-09-01 audit': it was an unsourced assumption from the start, and it overstated a Walloon diesel's annual road tax by 35 per cent." },
+      "annualScale.lpgSupplement": { "value": "89.16 to 7 CV, 148.68 from 8 to 13 CV, 208.20 from 14 CV", "source": "SPW Finances, Montants de la taxe de circulation, baremes_taxe_de_circulation.pdf, the 'Taxe de circulation complementaire (LPG)' panel, read 2026-10-06", "ref": "The sheet states the supplement is 'non indexable et non soumise a decime additionnel' and is an amount to add to the scale figure, which is exactly how the engine applies it. Confirmed independently by FEBIAC: the 9 fiscal HP LPG car returns 521,84 in both Brussels and Wallonia, and 373,16 + 148,68 = 521,84 to the cent.", "verified": "2026-10-06", "confidence": "high", "status": "RESOLVED AND MOVED. These are the exact figures; the values this file carried before (89 / 149 / 208, Brussels only) were the same table rounded to whole euros, which is where the 13.84 EUR residual Pax flagged on the Brussels LPG road tax case came from. It is one table in both regions, so it now lives on the shared scale instead of being duplicated per region, and it sits in the base block rather than in an indexWindows entry because the sheet says it is not indexed." },
       "wallonia.tmc.lpgReduction": { "value": 298.0, "source": "SPW Finances, Montants de la taxe de mise en circulation pour les vehicules equipes au LPG (baremes_taxe_de_mise_en_circulation_lpg.pdf), in force since 01/05/2002, explicitly not indexed annually", "ref": "Every band of the official LPG bareme is the general bareme minus exactly 298,00 EUR, floored: 495-298=197, 867-298=569, 1239-298=941, 2478-298=2180, 4957-298=4659, and the two bands below 298 collapse to 0. Five independent band values, one constant. FEBIAC Taxo agrees to the cent on the final amount: the 96 kW 130 g car returns 401,91 petrol against 103,91 LPG for otherwise identical inputs, a difference of exactly 298,00.", "verified": "2026-10-06", "confidence": "high on the 298,00 magnitude (primary, five band values); medium on applying it to the final TMC rather than to MB (read off FEBIAC's single LPG observation, since the SPW reformed-TMC page does not itself mention an LPG abatement)", "status": "DEVIATES FROM THE APPROVED FIX, FLAGGED FOR RED. The approved change was to add \"lpg\": 0.26 to wallonia.tmc.energyCoefficient, back-solved from the same single observation. The SPW page that defines the reformed TMC rules that out directly: its coefficient table reads 'Essence - Diesel - GPL - CNG - Bioethanol - Autres cas de figure : 1'. GPL is LPG, the coefficient is 1, and the combustion branch already returns 1, so nothing is missing from that table. A 0.26 multiplier would also mis-price every LPG car except the one it was fitted to, because the real rule is a flat subtraction. This entry records the deviation rather than hiding it; the commit that introduced it is droppable on its own." },
       "wallonia.roadTax.evFlat": { "value": 102.96, "source": "unknown", "ref": "This is the Flemish figure copied across. Wallonia operates a separate reduced forfait and no Walloon source was found for it.", "verified": "not verified", "confidence": "low", "status": "SUSPECT. Deliberately left unchanged on 2026-09-01 because no Walloon source could be found. Do not assume it tracks the Flemish amount." },
       "annualScale": { "source": "base block: representative scale, unchanged and still unsourced. 1 July 2026 window: SPW Finances, Montants de la taxe de circulation, decimes additionnels inclus, baremes_taxe_de_circulation.pdf, sheet validity 01/07/2026 - 30/06/2027, read 2026-10-06", "verified": "2026-10-06 for the 1 July 2026 window only", "confidence": "high for the 1 July 2026 window (primary table, every CV step read off the sheet, and the three steps FEBIAC exercised independently confirm it to the cent); low for the base block, which is untouched", "status": "PARTLY RESOLVED. The flat low-confidence flag no longer covers the whole node. From 1 July 2026 the figures are the SPW published per-CV amounts, not a representative approximation, and not a flat multiply of the 2025 set either: FEBIAC's residual against a 1,0408515 multiply was 11 to 51 cents because the real table is not a pure multiple. CAVEAT THAT HAS NOT GONE AWAY: this one table is shared by Brussels and Wallonia, and the window added here is the WALLOON sheet. It is used for Brussels because FEBIAC returns the identical figure for both regions at fiscal HP 7, 9 and 15, and all three match the Walloon sheet to the cent, which is evidence that the two regions' tables agree at those three steps, not proof that they agree at all seventeen. Brussels' own bareme was not located. Split the node if a Brussels figure is ever found to differ." },
@@ -207,13 +209,8 @@
     "roadTax": {
       "scale": "annualScale",
       "evExempt": true,
-      "lpgSupplement": [
-        { "cvMax": 7, "amount": 89.0 },
-        { "cvMax": 13, "amount": 149.0 },
-        { "cvMax": null, "amount": 208.0 }
-      ],
       "confidence": "low",
-      "note": "Fiscal-HP scale with 10 percent decime already included. EV/hydrogen exempt. Per-CV cents drift by indexation window."
+      "note": "Fiscal-HP scale with 10 percent decime already included. EV/hydrogen exempt. The LPG supplement moved to annualScale.lpgSupplement on 2026-10-06: it is the same table in Brussels and in Wallonia, it is not indexed, and keeping two copies of it was one copy too many."
     }
   },
   "wallonia": {
@@ -267,11 +264,10 @@
     },
     "roadTax": {
       "scale": "annualScale",
-      "dieselSurchargePct": 0.35,
       "evFlat": 102.96,
       "oldtimerFlat": 46.70,
       "confidence": "low",
-      "note": "Fiscal-HP scale with decimes. Diesel carries roughly +35 percent over the petrol base. EV pays a reduced forfait rather than full exemption."
+      "note": "Fiscal-HP scale with decimes, shared with Brussels, plus the same non-indexed LPG supplement (annualScale.lpgSupplement). The +35 percent diesel surcharge this entry used to carry was removed on 2026-10-06: it does not exist in SPW's own sheet and FEBIAC contradicts it in 7 independent diesel observations. EV pays a reduced forfait rather than full exemption, and that forfait is still SUSPECT, see its own provenance entry."
     }
   },
   "annualScale": {
@@ -296,6 +292,11 @@
       "11": 539, "12": 663, "13": 786, "14": 910, "15": 1033,
       "16": 1354, "17": 1674, "18": 1994, "19": 2314, "20": 2634
     },
+    "lpgSupplement": [
+      { "cvMax": 7, "amount": 89.16 },
+      { "cvMax": 13, "amount": 148.68 },
+      { "cvMax": null, "amount": 208.20 }
+    ],
     "minFiscalHp": 4,
     "perExtraHpAbove20": 143.62
   },

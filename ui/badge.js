@@ -174,6 +174,9 @@
     { re: /^(WLTP|NEDC) CO2 assumed, divisor X/,
       nl: function (m) { return m[1] + "-CO2 aangenomen"; },
       fr: function (m) { return "CO2 " + m[1] + " supposé"; } },
+    { re: /^LPG: flat Walloon abatement of (\S+)/,
+      nl: function (m) { return "LPG: vaste Waalse vermindering van € " + m[1]; },
+      fr: function (m) { return "LPG: abattement wallon forfaitaire de " + m[1] + " €"; } },
     // --- Flanders road tax (roadTaxFlandersModel) ---
     { re: /^first registered before 1 Jan 2021: NEDC branch, CO2 read as/,
       nl: "Van voor 1 januari 2021: NEDC-CO2 gebruikt",
@@ -198,14 +201,14 @@
     { re: /^oldtimer \((\d+)y\+\): flat Walloon rate/,
       nl: function (m) { return "Oldtimer (" + m[1] + " jaar+): vast Waals tarief"; },
       fr: function (m) { return "Ancêtre (" + m[1] + " ans+): tarif wallon forfaitaire"; } },
-    { re: /^Walloon diesel surcharge \+(\d+)%/,
-      nl: function (m) { return "Waalse dieseltoeslag +" + m[1] + "%"; },
-      fr: function (m) { return "Surtaxe diesel wallonne +" + m[1] + "%"; } },
-    { re: /^Brussels LPG supplement \+(\S+)/,
-      nl: function (m) { return "Brusselse LPG-toeslag +" + m[1]; },
-      fr: function (m) { return "Supplément LPG bruxellois +" + m[1]; } },
-    { re: /^representative fiscal-HP scale/,
-      nl: "Indicatieve fiscale-pk-schaal, alles inbegrepen", fr: "Barème indicatif de puissance fiscale, tout compris" }
+    // The "Walloon diesel surcharge +35%" entry was removed on 2026-10-06 with
+    // the surcharge itself. roadTax() no longer emits that assumption, so the
+    // localisation for it was dead copy, not a fallback.
+    { re: /^LPG supplement \+(\S+)/,
+      nl: function (m) { return "LPG-toeslag +" + m[1] + " (accijnscompenserende belasting)"; },
+      fr: function (m) { return "Supplément LPG +" + m[1] + " (taxe compensatoire des accises)"; } },
+    { re: /^shared fiscal-HP scale/,
+      nl: "Fiscale-pk-schaal, alles inbegrepen", fr: "Barème de puissance fiscale, tout compris" }
   ];
 
   function esc(s) {
