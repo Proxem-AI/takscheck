@@ -644,6 +644,40 @@
     var massTerm = mma.value / cfg.massReference;
 
     var tmc = mbAfterAge * co2Term * massTerm * C;
+
+    // LPG in Wallonia is a flat abatement, NOT an energy coefficient.
+    //
+    // This started life as a proposal to add "lpg": 0.26 to the energy
+    // coefficient table, back-solved from the single FEBIAC LPG observation.
+    // The SPW Finances page that defines the reformed TMC rules that out
+    // directly: its own coefficient table reads "Essence - Diesel - GPL - CNG -
+    // Bioethanol - Autres cas de figure : 1". GPL is LPG. The coefficient is 1,
+    // which is what the combustion branch above already returns, so there is
+    // nothing missing from that table.
+    //
+    // What is missing is the abatement. SPW publishes a separate LPG barème
+    // (baremes_taxe_de_mise_en_circulation_lpg.pdf, in force since 01/05/2002
+    // and explicitly not indexed) whose every band is the general barème minus
+    // exactly 298,00 EUR, floored: 495 - 298 = 197, 867 - 298 = 569,
+    // 1239 - 298 = 941, 2478 - 298 = 2180, 4957 - 298 = 4659, and the two bands
+    // below 298 collapse to 0. Five independent band values, one constant.
+    //
+    // FEBIAC agrees to the cent and shows where it is applied. The 96 kW 130 g
+    // car returns 401,91 on petrol and 103,91 on LPG for otherwise identical
+    // inputs: a difference of exactly 298,00 on the FINAL amount, not on the
+    // base amount. Subtracting it from MB instead would give 159,96.
+    //
+    // So the magnitude is primary-sourced and the application point is read off
+    // FEBIAC. The SPW reformed page does not itself mention an LPG abatement,
+    // which is why the confidence drops a tier here rather than claiming the
+    // whole rule is cited. The clamp below still applies afterwards, so the
+    // abatement can never take a figure under the 50 EUR statutory minimum.
+    if (vehicle.fuel === "lpg" && cfg.lpgReduction) {
+      tmc = tmc - cfg.lpgReduction;
+      assumptions.push("LPG: flat Walloon abatement of " + cfg.lpgReduction.toFixed(2) + " (SPW LPG bareme, not indexed)");
+      lower("medium");
+    }
+
     tmc = Math.min(cfg.max, Math.max(cfg.min, tmc));
 
     return {
