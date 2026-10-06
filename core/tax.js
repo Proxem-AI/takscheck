@@ -581,7 +581,15 @@
   // ---- Wallonia TMC (reformed 1 Jul 2025: kW base x CO2 x mass x energy) ---
 
   function tmcWallonia(vehicle, t, inf, refDate) {
-    var cfg = t.wallonia.tmc;
+    // The Walloon MB barème is re-indexed every 1 July, the same cycle as the
+    // Flemish amounts, so it is selected by window the way bivFlanders() does
+    // rather than read as a single flat set. Until 2026-10-06 this function read
+    // t.wallonia.tmc directly with no pickWindow call anywhere in it, which left
+    // Wallonia BIV a flat 4.08 per cent low on every non-floor case from 1 July
+    // 2026 onward, confirmed across 13 FEBIAC Taxo observations.
+    var picked = pickWindow(t.wallonia.tmc, refDate, "indexWindows");
+    var cfg = picked.values;
+    var vintage = picked.vintage;
     var assumptions = [];
     var confidence = "high";
     function lower(c) { var o = { high: 3, medium: 2, low: 1, none: 0 }; if (o[c] < o[confidence]) confidence = c; }
@@ -641,7 +649,7 @@
     return {
       amount: round2(tmc), needsMoreData: false, confidence: confidence,
       basis: "Wallonia reformed TMC (MB " + Math.round(mbAfterAge) + " x CO2/X x MMA/" + cfg.massReference + " x C" + C + ")",
-      assumptions: assumptions, simulatorUrl: t.simulatorUrls.wallonia
+      assumptions: assumptions, dataVintage: vintage, simulatorUrl: t.simulatorUrls.wallonia
     };
   }
 
