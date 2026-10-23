@@ -14,8 +14,9 @@
  *
  * Beyond the table (2028 and later) there is deliberately NO expected q. The
  * contract is: serve the newest window we hold, label it stale, and never
- * extrapolate. The 2028 case below fails if anyone makes the engine climb on its
- * own (1.315).
+ * extrapolate. The 2028 cases below fail if anyone makes the engine climb on its
+ * own (1.315), whether in pickQ (the q cases) or in bivFlanders (the amount case,
+ * which requires the 2028 BIV to equal the 2027 BIV to the cent).
  *
  * Run:  node test/q-windows.mjs
  */
@@ -27,7 +28,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const tariffs = JSON.parse(readFileSync(join(root, "core", "tariffs.json"), "utf8"));
-const { createTaxEngine, pickWindow } = require(join(root, "core", "tax.js"));
+const { createTaxEngine, pickQ } = require(join(root, "core", "tax.js"));
 const engine = createTaxEngine(tariffs);
 
 let failures = 0;
@@ -35,8 +36,12 @@ function check(name, ok, detail) {
   console.log((ok ? "  PASS " : "  FAIL ") + name + (detail ? "  (" + detail + ")" : ""));
   if (!ok) failures++;
 }
+// q is read through pickQ, the function bivFlanders() itself calls, not through
+// pickWindow: a fallback or an extrapolation added inside pickQ is invisible to a
+// test that bypasses it. The amounts further down go through computeAll, which is
+// bivFlanders, so the same defect is caught again at the figure the user sees.
 function qAt(date) {
-  const p = pickWindow(tariffs.flanders.biv, date, "qWindows");
+  const p = pickQ(tariffs.flanders.biv, date);
   return { q: p.values.q, status: p.vintage.status };
 }
 
@@ -81,6 +86,15 @@ const a2028 = bivAt("2028-01-01");
 check("BIV on 2028-01-01 is not served as current",
   a2028.dataVintage && a2028.dataVintage.status !== "current",
   a2028.dataVintage && a2028.dataVintage.status);
+
+// No extrapolation, at the amount. 2027-12-31 and 2028-01-01 are a day apart and
+// the probe (first registered 2023-05-15) is four completed years old on both, so
+// the age correction cannot differ: the only input that can move the amount is q.
+// Equal amounts therefore mean q was held at the 2027 value.
+const a2027end = bivAt("2027-12-31");
+check("BIV on 2028-01-01 equals BIV on 2027-12-31 (q held at 1.28, not extrapolated)",
+  a2027end.biv.amount != null && a2028.biv.amount === a2027end.biv.amount,
+  a2027end.biv.amount + " vs " + a2028.biv.amount);
 
 console.log("");
 if (failures) {

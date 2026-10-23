@@ -1016,6 +1016,7 @@
     inferCo2Cycle: inferCo2Cycle,
     deriveFiscalHp: deriveFiscalHp,
     pickWindow: pickWindow,
+    pickQ: pickQ,
     vintageOf: vintageOf,
     addMonths: addMonths,
     STALE_GRACE_MONTHS: STALE_GRACE_MONTHS,
