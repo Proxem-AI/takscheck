@@ -26,7 +26,22 @@ const root = join(__dirname, "..");
 
 const tariffs = JSON.parse(readFileSync(join(root, "core", "tariffs.json"), "utf8"));
 const { createTaxEngine } = require(join(root, "core", "tax.js"));
-const engine = createTaxEngine(tariffs);
+// The state fixtures below (current, stale, expired) describe the moment the 2026
+// q window has lapsed while the 1 July 2026 amounts are still live. That moment
+// is a property of the 2026 window, so the engine under test is pinned to it: a
+// copy of the shipped tariffs whose qWindows holds only the window ending
+// 2026-12-31. Without the pin, adding the 2027 q window (task #159) moves every
+// date in this file and the fixtures stop meaning what they say. Rendering,
+// wording and the staleness ladder are still exercised against the real
+// tariffs.json structure; only the list of q windows is held back.
+const Q_FIXTURE_UNTIL = "2026-12-31";
+const fixtureTariffs = JSON.parse(JSON.stringify(tariffs));
+fixtureTariffs.flanders.biv.qWindows = fixtureTariffs.flanders.biv.qWindows.filter((w) => w.until === Q_FIXTURE_UNTIL);
+if (fixtureTariffs.flanders.biv.qWindows.length !== 1) {
+  console.error("FAIL: tariffs.json no longer has a q window ending " + Q_FIXTURE_UNTIL + ", so the badge state fixtures have nothing to pin to.");
+  process.exit(1);
+}
+const engine = createTaxEngine(fixtureTariffs);
 
 const badgeSrc = readFileSync(join(root, "ui", "badge.js"), "utf8");
 
@@ -74,7 +89,7 @@ const noCo2 = { title: "Test", fuel: "petrol", euroNorm: 6, displacementCc: 1600
 
 // The dates are taken from the tariff file, not from the engine, so these stay
 // meaningful when a new window is added.
-const qWindow = tariffs.flanders.biv.qWindows[0];
+const qWindow = fixtureTariffs.flanders.biv.qWindows[0];
 const CURRENT = qWindow.until;                              // last live day
 const STALE = "2027-03-01";                                 // past q, inside grace
 const EXPIRED = "2028-06-01";                               // past the grace period

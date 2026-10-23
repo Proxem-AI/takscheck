@@ -102,6 +102,12 @@
       "evExemptBeforeYear": 2026,
       "qWindows": [
         {
+          "from": "2027-01-01",
+          "until": "2027-12-31",
+          "q": 1.28,
+          "note": "q for calendar year 2027. Read from the statute, not computed by the engine: VCF art. 2.3.4.1.2/1, tweede lid, 3: 'q is gelijk aan 1,07 in 2021 en wordt jaarlijks verhoogd met 0,035 vanaf het jaar 2022', which is 1,28 for 2027 (consolidated text read 2026-10-23 at codex.vlaanderen.be, document 1023499; the article is in force from 01/01/2021 with no end date and no future-dated version). NOT yet confirmed against the official Vlaamse Belastingdienst simulator: it cannot be driven for a 2027 assessment before 2027 and its API is WAF blocked to scripts. Re-run the Pax simulator capture in the first days of January 2027 and correct this entry if the simulator disagrees. Add the 2028 window here the same way, from the statute text of that year; there is deliberately no formula."
+        },
+        {
           "from": "2026-01-01",
           "until": "2026-12-31",
           "q": 1.245,
