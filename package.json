@@ -1,6 +1,6 @@
 {
   "name": "takscheck",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "TaksCheck: MV3 Chrome extension showing Belgian BIV / TMC and Rijtaks / TC on car ads (NL / FR), plus a regression harness against the official Flemish simulator.",
   "scripts": {
